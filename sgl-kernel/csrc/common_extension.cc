@@ -157,6 +157,8 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
   m.def("sgl_per_token_quant_fp8(Tensor input, Tensor! output_q, Tensor! output_s) -> ()");
   m.impl("sgl_per_token_quant_fp8", torch::kCUDA, &sgl_per_token_quant_fp8);
 
+  // Blackwell-only FP4 path (NVFP4).
+#if !defined(SGL_KERNEL_DISABLE_BLACKWELL)
   m.def(
       "cutlass_scaled_fp4_mm(Tensor! out, Tensor a, Tensor b,"
       "                      Tensor block_scale_a, Tensor block_scale_b,"
@@ -167,11 +169,13 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
       "scaled_fp4_quant(Tensor! output, Tensor! input,"
       "                 Tensor! output_scale, Tensor! input_scale) -> ()");
   m.impl("scaled_fp4_quant", torch::kCUDA, &scaled_fp4_quant);
+#endif
 
   m.def("dsv3_fused_a_gemm(Tensor! output, Tensor mat_a, Tensor mat_b) -> ()");
   m.impl("dsv3_fused_a_gemm", torch::kCUDA, &dsv3_fused_a_gemm);
 
   // Compute NVFP4 experts quantization.
+#if !defined(SGL_KERNEL_DISABLE_BLACKWELL)
   m.def(
       "scaled_fp4_experts_quant(Tensor! output, Tensor! output_scale,"
       "Tensor input, Tensor input_global_scale, Tensor input_offset_by_experts,"
@@ -189,6 +193,7 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
       "Tensor ab_strides, Tensor c_strides, Tensor problem_sizes,"
       " Tensor expert_offsets, Tensor sf_offsets) -> ()");
   m.impl("cutlass_fp4_group_mm", torch::kCUDA, &cutlass_fp4_group_mm);
+#endif
 
   m.def("dsv3_router_gemm(Tensor! output, Tensor mat_a, Tensor mat_b) -> ()");
   m.impl("dsv3_router_gemm", torch::kCUDA, &dsv3_router_gemm);
@@ -537,6 +542,7 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
       "stride_a, Tensor stride_b, Tensor stride_d, Tensor problem_sizes, Tensor expert_offsets, Tensor workspace) -> "
       "()");
   m.impl("es_fp8_blockwise_scaled_grouped_mm", &es_fp8_blockwise_scaled_grouped_mm);
+#if !defined(SGL_KERNEL_DISABLE_BLACKWELL)
   m.def(
       "es_sm100_mxfp8_blockscaled_grouped_mm(Tensor a, Tensor b, Tensor sfa, Tensor sfb, Tensor d, Tensor "
       "problem_sizes, Tensor expert_offsets, Tensor blockscale_offsets) -> ()");
@@ -545,6 +551,7 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
       "es_sm100_mxfp8_blockscaled_grouped_quant(Tensor input, Tensor problem_sizes, Tensor expert_offsets, Tensor "
       "blockscale_offsets, Tensor quant_output, Tensor scale_factor) -> () ");
   m.impl("es_sm100_mxfp8_blockscaled_grouped_quant", &es_sm100_mxfp8_blockscaled_grouped_quant);
+#endif
 }
 
 REGISTER_EXTENSION(common_ops)

@@ -1,0 +1,17 @@
+{
+	"InstallScripts" : 
+	[
+		"/jhe/sglang/sgl-kernel/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/_deps/json-build/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/include/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/src/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/python/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/python/mscclpp/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/_deps/nanobind-build/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/_deps/dlpack-build/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/python/test/cmake_install.cmake",
+		"/jhe/sglang/sgl-kernel/mscclpp-build/apps/nccl/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

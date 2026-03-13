@@ -118,6 +118,7 @@ from sgl_kernel.top_k import (
     fast_topk_v2,
 )
 from sgl_kernel.version import __version__
+from sgl_kernel import kvlib
 
 if torch.version.hip is not None:
     from sgl_kernel.elementwise import gelu_quick

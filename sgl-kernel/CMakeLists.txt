@@ -1,5 +1,7 @@
+# export CMAKE_ARGS="-DSGL_KERNEL_ENABLE_FP4=OFF -DSGL_KERNEL_ENABLE_SM100A=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+# export TORCH_CUDA_ARCH_LIST="8.6"
 cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
-project(sgl-kernel LANGUAGES CXX CUDA)
+project(sgl-kernel LANGUAGES C CXX CUDA)
 
 # utils
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/utils.cmake)
@@ -16,7 +18,8 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 # Python
 find_package(Python COMPONENTS Interpreter Development.Module ${SKBUILD_SABI_COMPONENT} REQUIRED)
 
-# CXX
+# C / CXX
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
@@ -97,6 +100,15 @@ FetchContent_Declare(
 )
 FetchContent_Populate(repo-flash-attention)
 
+# KVLib (myTransformer operators, in-tree at csrc/kvlib)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/csrc/kvlib/operator.h")
+  set(SGL_KERNEL_ENABLE_KVLIB ON)
+  message(STATUS "KVLib found at csrc/kvlib, enabling kvlib ops")
+else()
+  set(SGL_KERNEL_ENABLE_KVLIB OFF)
+  message(STATUS "KVLib not found (csrc/kvlib/operator.h missing)")
+endif()
+
 # mscclpp
 FetchContent_Declare(
     repo-mscclpp
@@ -136,7 +148,7 @@ set(SGL_KERNEL_CUDA_FLAGS
     "-O3"
     "-Xcompiler"
     "-fPIC"
-    "-gencode=arch=compute_90,code=sm_90"
+    "-gencode=arch=compute_86,code=sm_86" # 手动修改成只编译sm86(a40)
     "-std=c++17"
     "-DFLASHINFER_ENABLE_F16"
     "-DCUTE_USE_PACKED_TUPLE=1"
@@ -188,6 +200,7 @@ option(SGL_KERNEL_ENABLE_FP4              "Enable FP4"              OFF)
 option(SGL_KERNEL_ENABLE_FA3              "Enable FA3"              OFF)
 option(SGL_KERNEL_ENABLE_SM90A            "Enable SM90A"            OFF)
 option(SGL_KERNEL_ENABLE_SM100A           "Enable SM100A"           OFF)
+option(SGL_KERNEL_DISABLE_BLACKWELL       "Disable Blackwell arch (sm100a/sm120a) gencode flags" ON)
 
 if (SGL_KERNEL_ENABLE_BF16)
     list(APPEND SGL_KERNEL_CUDA_FLAGS
@@ -215,8 +228,12 @@ if (ENABLE_BELOW_SM90)
     endif()
 
 endif()
+if (SGL_KERNEL_DISABLE_BLACKWELL)
+    list(APPEND SGL_KERNEL_CUDA_FLAGS "-DSGL_KERNEL_DISABLE_BLACKWELL=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSGL_KERNEL_DISABLE_BLACKWELL=1")
+endif()
 
-if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" OR SGL_KERNEL_ENABLE_SM100A)
+if (SGL_KERNEL_ENABLE_SM100A OR ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" AND NOT SGL_KERNEL_DISABLE_BLACKWELL))
     list(APPEND SGL_KERNEL_CUDA_FLAGS
         "-gencode=arch=compute_100a,code=sm_100a"
         "-gencode=arch=compute_120a,code=sm_120a"
@@ -241,15 +258,16 @@ if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" OR SGL_KERNEL_ENABLE_SM100A)
         endif()
     endif()
 endif()
-
+# 为了不编译sm90
 if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.4")
     set(SGL_KERNEL_ENABLE_FA3 ON)
-    list(APPEND SGL_KERNEL_CUDA_FLAGS
-        "-gencode=arch=compute_90a,code=sm_90a"
-    )
+    # sm90a requires SM90 TMA features not available on sm86 (A40), skip
+    # list(APPEND SGL_KERNEL_CUDA_FLAGS
+    #     "-gencode=arch=compute_90a,code=sm_90a"
+    # )
 endif()
 
-if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" OR SGL_KERNEL_ENABLE_FP4)
+if (NOT SGL_KERNEL_DISABLE_BLACKWELL AND ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" OR SGL_KERNEL_ENABLE_FP4))
     list(APPEND SGL_KERNEL_CUDA_FLAGS
         "-DENABLE_NVFP4=1"
     )
@@ -274,8 +292,6 @@ set(SOURCES
     "csrc/elementwise/pos_enc.cu"
     "csrc/elementwise/topk.cu"
     "csrc/expert_specialization/es_fp8_blockwise.cu"
-    "csrc/expert_specialization/es_sm100_mxfp8_blockscaled.cu"
-    "csrc/expert_specialization/es_sm100_mxfp8_blockscaled_group_quant.cu"
 
     "csrc/gemm/awq_kernel.cu"
     "csrc/gemm/bmm_fp8.cu"
@@ -286,11 +302,6 @@ set(SOURCES
     "csrc/gemm/fp8_blockwise_gemm_kernel.cu"
     "csrc/gemm/fp8_gemm_kernel.cu"
     "csrc/gemm/int8_gemm_kernel.cu"
-    "csrc/gemm/nvfp4_expert_quant.cu"
-    "csrc/gemm/nvfp4_quant_entry.cu"
-    "csrc/gemm/nvfp4_quant_kernels.cu"
-    "csrc/gemm/nvfp4_scaled_mm_entry.cu"
-    "csrc/gemm/nvfp4_scaled_mm_kernels.cu"
     "csrc/gemm/per_tensor_quant_fp8.cu"
     "csrc/gemm/per_token_group_quant_8bit.cu"
     "csrc/gemm/per_token_group_quant_8bit_v2.cu"
@@ -316,7 +327,6 @@ set(SOURCES
     "csrc/moe/moe_sum_reduce.cu"
     "csrc/moe/moe_topk_softmax_kernels.cu"
     "csrc/moe/moe_topk_sigmoid_kernels.cu"
-    "csrc/moe/nvfp4_blockwise_moe.cu"
     "csrc/moe/fp8_blockwise_moe_kernel.cu"
     "csrc/moe/prepare_moe_input.cu"
 
@@ -336,6 +346,42 @@ set(SOURCES
     "${repo-flash-attention_SOURCE_DIR}/csrc/flash_attn/flash_sparse_api.cpp"
 )
 
+# nvfp4/es_sm100 entry files compile on any arch (provide TORCH_CHECK stubs when ENABLE_NVFP4=0)
+list(APPEND SOURCES
+    "csrc/gemm/nvfp4_expert_quant.cu"
+    "csrc/gemm/nvfp4_quant_entry.cu"
+    "csrc/gemm/nvfp4_scaled_mm_entry.cu"
+)
+
+# Kernel/MoE files use CUTLASS FP4 templates / sm100 PTX that cannot compile without Blackwell target
+if (NOT SGL_KERNEL_DISABLE_BLACKWELL)
+    list(APPEND SOURCES
+        "csrc/expert_specialization/es_sm100_mxfp8_blockscaled.cu"
+        "csrc/expert_specialization/es_sm100_mxfp8_blockscaled_group_quant.cu"
+        "csrc/gemm/nvfp4_quant_kernels.cu"
+        "csrc/gemm/nvfp4_scaled_mm_kernels.cu"
+        "csrc/moe/nvfp4_blockwise_moe.cu"
+    )
+endif()
+
+# KVLib sources (in-tree csrc/kvlib, from myTransformer; cache_reuse/check_reuse/decode_multi_hash_encode/hash_encode replaced by Triton)
+if(SGL_KERNEL_ENABLE_KVLIB)
+  list(APPEND SOURCES
+    "csrc/kvlib_bindings.cc"
+    "csrc/kvlib/cpu_gather_engine_v3.cc"
+    "csrc/kvlib/ham_dist.cu"
+    "csrc/kvlib/kvcache_append.cu"
+    "csrc/kvlib/prefetch.cu"
+    "csrc/kvlib/topk.cu"
+    "csrc/kvlib/cuda-attn/flash_fwd_hdim128_fp16_sm80.cu"
+    "csrc/kvlib/cuda-attn/flash_fwd_split_hdim128_fp16_sm80.cu"
+    "csrc/kvlib/cuda-attn/flash_gather_fwd_hdim128_fp16_sm80.cu"
+    "csrc/kvlib/cuda-attn/flash_gather_fwd_split_hdim128_fp16_sm80.cu"
+    "csrc/kvlib/cuda-attn/flash_mixed_fwd_hdim128_fp16_sm80.cu"
+    "csrc/kvlib/cuda-attn/flash_mixed_fwd_split_hdim128_fp16_sm80.cu"
+  )
+endif()
+
 set(INCLUDES
     ${repo-cutlass_SOURCE_DIR}/include
     ${repo-cutlass_SOURCE_DIR}/tools/util/include
@@ -346,6 +392,15 @@ set(INCLUDES
     ${repo-cutlass_SOURCE_DIR}/examples/common
     ${repo-flash-attention_SOURCE_DIR}/csrc/flash_attn/src
 )
+if(SGL_KERNEL_ENABLE_KVLIB)
+  list(APPEND INCLUDES
+    ${PROJECT_SOURCE_DIR}/csrc/kvlib
+    ${PROJECT_SOURCE_DIR}/csrc/kvlib/cuda-attn
+    ${PROJECT_SOURCE_DIR}/csrc/kvlib/3rdparty/raft/cpp/include
+    ${PROJECT_SOURCE_DIR}/csrc/kvlib/3rdparty/rmm/include
+    ${PROJECT_SOURCE_DIR}/csrc/kvlib/3rdparty/spdlog/include
+  )
+endif()
 
 # =========================== Common SM90 Build ============================= #
 # Build SM90 library with fast math optimization (same namespace, different directory)
@@ -354,6 +409,10 @@ Python_add_library(common_ops_sm90_build MODULE USE_SABI ${SKBUILD_SABI_VERSION}
 target_compile_options(common_ops_sm90_build PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:${SGL_KERNEL_CUDA_FLAGS} -use_fast_math>
 )
+if(SGL_KERNEL_ENABLE_KVLIB)
+  target_compile_options(common_ops_sm90_build PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mf16c>)
+  target_compile_definitions(common_ops_sm90_build PRIVATE KVLIB_GDR_AVAILABLE KVLIB_RAFT_AVAILABLE)
+endif()
 target_include_directories(common_ops_sm90_build PRIVATE ${INCLUDES})
 # Set output name and separate build directory to avoid conflicts
 set_target_properties(common_ops_sm90_build PROPERTIES
@@ -368,6 +427,10 @@ Python_add_library(common_ops_sm100_build MODULE USE_SABI ${SKBUILD_SABI_VERSION
 target_compile_options(common_ops_sm100_build PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:${SGL_KERNEL_CUDA_FLAGS}>
 )
+if(SGL_KERNEL_ENABLE_KVLIB)
+  target_compile_options(common_ops_sm100_build PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mf16c>)
+  target_compile_definitions(common_ops_sm100_build PRIVATE KVLIB_GDR_AVAILABLE KVLIB_RAFT_AVAILABLE)
+endif()
 target_include_directories(common_ops_sm100_build PRIVATE ${INCLUDES})
 # Set output name and separate build directory to avoid conflicts
 set_target_properties(common_ops_sm100_build PROPERTIES
@@ -402,6 +465,10 @@ add_subdirectory(
 
 target_link_libraries(common_ops_sm90_build PRIVATE ${TORCH_LIBRARIES} c10 cuda cublas cublasLt mscclpp_static)
 target_link_libraries(common_ops_sm100_build PRIVATE ${TORCH_LIBRARIES} c10 cuda cublas cublasLt mscclpp_static)
+if(SGL_KERNEL_ENABLE_KVLIB)
+  target_link_libraries(common_ops_sm90_build PRIVATE gdrapi)
+  target_link_libraries(common_ops_sm100_build PRIVATE gdrapi)
+endif()
 
 # sparse flash attention
 target_compile_definitions(common_ops_sm90_build PRIVATE
@@ -418,8 +485,8 @@ target_compile_definitions(common_ops_sm100_build PRIVATE
 # Install to different subdirectories
 # CMake will find the built libraries in their respective LIBRARY_OUTPUT_DIRECTORY locations
 # and install them to the specified destinations
-install(TARGETS common_ops_sm90_build LIBRARY DESTINATION sgl_kernel/sm90)
-install(TARGETS common_ops_sm100_build LIBRARY DESTINATION sgl_kernel/sm100)
+install(TARGETS common_ops_sm90_build LIBRARY DESTINATION python/sgl_kernel/sm90)
+install(TARGETS common_ops_sm100_build LIBRARY DESTINATION python/sgl_kernel/sm100)
 
 # ============================ Optional Install: FA3 ============================= #
 # set flash-attention sources file
@@ -524,7 +591,10 @@ target_link_libraries(spatial_ops PRIVATE ${TORCH_LIBRARIES} c10 cuda)
 install(TARGETS spatial_ops LIBRARY DESTINATION sgl_kernel)
 
 # ============================ Extra Install: FLashMLA ============================= #
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/flashmla.cmake)
+# FlashMLA requires SM90+ (Hopper), skip on sm86 (A40)
+if(NOT DEFINED ENV{SKIP_FLASHMLA} OR NOT "$ENV{SKIP_FLASHMLA}" STREQUAL "1")
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/flashmla.cmake)
+endif()
 
 # ============================ Extra Install: DeepGEMM (JIT) ============================= #
 # Create a separate library for DeepGEMM's Python API.
