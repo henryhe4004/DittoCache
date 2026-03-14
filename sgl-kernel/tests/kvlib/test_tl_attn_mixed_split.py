@@ -1,8 +1,8 @@
 import torch
 import math
 from functools import partial
-from flash_attn import flash_attn_with_kvcache
-from myTransformer.kernels.attention import decode_mixed_split_attention_fwd_grouped
+from sgl_kernel.flash_attn import flash_attn_with_kvcache
+from sglang.jit_kernel.triton_kernels.attention import decode_mixed_split_attention_fwd_grouped
 
 def _get_topk_split_num(self, batch_size, num_kv_heads, max_splits):
     device = torch.cuda.current_device()

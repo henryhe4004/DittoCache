@@ -1,4 +1,4 @@
-from myTransformer.kernels.hash.prefill_encode import (
+from sglang.jit_kernel.triton_kernels.hash.prefill_encode import (
     hash_encode_append_prefill,
 )
 import torch

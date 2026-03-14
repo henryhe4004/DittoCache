@@ -1,4 +1,4 @@
-from myTransformer.cache.kernels.triton_loki_kernels import (
+from sglang.jit_kernel.legacy_triton_cache_kernels.triton_loki_kernels import (
     prefill_loki_encode,
     decode_loki_encode_k,
     decode_loki_encode_qk,

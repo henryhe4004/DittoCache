@@ -1,9 +1,7 @@
-from transformers.models.llama.modeling_llama import repeat_kv
 import torch
 from functools import partial
 import math
 from flash_attn import flash_attn_func
-
 
 def flash_attnention(q, k, v, scale):
     attn, lse, _ = flash_attn_func(q,

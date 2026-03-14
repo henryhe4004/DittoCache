@@ -15,7 +15,7 @@ dtype = torch.float16
 
 key_states = torch.zeros((B, 1, H, D), dtype=dtype, device=device)
 value_states = torch.zeros((B, 1, H, D), dtype=dtype, device=device)
-cpu_head_index = torch.randperm(H)[:H // 2].sort().values.int().to(device)
+cpu_head_index = torch.randperm(H, device=device)[:H // 2].sort().values.long()
 
 cpu_cache = torch.zeros((2, B, S, H, D),
                         dtype=dtype,

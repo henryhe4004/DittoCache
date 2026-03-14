@@ -1,4 +1,4 @@
-from myTransformer.kernels.hash.decode_encode import (
+from sglang.jit_kernel.triton_kernels.hash.decode_encode import (
     hash_encode_append_decode_k,
     hash_encode_append_decode_qk,
     hash_encode_append_decode_qqk,

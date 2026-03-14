@@ -1,7 +1,7 @@
 import torch
 import math
 from functools import partial
-from myTransformer.cache.kernels.triton_loki_kernels import (
+from sglang.jit_kernel.legacy_triton_cache_kernels.triton_loki_kernels import (
     loki_score, )
 
 

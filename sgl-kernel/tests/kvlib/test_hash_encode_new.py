@@ -1,4 +1,4 @@
-from myTransformer.cache.kernels.triton_hash_encode_new import (
+from sglang.jit_kernel.legacy_triton_cache_kernels.triton_hash_encode_new import (
     prefill_multi_hash_encode,
     decode_multi_hash_encode_qk,
     decode_multi_hash_encode_qqk,

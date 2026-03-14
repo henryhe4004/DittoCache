@@ -1,5 +1,5 @@
 import torch
-from myTransformer.kernels.cache.check_reuse import check_reuse_head_threshold_with_gpu_head
+from sglang.jit_kernel.triton_kernels.cache.check_reuse import check_reuse_head_threshold_with_gpu_head
 
 
 if __name__ == "__main__":
