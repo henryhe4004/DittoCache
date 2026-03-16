@@ -199,13 +199,6 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
         "Tensor gpu_head_mask, Tensor q_head_importance, Tensor out_mask, Tensor threshold) -> ()");
   // create_tensor: pinned host tensor (for offload). dtype 16=fp16, 32=fp32.
   m.def("kvlib_create_tensor(int[] size, int dtype) -> Tensor");
-  // CPUGatherEngineV3 handle API (offload)
-  m.def("kvlib_create_cpu_gather_engine_v3(int num_omp_threads, Tensor[] cpu_kv_data, "
-        "Tensor[] gpu_kv_buffer, Tensor[] dst_head_index, int[] num_gpu_heads, "
-        "Tensor cpu_indices_buffer, Tensor launch_flag, Tensor[] ready_flags, "
-        "int max_batch_size, int sink_recent_budget, int num_heads, int head_dim, bool debug) -> int");
-  m.def("kvlib_cpu_gather_engine_v3_wait(int handle) -> ()");
-  m.def("kvlib_cpu_gather_engine_v3_destroy(int handle) -> ()");
 }
 
 TORCH_LIBRARY_IMPL(sgl_kernel, CUDA, m) {
@@ -524,7 +517,4 @@ TORCH_LIBRARY_IMPL(sgl_kernel, CUDA, m) {
 
 TORCH_LIBRARY_IMPL(sgl_kernel, CPU, m) {
   m.impl("kvlib_create_tensor", create_tensor_impl);
-  m.impl("kvlib_create_cpu_gather_engine_v3", create_cpu_gather_engine_v3_impl);
-  m.impl("kvlib_cpu_gather_engine_v3_wait", cpu_gather_engine_v3_wait_impl);
-  m.impl("kvlib_cpu_gather_engine_v3_destroy", cpu_gather_engine_v3_destroy_impl);
 }

@@ -3,12 +3,29 @@ from typing import Optional, Union
 
 import torch
 
+# # Optional: use official flash-attention library when installed (pip install flash-attn)
+# try:
+#     from flash_attn import flash_attn_with_kvcache as flash_attn_with_kvcache_official
+#     HAS_FLASH_ATTN_OFFICIAL = True
+# except ImportError:
+#     flash_attn_with_kvcache_official = None
+#     HAS_FLASH_ATTN_OFFICIAL = False
+
 try:
     from sgl_kernel import flash_ops
 except:
     raise ImportError(
         "Can not import FA3 in sgl_kernel. Please check your installation."
     )
+
+# __all__ = [
+#     "flash_attn_with_kvcache",
+#     "flash_attn_with_kvcache_official",
+#     "flash_attn_varlen_func",
+#     "HAS_FLASH_ATTN_OFFICIAL",
+#     "is_fa3_supported",
+#     "maybe_contiguous",
+# ]
 
 
 @lru_cache(maxsize=1)

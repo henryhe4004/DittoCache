@@ -584,45 +584,17 @@ def create_tensor(size: list, dtype: int) -> torch.Tensor:
 
 
 # -----------------------------------------------------------------------------
-# CPUGatherEngineV3: handle-based API for offload (requires gdrapi when built).
+# CPUGatherEngineV3: CPU-side gather engine for offload, via dedicated module.
 # -----------------------------------------------------------------------------
 
-
-def create_cpu_gather_engine_v3(
-    num_omp_threads: int,
-    cpu_kv_data: list,
-    gpu_kv_buffer: list,
-    dst_head_index: list,
-    num_gpu_heads: list,
-    cpu_indices_buffer: torch.Tensor,
-    launch_flag: torch.Tensor,
-    ready_flags: list,
-    max_batch_size: int,
-    sink_recent_budget: int,
-    num_heads: int,
-    head_dim: int,
-    debug: bool = False,
-) -> int:
-    """Create CPUGatherEngineV3; returns handle (int). Use None in lists for optional entries."""
-    return torch.ops.sgl_kernel.kvlib_create_cpu_gather_engine_v3.default(
-        num_omp_threads,
-        cpu_kv_data,
-        gpu_kv_buffer,
-        dst_head_index,
-        num_gpu_heads,
-        cpu_indices_buffer,
-        launch_flag,
-        ready_flags,
-        max_batch_size,
-        sink_recent_budget,
-        num_heads,
-        head_dim,
-        debug,
-    )
+try:
+    from sgl_kernel import kvlib_cpu_gather as _kvlib_cpu_gather
+except ImportError:
+    _kvlib_cpu_gather = None
 
 
 class CPUGatherEngineV3:
-    """Python wrapper for CPUGatherEngineV3 (offload)."""
+    """Python wrapper for CPUGatherEngineV3 (offload) backed by kvlib_cpu_gather."""
 
     def __init__(
         self,
@@ -640,7 +612,12 @@ class CPUGatherEngineV3:
         head_dim: int,
         debug: bool = False,
     ):
-        self._handle = create_cpu_gather_engine_v3(
+        if _kvlib_cpu_gather is None:
+            raise RuntimeError(
+                "kvlib_cpu_gather extension is not available; "
+                "ensure sgl-kernel was built with gdrapi and kvlib_cpu_gather target."
+            )
+        self._impl = _kvlib_cpu_gather.CPUGatherEngineV3(
             num_omp_threads,
             cpu_kv_data,
             gpu_kv_buffer,
@@ -660,7 +637,8 @@ class CPUGatherEngineV3:
         return self
 
     def __exit__(self, *args):
-        pass
+        # Rely on C++ destructor for cleanup.
+        self._impl = None
 
 
 def flash_index_decode(

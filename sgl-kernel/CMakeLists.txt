@@ -488,6 +488,23 @@ target_compile_definitions(common_ops_sm100_build PRIVATE
 install(TARGETS common_ops_sm90_build LIBRARY DESTINATION python/sgl_kernel/sm90)
 install(TARGETS common_ops_sm100_build LIBRARY DESTINATION python/sgl_kernel/sm100)
 
+# ========================== KVLib pybind module ============================ #
+# Expose CPUGatherEngineV3 via a dedicated pybind-style extension so it does
+# not rely on torch.library dispatch.
+Python_add_library(kvlib_cpu_gather MODULE
+    csrc/kvlib/py_cpu_gather_engine_v3.cc
+    csrc/kvlib/cpu_gather_engine_v3.cc
+)
+target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} gdrapi)
+target_include_directories(kvlib_cpu_gather PRIVATE
+    ${PROJECT_SOURCE_DIR}/csrc
+    ${PROJECT_SOURCE_DIR}/include
+)
+set_target_properties(kvlib_cpu_gather PROPERTIES
+    OUTPUT_NAME "kvlib_cpu_gather"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python/sgl_kernel"
+)
+
 # ============================ Optional Install: FA3 ============================= #
 # set flash-attention sources file
 # Now FA3 support sm80/sm86/sm90
