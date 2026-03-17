@@ -24,7 +24,8 @@ class CPUGatherEngineV3 {
 
   int64_t _num_omp_threads = 0;
 
-  int32_t* __restrict__ _launch_flag = nullptr;  // (3, )
+  // int32_t* __restrict__ _launch_flag = nullptr;  // (3, )
+  volatile int32_t* __restrict__ _launch_flag = nullptr;  // (3, )
   std::vector<bool*> _ready_flags = {};
   std::vector<int> _gather_hids = {};
   std::vector<int> _dst_offset = {};

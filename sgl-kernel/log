@@ -1,0 +1,415 @@
+Using pip 25.2 from /opt/conda/lib/python3.13/site-packages/pip (python 3.13)
+Obtaining file:///jhe/sglang/sgl-kernel
+  Installing build dependencies: started
+  Running command pip subprocess to install build dependencies
+  Using pip 25.2 from /opt/conda/lib/python3.13/site-packages/pip (python 3.13)
+  Collecting scikit-build-core>=0.10
+    Obtaining dependency information for scikit-build-core>=0.10 from https://files.pythonhosted.org/packages/07/49/b2f0fbe3165d55c02e7f9eec6a10685d518af0ef6e919ff2f589c2d15c85/scikit_build_core-0.12.2-py3-none-any.whl.metadata
+    Using cached scikit_build_core-0.12.2-py3-none-any.whl.metadata (16 kB)
+  Collecting torch>=2.8.0
+    Obtaining dependency information for torch>=2.8.0 from https://files.pythonhosted.org/packages/ab/c6/4dfe238342ffdcec5aef1c96c457548762d33c40b45a1ab7033bb26d2ff2/torch-2.10.0-3-cp313-cp313-manylinux_2_28_x86_64.whl.metadata
+    Using cached torch-2.10.0-3-cp313-cp313-manylinux_2_28_x86_64.whl.metadata (31 kB)
+  Collecting wheel
+    Obtaining dependency information for wheel from https://files.pythonhosted.org/packages/87/22/b76d483683216dde3d67cba61fb2444be8d5be289bf628c13fc0fd90e5f9/wheel-0.46.3-py3-none-any.whl.metadata
+    Using cached wheel-0.46.3-py3-none-any.whl.metadata (2.4 kB)
+  Collecting packaging>=23.2 (from scikit-build-core>=0.10)
+    Obtaining dependency information for packaging>=23.2 from https://files.pythonhosted.org/packages/b7/b9/c538f279a4e237a006a2c98387d081e9eb060d203d8ed34467cc0f0b9b53/packaging-26.0-py3-none-any.whl.metadata
+    Using cached packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+  Collecting pathspec>=0.12.0 (from scikit-build-core>=0.10)
+    Obtaining dependency information for pathspec>=0.12.0 from https://files.pythonhosted.org/packages/ef/3c/2c197d226f9ea224a9ab8d197933f9da0ae0aac5b6e0f884e2b8d9c8e9f7/pathspec-1.0.4-py3-none-any.whl.metadata
+    Using cached pathspec-1.0.4-py3-none-any.whl.metadata (13 kB)
+  Collecting filelock (from torch>=2.8.0)
+    Obtaining dependency information for filelock from https://files.pythonhosted.org/packages/a4/a5/842ae8f0c08b61d6484b52f99a03510a3a72d23141942d216ebe81fefbce/filelock-3.25.2-py3-none-any.whl.metadata
+    Using cached filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+  Collecting typing-extensions>=4.10.0 (from torch>=2.8.0)
+    Obtaining dependency information for typing-extensions>=4.10.0 from https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl.metadata
+    Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+  Collecting setuptools (from torch>=2.8.0)
+    Obtaining dependency information for setuptools from https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl.metadata
+    Using cached setuptools-82.0.1-py3-none-any.whl.metadata (6.5 kB)
+  Collecting sympy>=1.13.3 (from torch>=2.8.0)
+    Obtaining dependency information for sympy>=1.13.3 from https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl.metadata
+    Using cached sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+  Collecting networkx>=2.5.1 (from torch>=2.8.0)
+    Obtaining dependency information for networkx>=2.5.1 from https://files.pythonhosted.org/packages/9e/c9/b2622292ea83fbb4ec318f5b9ab867d0a28ab43c5717bb85b0a5f6b3b0a4/networkx-3.6.1-py3-none-any.whl.metadata
+    Using cached networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+  Collecting jinja2 (from torch>=2.8.0)
+    Obtaining dependency information for jinja2 from https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl.metadata
+    Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+  Collecting fsspec>=0.8.5 (from torch>=2.8.0)
+    Obtaining dependency information for fsspec>=0.8.5 from https://files.pythonhosted.org/packages/e6/ab/fb21f4c939bb440104cc2b396d3be1d9b7a9fd3c6c2a53d98c45b3d7c954/fsspec-2026.2.0-py3-none-any.whl.metadata
+    Using cached fsspec-2026.2.0-py3-none-any.whl.metadata (10 kB)
+  Collecting cuda-bindings==12.9.4 (from torch>=2.8.0)
+    Obtaining dependency information for cuda-bindings==12.9.4 from https://files.pythonhosted.org/packages/63/56/e465c31dc9111be3441a9ba7df1941fe98f4aa6e71e8788a3fb4534ce24d/cuda_bindings-12.9.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata
+    Using cached cuda_bindings-12.9.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (2.6 kB)
+  Collecting nvidia-cuda-nvrtc-cu12==12.8.93 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cuda-nvrtc-cu12==12.8.93 from https://files.pythonhosted.org/packages/05/6b/32f747947df2da6994e999492ab306a903659555dddc0fbdeb9d71f75e52/nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata
+    Using cached nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-cuda-runtime-cu12==12.8.90 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cuda-runtime-cu12==12.8.90 from https://files.pythonhosted.org/packages/0d/9b/a997b638fcd068ad6e4d53b8551a7d30fe8b404d6f1804abf1df69838932/nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-cuda-cupti-cu12==12.8.90 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cuda-cupti-cu12==12.8.90 from https://files.pythonhosted.org/packages/f8/02/2adcaa145158bf1a8295d83591d22e4103dbfd821bcaf6f3f53151ca4ffa/nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-cudnn-cu12==9.10.2.21 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cudnn-cu12==9.10.2.21 from https://files.pythonhosted.org/packages/ba/51/e123d997aa098c61d029f76663dedbfb9bc8dcf8c60cbd6adbe42f76d049/nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl.metadata
+    Using cached nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+  Collecting nvidia-cublas-cu12==12.8.4.1 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cublas-cu12==12.8.4.1 from https://files.pythonhosted.org/packages/dc/61/e24b560ab2e2eaeb3c839129175fb330dfcfc29e5203196e5541a4c44682/nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl.metadata
+    Using cached nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-cufft-cu12==11.3.3.83 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cufft-cu12==11.3.3.83 from https://files.pythonhosted.org/packages/1f/13/ee4e00f30e676b66ae65b4f08cb5bcbb8392c03f54f2d5413ea99a5d1c80/nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-curand-cu12==10.3.9.90 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-curand-cu12==10.3.9.90 from https://files.pythonhosted.org/packages/fb/aa/6584b56dc84ebe9cf93226a5cde4d99080c8e90ab40f0c27bda7a0f29aa1/nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl.metadata
+    Using cached nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-cusolver-cu12==11.7.3.90 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cusolver-cu12==11.7.3.90 from https://files.pythonhosted.org/packages/85/48/9a13d2975803e8cf2777d5ed57b87a0b6ca2cc795f9a4f59796a910bfb80/nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl.metadata
+    Using cached nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+  Collecting nvidia-cusparse-cu12==12.5.8.93 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cusparse-cu12==12.5.8.93 from https://files.pythonhosted.org/packages/c2/f5/e1854cb2f2bcd4280c44736c93550cc300ff4b8c95ebe370d0aa7d2b473d/nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+  Collecting nvidia-cusparselt-cu12==0.7.1 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cusparselt-cu12==0.7.1 from https://files.pythonhosted.org/packages/56/79/12978b96bd44274fe38b5dde5cfb660b1d114f70a65ef962bcbbed99b549/nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl.metadata
+    Using cached nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl.metadata (7.0 kB)
+  Collecting nvidia-nccl-cu12==2.27.5 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-nccl-cu12==2.27.5 from https://files.pythonhosted.org/packages/6e/89/f7a07dc961b60645dbbf42e80f2bc85ade7feb9a491b11a1e973aa00071f/nvidia_nccl_cu12-2.27.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_nccl_cu12-2.27.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.0 kB)
+  Collecting nvidia-nvshmem-cu12==3.4.5 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-nvshmem-cu12==3.4.5 from https://files.pythonhosted.org/packages/b5/09/6ea3ea725f82e1e76684f0708bbedd871fc96da89945adeba65c3835a64c/nvidia_nvshmem_cu12-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_nvshmem_cu12-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.1 kB)
+  Collecting nvidia-nvtx-cu12==12.8.90 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-nvtx-cu12==12.8.90 from https://files.pythonhosted.org/packages/a2/eb/86626c1bbc2edb86323022371c39aa48df6fd8b0a1647bc274577f72e90b/nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+  Collecting nvidia-nvjitlink-cu12==12.8.93 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-nvjitlink-cu12==12.8.93 from https://files.pythonhosted.org/packages/f6/74/86a07f1d0f42998ca31312f998bd3b9a7eff7f52378f4f270c8679c77fb9/nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata
+    Using cached nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+  Collecting nvidia-cufile-cu12==1.13.1.3 (from torch>=2.8.0)
+    Obtaining dependency information for nvidia-cufile-cu12==1.13.1.3 from https://files.pythonhosted.org/packages/bb/fe/1bcba1dfbfb8d01be8d93f07bfc502c93fa23afa6fd5ab3fc7c1df71038a/nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+  Collecting triton==3.6.0 (from torch>=2.8.0)
+    Obtaining dependency information for triton==3.6.0 from https://files.pythonhosted.org/packages/f9/0b/37d991d8c130ce81a8728ae3c25b6e60935838e9be1b58791f5997b24a54/triton-3.6.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata
+    Using cached triton-3.6.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+  Collecting cuda-pathfinder~=1.1 (from cuda-bindings==12.9.4->torch>=2.8.0)
+    Obtaining dependency information for cuda-pathfinder~=1.1 from https://files.pythonhosted.org/packages/92/de/8ca2b613042550dcf9ef50c596c8b1f602afda92cf9032ac28a73f6ee410/cuda_pathfinder-1.4.2-py3-none-any.whl.metadata
+    Using cached cuda_pathfinder-1.4.2-py3-none-any.whl.metadata (1.9 kB)
+  Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch>=2.8.0)
+    Obtaining dependency information for mpmath<1.4,>=1.1.0 from https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl.metadata
+    Using cached mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+  Collecting MarkupSafe>=2.0 (from jinja2->torch>=2.8.0)
+    Obtaining dependency information for MarkupSafe>=2.0 from https://files.pythonhosted.org/packages/a9/21/9b05698b46f218fc0e118e1f8168395c65c8a2c750ae2bab54fc4bd4e0e8/markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata
+    Using cached markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+  Using cached scikit_build_core-0.12.2-py3-none-any.whl (192 kB)
+  Using cached torch-2.10.0-3-cp313-cp313-manylinux_2_28_x86_64.whl (915.6 MB)
+  Using cached cuda_bindings-12.9.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.9 MB)
+  Using cached nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl (594.3 MB)
+  Using cached nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.2 MB)
+  Using cached nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (88.0 MB)
+  Using cached nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (954 kB)
+  Using cached nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl (706.8 MB)
+  Using cached nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (193.1 MB)
+  Using cached nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+  Using cached nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl (63.6 MB)
+  Using cached nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl (267.5 MB)
+  Using cached nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (288.2 MB)
+  Using cached nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl (287.2 MB)
+  Using cached nvidia_nccl_cu12-2.27.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (322.3 MB)
+  Using cached nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.3 MB)
+  Using cached nvidia_nvshmem_cu12-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (139.1 MB)
+  Using cached nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (89 kB)
+  Using cached triton-3.6.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (188.3 MB)
+  Using cached cuda_pathfinder-1.4.2-py3-none-any.whl (44 kB)
+  Using cached wheel-0.46.3-py3-none-any.whl (30 kB)
+  Using cached fsspec-2026.2.0-py3-none-any.whl (202 kB)
+  Using cached networkx-3.6.1-py3-none-any.whl (2.1 MB)
+  Using cached packaging-26.0-py3-none-any.whl (74 kB)
+  Using cached pathspec-1.0.4-py3-none-any.whl (55 kB)
+  Using cached sympy-1.14.0-py3-none-any.whl (6.3 MB)
+  Using cached mpmath-1.3.0-py3-none-any.whl (536 kB)
+  Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+  Using cached filelock-3.25.2-py3-none-any.whl (26 kB)
+  Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+  Using cached markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+  Using cached setuptools-82.0.1-py3-none-any.whl (1.0 MB)
+  Installing collected packages: nvidia-cusparselt-cu12, mpmath, typing-extensions, triton, sympy, setuptools, pathspec, packaging, nvidia-nvtx-cu12, nvidia-nvshmem-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, networkx, MarkupSafe, fsspec, filelock, cuda-pathfinder, wheel, scikit-build-core, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, jinja2, cuda-bindings, nvidia-cusolver-cu12, torch
+    Creating /tmp/pip-build-env-wvssonvo/overlay/bin
+    changing mode of /tmp/pip-build-env-wvssonvo/overlay/bin/proton to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/overlay/bin/proton-viewer to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/overlay/bin/isympy to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/overlay/bin/wheel to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/overlay/bin/torchfrtrace to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/overlay/bin/torchrun to 755
+
+  ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+  sgl-fa4 4.0.3 requires torch==2.9.1, but you have torch 2.10.0 which is incompatible.
+  torchaudio 2.9.1 requires torch==2.9.1, but you have torch 2.10.0 which is incompatible.
+  torchvision 0.24.1 requires torch==2.9.1, but you have torch 2.10.0 which is incompatible.
+  sglang 0.5.9 requires torch==2.9.1, but you have torch 2.10.0 which is incompatible.
+  Successfully installed MarkupSafe-3.0.3 cuda-bindings-12.9.4 cuda-pathfinder-1.4.2 filelock-3.25.2 fsspec-2026.2.0 jinja2-3.1.6 mpmath-1.3.0 networkx-3.6.1 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.10.2.21 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.27.5 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvshmem-cu12-3.4.5 nvidia-nvtx-cu12-12.8.90 packaging-26.0 pathspec-1.0.4 scikit-build-core-0.12.2 setuptools-82.0.1 sympy-1.14.0 torch-2.10.0 triton-3.6.0 typing-extensions-4.15.0 wheel-0.46.3
+  WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Running command Checking if build backend supports build_editable
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Running command Getting requirements to build editable
+  Getting requirements to build editable: finished with status 'done'
+  Installing backend dependencies: started
+  Running command pip subprocess to install backend dependencies
+  Using pip 25.2 from /opt/conda/lib/python3.13/site-packages/pip (python 3.13)
+  Collecting cmake>=3.26
+    Obtaining dependency information for cmake>=3.26 from https://files.pythonhosted.org/packages/a7/c2/7ecd2aec927262ff2898d371f44ccb15884b6172407326e9388df07f9642/cmake-4.2.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+    Using cached cmake-4.2.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.5 kB)
+  Using cached cmake-4.2.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (28.9 MB)
+  Installing collected packages: cmake
+    Creating /tmp/pip-build-env-wvssonvo/normal/bin
+    changing mode of /tmp/pip-build-env-wvssonvo/normal/bin/ccmake to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/normal/bin/cmake to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/normal/bin/cpack to 755
+    changing mode of /tmp/pip-build-env-wvssonvo/normal/bin/ctest to 755
+  Successfully installed cmake-4.2.3
+  WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+  Installing backend dependencies: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Running command Preparing editable metadata (pyproject.toml)
+  *** scikit-build-core 0.12.2 using CMake 4.2.3 (metadata_editable)
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: sgl-kernel
+  Building editable for sgl-kernel (pyproject.toml): started
+  Running command Building editable for sgl-kernel (pyproject.toml)
+  *** scikit-build-core 0.12.2 using CMake 4.2.3 (editable)
+  *** Configuring CMake...
+  loading initial cache file /tmp/tmpb7ls0oxn/build/CMakeInit.txt
+  -- The C compiler identification is GNU 11.4.0
+  -- The CXX compiler identification is GNU 11.4.0
+  -- The CUDA compiler identification is NVIDIA 12.4.131 with host compiler GNU 11.4.0
+  -- Detecting C compiler ABI info
+  -- Detecting C compiler ABI info - done
+  -- Check for working C compiler: /usr/bin/gcc - skipped
+  -- Detecting C compile features
+  -- Detecting C compile features - done
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Check for working CXX compiler: /usr/bin/g++ - skipped
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Detecting CUDA compiler ABI info
+  -- Detecting CUDA compiler ABI info - done
+  -- Check for working CUDA compiler: /usr/local/cuda/bin/nvcc - skipped
+  -- Detecting CUDA compile features
+  -- Detecting CUDA compile features - done
+  -- Found Python: /opt/conda/bin/python3.13 (found version "3.13.9") found components: Interpreter Development.Module Development.SABIModule
+  -- Found CUDAToolkit: /usr/local/cuda/targets/x86_64-linux/include (found version "12.4.131")
+  -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+  -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+  -- Found Threads: TRUE
+  -- Detected CUDA_VERSION=
+  -- Found CUDA: /usr/local/cuda (found version "12.4")
+  -- Found CUDAToolkit: /usr/local/cuda/include (found version "12.4.131")
+  -- PyTorch: CUDA detected: 12.4
+  -- PyTorch: CUDA nvcc is: /usr/local/cuda/bin/nvcc
+  -- PyTorch: CUDA toolkit directory: /usr/local/cuda
+  -- PyTorch: Header version is: 12.4
+  -- Found Python: /opt/conda/bin/python3.13 (found version "3.13.9") found components: Interpreter
+  CMake Warning at /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Caffe2/public/cuda.cmake:140 (message):
+    Failed to compute shorthash for libnvrtc.so
+  Call Stack (most recent call first):
+    /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)
+    /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Torch/TorchConfig.cmake:68 (find_package)
+    CMakeLists.txt:45 (find_package)
+
+
+  -- USE_CUDNN is set to 0. Compiling without cuDNN support
+  -- USE_CUSPARSELT is set to 0. Compiling without cuSPARSELt support
+  -- USE_CUDSS is set to 0. Compiling without cuDSS support
+  -- USE_CUFILE is set to 0. Compiling without cuFile support
+  -- Automatic GPU detection failed. Building for common architectures.
+  -- Autodetected CUDA architecture(s): 5.0;8.0;8.6;8.9;9.0;9.0a
+  CMake Warning at /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Caffe2/public/cuda.cmake:323 (message):
+    pytorch is not compatible with `CMAKE_CUDA_ARCHITECTURES` and will ignore
+    its value.  Please configure `TORCH_CUDA_ARCH_LIST` instead.
+  Call Stack (most recent call first):
+    /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)
+    /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Torch/TorchConfig.cmake:68 (find_package)
+    CMakeLists.txt:45 (find_package)
+
+
+  -- Added CUDA NVCC flags for: -gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_89,code=sm_89;-gencode;arch=compute_90,code=sm_90;-gencode;arch=compute_90a,code=sm_90a
+  CMake Warning at /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Torch/TorchConfig.cmake:22 (message):
+    static library kineto_LIBRARY-NOTFOUND not found.
+  Call Stack (most recent call first):
+    /opt/conda/lib/python3.13/site-packages/torch/share/cmake/Torch/TorchConfig.cmake:125 (append_torchlib_if_found)
+    CMakeLists.txt:45 (find_package)
+
+
+  -- Found Torch: /opt/conda/lib/python3.13/site-packages/torch/lib/libtorch.so
+  -- KVLib found at csrc/kvlib, enabling kvlib ops
+  -- Found Python3: /opt/conda/bin/python3.13 (found version "3.13.9") found components: Interpreter
+  /tmp/pip-build-env-wvssonvo/overlay/lib/python3.13/site-packages/torch/_subclasses/functional_tensor.py:283: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:84.)
+    cpu = _conversion_method_template(device=torch.device("cpu"))
+  -- Using new C++11 ABI (-D_GLIBCXX_USE_CXX11_ABI=1)
+  -- Bypassing GPU check: using NVIDIA/CUDA.
+  -- Found CUDAToolkit: /usr/local/cuda/targets/x86_64-linux/include (found version "12.4.131")
+  -- clang-format not found.
+  -- black not found.
+  -- Found IBVerbs: /usr/include
+  -- Found NUMA: /usr/include
+  -- Using the multi-header code from /tmp/tmpb7ls0oxn/build/_deps/json-src/include/
+  CMake Warning (dev) at /tmp/tmpb7ls0oxn/build/_deps/repo-mscclpp-src/CMakeLists.txt:149 (install):
+    Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+    "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+    command to set the policy and suppress this warning.
+  This warning is for project developers.  Use -Wno-dev to suppress it.
+
+  CMake Warning (dev) at /tmp/tmpb7ls0oxn/build/_deps/repo-mscclpp-src/CMakeLists.txt:151 (install):
+    Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+    "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+    command to set the policy and suppress this warning.
+  This warning is for project developers.  Use -Wno-dev to suppress it.
+
+  CMake Warning (dev) at /tmp/tmpb7ls0oxn/build/_deps/repo-mscclpp-src/CMakeLists.txt:153 (install):
+    Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+    "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+    command to set the policy and suppress this warning.
+  This warning is for project developers.  Use -Wno-dev to suppress it.
+
+  -- Found Python: /opt/conda/bin/python3.13 (found suitable version "3.13.9", minimum required is "3.8") found components: Interpreter Development.Module
+  CMake Deprecation Warning at /tmp/tmpb7ls0oxn/build/_deps/dlpack-src/CMakeLists.txt:5 (cmake_minimum_required):
+    Compatibility with CMake < 3.10 will be removed from a future version of
+    CMake.
+
+    Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+    to tell CMake that the project requires at least <min> but has been updated
+    to work with policies introduced by <max> or earlier.
+
+
+  -- C++11 support has been enabled by default.
+  CMake Warning (dev) at /tmp/tmpb7ls0oxn/build/_deps/repo-mscclpp-src/apps/nccl/CMakeLists.txt:32 (install):
+    Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+    "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+    command to set the policy and suppress this warning.
+  This warning is for project developers.  Use -Wno-dev to suppress it.
+
+  CMake Warning (dev) at /tmp/tmpb7ls0oxn/build/_deps/repo-mscclpp-src/apps/nccl/CMakeLists.txt:34 (install):
+    Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+    "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+    command to set the policy and suppress this warning.
+  This warning is for project developers.  Use -Wno-dev to suppress it.
+
+  CMake Warning (dev) at /tmp/tmpb7ls0oxn/build/_deps/repo-mscclpp-src/apps/nccl/CMakeLists.txt:36 (install):
+    Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+    "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+    command to set the policy and suppress this warning.
+  This warning is for project developers.  Use -Wno-dev to suppress it.
+
+  -- CMAKE_CURRENT_BINARY_DIR = /tmp/tmpb7ls0oxn/build
+  -- kvlib_cpu_gather will be built to: /tmp/tmpb7ls0oxn/build/python/sgl_kernel
+  -- Configuring done (160.0s)
+  -- Generating done (0.1s)
+  CMake Warning:
+    Manually-specified variables were not used by the project:
+
+      GDRAPI_LIBRARY
+      SGL_KERNEL_USE_RAFT
+
+
+  -- Build files have been written to: /tmp/tmpb7ls0oxn/build
+  *** Building project with Ninja...
+  [0/2] Re-checking globbed directories...
+  [1/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/c_style_remnants.cc.o
+  [2/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/error_py.cpp.o
+  [3/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/env_py.cpp.o
+  [4/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/utils_internal.cc.o
+  [5/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/numa.cc.o
+  [6/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/npkit/npkit.cc.o
+  [7/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/fifo_py.cpp.o
+  [8/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/utils_py.cpp.o
+  [9/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/utils.cc.o
+  [10/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/proxy.cc.o
+  [11/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/nb_enum.cpp.o
+  [12/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/numa_py.cpp.o
+  [13/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/connection.cc.o
+  [14/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/env.cpp.o
+  [15/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/core.cc.o
+  [16/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/implicit.cpp.o
+  [17/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/communicator.cc.o
+  [18/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/trampoline.cpp.o
+  [19/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/gpu_utils_py.cpp.o
+  [20/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/nb_internals.cpp.o
+  [21/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/nvls.cc.o
+  [22/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/nb_static_property.cpp.o
+  [23/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/common.cpp.o
+  [24/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/nvls_py.cpp.o
+  [25/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/error.cpp.o
+  [26/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/errors.cc.o
+  [27/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/port_channel.cc.o
+  [28/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/debug.cc.o
+  [29/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/nb_ndarray.cpp.o
+  [30/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/endpoint.cc.o
+  [31/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/executor_py.cpp.o
+  [32/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/memory_channel.cc.o
+  [33/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/npkit_py.cpp.o
+  [34/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/registered_memory.cc.o
+  [35/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/gpu_utils.cc.o
+  [36/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/bootstrap/bootstrap.cc.o
+  [37/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/memory_channel_py.cpp.o
+  [38/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/semaphore.cc.o
+  [39/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/semaphore_py.cpp.o
+  [40/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/ib.cc.o
+  [41/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/fifo.cc.o
+  [42/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/context.cc.o
+  [43/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/port_channel_py.cpp.o
+  [44/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/nb_func.cpp.o
+  [45/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/bootstrap/socket.cc.o
+  [46/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/nanobind-static.dir/__/__/__/_deps/nanobind-src/src/nb_type.cpp.o
+  [47/605] Linking CXX static library mscclpp-build/python/mscclpp/libnanobind-static.a
+  [48/605] Building CXX object mscclpp-build/python/test/CMakeFiles/mscclpp_py_test.dir/_cpp/proxy_test.cpp.o
+  [49/605] Building CXX object mscclpp-build/python/mscclpp/CMakeFiles/mscclpp_py.dir/core_py.cpp.o
+  [50/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/executor/executor.cc.o
+  [51/605] Building CXX object CMakeFiles/common_ops_sm90_build.dir/csrc/kvlib/cpu_gather_engine_v3.cc.o
+  [52/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/memory/store.cu.o
+  [53/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/memory/store.cu.o
+  [54/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/elementwise/topk.cu.o
+  [55/605] Building CXX object CMakeFiles/common_ops_sm100_build.dir/_deps/repo-flash-attention-src/csrc/flash_attn/flash_sparse_api.cpp.o
+  [56/605] Building CXX object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/executor/execution_plan.cc.o
+  [57/605] Building CXX object CMakeFiles/common_ops_sm100_build.dir/csrc/memory/weak_ref_tensor.cpp.o
+  [58/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/kvcacheio/transfer.cu.o
+  [59/605] Building CXX object CMakeFiles/common_ops_sm90_build.dir/csrc/memory/weak_ref_tensor.cpp.o
+  [60/605] Building CXX object CMakeFiles/common_ops_sm90_build.dir/_deps/repo-flash-attention-src/csrc/flash_attn/flash_sparse_api.cpp.o
+  [61/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/elementwise/topk.cu.o
+  [62/605] Building CUDA object mscclpp-build/apps/nccl/CMakeFiles/mscclpp_nccl_obj.dir/src/nccl.cu.o
+  [63/605] Building CXX object CMakeFiles/kvlib_cpu_gather.dir/csrc/kvlib/cpu_gather_engine_v3.cc.o
+  [64/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/elementwise/cast.cu.o
+  [65/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/attention/cascade.cu.o
+  [66/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/elementwise/cast.cu.o
+  [67/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/attention/merge_attn_states.cu.o
+  [68/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/attention/merge_attn_states.cu.o
+  [69/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/elementwise/concat_mla.cu.o
+  [70/605] Building CXX object CMakeFiles/common_ops_sm100_build.dir/csrc/kvlib/cpu_gather_engine_v3.cc.o
+  [71/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/gemm/bmm_fp8.cu.o
+  [72/605] Building CXX object CMakeFiles/flash_ops.dir/csrc/flash_extension.cc.o
+  [73/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/attention/cascade.cu.o
+  [74/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/speculative/packbit.cu.o
+  [75/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/kvcacheio/transfer.cu.o
+  [76/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/_deps/repo-flashinfer-src/csrc/norm.cu.o
+  [77/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/elementwise/concat_mla.cu.o
+  [78/605] Building CUDA object mscclpp-build/CMakeFiles/mscclpp_obj.dir/src/executor/execution_kernel.cu.o
+  [79/605] Linking CXX static library mscclpp-build/libmscclpp_static.a
+  [80/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/gemm/bmm_fp8.cu.o
+  [81/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/speculative/packbit.cu.o
+  [82/605] Building CXX object CMakeFiles/common_ops_sm90_build.dir/csrc/kvlib_bindings.cc.o
+  [83/605] Building CXX object CMakeFiles/common_ops_sm100_build.dir/csrc/kvlib_bindings.cc.o
+  [84/605] Building CXX object CMakeFiles/common_ops_sm90_build.dir/csrc/common_extension.cc.o
+  [85/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/_deps/repo-flashinfer-src/csrc/renorm.cu.o
+  [86/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/_deps/repo-flashinfer-src/csrc/norm.cu.o
+  [87/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/_deps/repo-flashinfer-src/csrc/renorm.cu.o
+  [88/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/speculative/ngram_utils.cu.o
+  [89/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/speculative/speculative_sampling.cu.o
+  [90/605] Building CXX object CMakeFiles/flash_ops.dir/_deps/repo-flash-attention-src/hopper/flash_api.cpp.o
+  [91/605] Building CXX object CMakeFiles/common_ops_sm100_build.dir/csrc/common_extension.cc.o
+  [92/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/speculative/speculative_sampling.cu.o
+  [93/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/speculative/ngram_utils.cu.o
+  [94/605] Building CXX object CMakeFiles/kvlib_cpu_gather.dir/csrc/kvlib/py_cpu_gather_engine_v3.cc.o
+  [95/605] Building CUDA object CMakeFiles/common_ops_sm100_build.dir/csrc/speculative/eagle_utils.cu.o
+  [96/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/csrc/speculative/eagle_utils.cu.o
+  [97/605] Building CUDA object CMakeFiles/common_ops_sm90_build.dir/_deps/repo-flash-attention-src/csrc/flash_attn/src/flash_fwd_sparse_hdim128_fp16_causal_sm80.cu.o

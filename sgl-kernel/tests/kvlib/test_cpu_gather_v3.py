@@ -1,7 +1,7 @@
 import torch
 import time
 import sgl_kernel.kvlib as capi
-from myTransformer.cache.kvcache_offloading_duohead_base import create_aligned_cuda_tensor
+from sglang.litecache.kvcache_offloading import create_aligned_cuda_tensor
 
 B = 16
 S = 8000

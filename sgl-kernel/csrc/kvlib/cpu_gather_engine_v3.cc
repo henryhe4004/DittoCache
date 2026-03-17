@@ -171,7 +171,8 @@ CPUGatherEngineV3::CPUGatherEngineV3(
       _num_heads(num_heads),
       _head_dim(head_dim),
       _num_omp_threads(num_omp_threads),
-      _launch_flag(launch_flag.data_ptr<int32_t>()),
+      // _launch_flag(launch_flag.data_ptr<int32_t>()),
+      _launch_flag(reinterpret_cast<volatile int32_t*>(launch_flag.data_ptr<int32_t>())),
       _cpu_indices_buffer(cpu_indices_buffer.data_ptr<int64_t>()),
       _debug(debug) {
 

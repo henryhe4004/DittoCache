@@ -162,7 +162,8 @@ def test_gather_engine():
 
                 # torch_real_indices
                 torch.cuda.synchronize()
-
+                torch.cuda.synchronize()
+                print("flag any:", ready_flags[l].any().item(), "meta:", gather_engine_metadta.tolist())
                 capi.static_launch_prefetch(
                     gpu_indices_buffer,
                     gpu_gather_mask,
@@ -172,7 +173,8 @@ def test_gather_engine():
                     ready_flags[l],
                     b, maxs, h, l,
                 )
-
+                torch.cuda.synchronize()
+                print("flag any:", ready_flags[l].any().item(), "meta:", gather_engine_metadta.tolist())
                 torch.cuda.synchronize()
                 tic = time.time()
                 capi.wait_kv_data(ready_flags[l], b, h)

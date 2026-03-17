@@ -139,17 +139,25 @@ def real_indices_and_launch_prefetch(
     num_heads: int,
     layer_idx: int,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_real_indices_and_launch_prefetch(
-        indices,
-        gpu_gather_mask,
-        output,
-        gather_flag,
-        cpu_ready_mask,
-        cache_seq_len,
-        batch_size,
-        num_heads,
-        layer_idx,
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "real_indices_and_launch_prefetch"
+    ):
+        _kvlib_cpu_gather.real_indices_and_launch_prefetch(
+            indices,
+            gpu_gather_mask,
+            output,
+            gather_flag,
+            cpu_ready_mask,
+            cache_seq_len,
+            batch_size,
+            num_heads,
+            layer_idx,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.real_indices_and_launch_prefetch is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def static_launch_prefetch(
@@ -164,18 +172,26 @@ def static_launch_prefetch(
     num_heads: int,
     layer_idx: int,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_static_launch_prefetch(
-        gpu_indices,
-        gpu_gather_mask,
-        gpu_index_length,
-        cpu_indices,
-        cpu_gather_flag,
-        cpu_ready_mask,
-        batch_size,
-        max_cache_seqlen,
-        num_heads,
-        layer_idx,
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "static_launch_prefetch"
+    ):
+        _kvlib_cpu_gather.static_launch_prefetch(
+            gpu_indices,
+            gpu_gather_mask,
+            gpu_index_length,
+            cpu_indices,
+            cpu_gather_flag,
+            cpu_ready_mask,
+            batch_size,
+            max_cache_seqlen,
+            num_heads,
+            layer_idx,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.static_launch_prefetch is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def decode_append_offload_wait(
@@ -188,16 +204,24 @@ def decode_append_offload_wait(
     ready_flags: torch.Tensor,
     cpu_head_ids: torch.Tensor,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_decode_append_offload_wait(
-        key_states,
-        value_states,
-        gpu_kv_buffer,
-        cpu_kv_cache,
-        gpu_append_pos,
-        cpu_append_pos,
-        ready_flags,
-        cpu_head_ids,
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "decode_append_offload_wait"
+    ):
+        _kvlib_cpu_gather.decode_append_offload_wait(
+            key_states,
+            value_states,
+            gpu_kv_buffer,
+            cpu_kv_cache,
+            gpu_append_pos,
+            cpu_append_pos,
+            ready_flags,
+            cpu_head_ids,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.decode_append_offload_wait is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def decode_append_offload_tensor_pos_wait(
@@ -210,20 +234,36 @@ def decode_append_offload_tensor_pos_wait(
     ready_flags: torch.Tensor,
     cpu_head_ids: torch.Tensor,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_decode_append_offload_tensor_pos_wait(
-        key_states,
-        value_states,
-        gpu_kv_buffer,
-        cpu_kv_cache,
-        gpu_append_pos,
-        cpu_append_pos,
-        ready_flags,
-        cpu_head_ids,
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "decode_append_offload_tensor_pos_wait"
+    ):
+        _kvlib_cpu_gather.decode_append_offload_tensor_pos_wait(
+            key_states,
+            value_states,
+            gpu_kv_buffer,
+            cpu_kv_cache,
+            gpu_append_pos,
+            cpu_append_pos,
+            ready_flags,
+            cpu_head_ids,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.decode_append_offload_tensor_pos_wait is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def wait_kv_data(ready_flags: torch.Tensor, batch_size: int, num_heads: int) -> None:
-    torch.ops.sgl_kernel.kvlib_wait_kv_data(ready_flags, batch_size, num_heads)
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "wait_kv_data"
+    ):
+        _kvlib_cpu_gather.wait_kv_data(ready_flags, batch_size, num_heads)
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.wait_kv_data is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def gather_gpu_kvcache(
@@ -235,9 +275,23 @@ def gather_gpu_kvcache(
     head_ids: torch.Tensor,
     sink_recent_budget: int,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_gather_gpu_kvcache(
-        indices, src_key, src_value, dst_key, dst_value, head_ids, sink_recent_budget
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "gather_gpu_kvcache"
+    ):
+        _kvlib_cpu_gather.gather_gpu_kvcache(
+            indices,
+            src_key,
+            src_value,
+            dst_key,
+            dst_value,
+            head_ids,
+            sink_recent_budget,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.gather_gpu_kvcache is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def block_id_to_token_id(
@@ -473,10 +527,25 @@ def real_indices_and_launch_prefetch(
     num_heads: int,
     layer_idx: int,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_real_indices_and_launch_prefetch.default(
-        indices, gpu_gather_mask, output, gather_flag, cpu_ready_mask,
-        cache_seq_len, batch_size, num_heads, layer_idx
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "real_indices_and_launch_prefetch"
+    ):
+        _kvlib_cpu_gather.real_indices_and_launch_prefetch(
+            indices,
+            gpu_gather_mask,
+            output,
+            gather_flag,
+            cpu_ready_mask,
+            cache_seq_len,
+            batch_size,
+            num_heads,
+            layer_idx,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.real_indices_and_launch_prefetch is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def static_launch_prefetch(
@@ -491,11 +560,26 @@ def static_launch_prefetch(
     num_heads: int,
     layer_idx: int,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_static_launch_prefetch.default(
-        gpu_indices, gpu_gather_mask, gpu_index_length,
-        cpu_indices, cpu_gather_flag, cpu_ready_mask,
-        batch_size, max_cache_seqlen, num_heads, layer_idx
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "static_launch_prefetch"
+    ):
+        _kvlib_cpu_gather.static_launch_prefetch(
+            gpu_indices,
+            gpu_gather_mask,
+            gpu_index_length,
+            cpu_indices,
+            cpu_gather_flag,
+            cpu_ready_mask,
+            batch_size,
+            max_cache_seqlen,
+            num_heads,
+            layer_idx,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.static_launch_prefetch is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def decode_append_offload_wait(
@@ -508,10 +592,24 @@ def decode_append_offload_wait(
     ready_flags: torch.Tensor,
     cpu_head_ids: torch.Tensor,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_decode_append_offload_wait.default(
-        key_states, value_states, gpu_kv_buffer, cpu_kv_cache,
-        gpu_append_pos, cpu_append_pos, ready_flags, cpu_head_ids
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "decode_append_offload_wait"
+    ):
+        _kvlib_cpu_gather.decode_append_offload_wait(
+            key_states,
+            value_states,
+            gpu_kv_buffer,
+            cpu_kv_cache,
+            gpu_append_pos,
+            cpu_append_pos,
+            ready_flags,
+            cpu_head_ids,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.decode_append_offload_wait is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def decode_append_offload_tensor_pos_wait(
@@ -524,14 +622,36 @@ def decode_append_offload_tensor_pos_wait(
     ready_flags: torch.Tensor,
     cpu_head_ids: torch.Tensor,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_decode_append_offload_tensor_pos_wait.default(
-        key_states, value_states, gpu_kv_buffer, cpu_kv_cache,
-        gpu_append_pos, cpu_append_pos, ready_flags, cpu_head_ids
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "decode_append_offload_tensor_pos_wait"
+    ):
+        _kvlib_cpu_gather.decode_append_offload_tensor_pos_wait(
+            key_states,
+            value_states,
+            gpu_kv_buffer,
+            cpu_kv_cache,
+            gpu_append_pos,
+            cpu_append_pos,
+            ready_flags,
+            cpu_head_ids,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.decode_append_offload_tensor_pos_wait is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def wait_kv_data(ready_flags: torch.Tensor, batch_size: int, num_heads: int) -> None:
-    torch.ops.sgl_kernel.kvlib_wait_kv_data.default(ready_flags, batch_size, num_heads)
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "wait_kv_data"
+    ):
+        _kvlib_cpu_gather.wait_kv_data(ready_flags, batch_size, num_heads)
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.wait_kv_data is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def gather_gpu_kvcache(
@@ -543,9 +663,23 @@ def gather_gpu_kvcache(
     head_ids: torch.Tensor,
     sink_recent_budget: int,
 ) -> None:
-    torch.ops.sgl_kernel.kvlib_gather_gpu_kvcache.default(
-        indices, src_key, src_value, dst_key, dst_value, head_ids, sink_recent_budget
-    )
+    if "_kvlib_cpu_gather" in globals() and _kvlib_cpu_gather is not None and hasattr(
+        _kvlib_cpu_gather, "gather_gpu_kvcache"
+    ):
+        _kvlib_cpu_gather.gather_gpu_kvcache(
+            indices,
+            src_key,
+            src_value,
+            dst_key,
+            dst_value,
+            head_ids,
+            sink_recent_budget,
+        )
+    else:
+        raise RuntimeError(
+            "kvlib_cpu_gather.gather_gpu_kvcache is not available; "
+            "ensure sgl-kernel was built with kvlib_cpu_gather target."
+        )
 
 
 def block_id_to_token_id(

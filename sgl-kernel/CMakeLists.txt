@@ -368,10 +368,8 @@ endif()
 if(SGL_KERNEL_ENABLE_KVLIB)
   list(APPEND SOURCES
     "csrc/kvlib_bindings.cc"
-    "csrc/kvlib/cpu_gather_engine_v3.cc"
     "csrc/kvlib/ham_dist.cu"
     "csrc/kvlib/kvcache_append.cu"
-    "csrc/kvlib/prefetch.cu"
     "csrc/kvlib/topk.cu"
     "csrc/kvlib/cuda-attn/flash_fwd_hdim128_fp16_sm80.cu"
     "csrc/kvlib/cuda-attn/flash_fwd_split_hdim128_fp16_sm80.cu"
@@ -400,6 +398,35 @@ if(SGL_KERNEL_ENABLE_KVLIB)
     ${PROJECT_SOURCE_DIR}/csrc/kvlib/3rdparty/rmm/include
     ${PROJECT_SOURCE_DIR}/csrc/kvlib/3rdparty/spdlog/include
   )
+endif()
+
+# Build KVLib offload core once and share across extensions.
+if(SGL_KERNEL_ENABLE_KVLIB)
+  find_package(OpenMP REQUIRED)
+  add_library(kvlib_offload_core STATIC
+    csrc/kvlib/cpu_gather_engine_v3.cc
+    csrc/kvlib/prefetch.cu
+  )
+  set_target_properties(kvlib_offload_core PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_STANDARD 17
+  )
+  target_compile_options(kvlib_offload_core PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:${SGL_KERNEL_CUDA_FLAGS}>
+    $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mf16c>
+  )
+  target_compile_definitions(kvlib_offload_core PRIVATE
+    KVLIB_GDR_AVAILABLE
+    KVLIB_RAFT_AVAILABLE
+  )
+  target_include_directories(kvlib_offload_core PRIVATE
+    ${INCLUDES}
+    ${PROJECT_SOURCE_DIR}/csrc
+    ${PROJECT_SOURCE_DIR}/include
+  )
+  target_link_libraries(kvlib_offload_core PUBLIC OpenMP::OpenMP_CXX)
+  target_link_libraries(kvlib_offload_core PRIVATE ${TORCH_LIBRARIES} c10 cuda gdrapi)
 endif()
 
 # =========================== Common SM90 Build ============================= #
@@ -466,6 +493,8 @@ add_subdirectory(
 target_link_libraries(common_ops_sm90_build PRIVATE ${TORCH_LIBRARIES} c10 cuda cublas cublasLt mscclpp_static)
 target_link_libraries(common_ops_sm100_build PRIVATE ${TORCH_LIBRARIES} c10 cuda cublas cublasLt mscclpp_static)
 if(SGL_KERNEL_ENABLE_KVLIB)
+  target_link_libraries(common_ops_sm90_build PRIVATE kvlib_offload_core)
+  target_link_libraries(common_ops_sm100_build PRIVATE kvlib_offload_core)
   target_link_libraries(common_ops_sm90_build PRIVATE gdrapi)
   target_link_libraries(common_ops_sm100_build PRIVATE gdrapi)
 endif()
@@ -491,20 +520,39 @@ install(TARGETS common_ops_sm100_build LIBRARY DESTINATION python/sgl_kernel/sm1
 # ========================== KVLib pybind module ============================ #
 # Expose CPUGatherEngineV3 via a dedicated pybind-style extension so it does
 # not rely on torch.library dispatch.
+# pybind11 type_caster<at::Tensor> is in libtorch_python.so, not TORCH_LIBRARIES.
+find_library(TORCH_PYTHON_LIBRARY torch_python HINTS "${TORCH_INSTALL_PREFIX}/lib" "${TORCH_INSTALL_PREFIX}/lib64")
+if(NOT TORCH_PYTHON_LIBRARY)
+  message(FATAL_ERROR "torch_python not found; required for kvlib_cpu_gather (pybind11 at::Tensor). Check TORCH_INSTALL_PREFIX=${TORCH_INSTALL_PREFIX}")
+endif()
 Python_add_library(kvlib_cpu_gather MODULE
     csrc/kvlib/py_cpu_gather_engine_v3.cc
-    csrc/kvlib/cpu_gather_engine_v3.cc
 )
-target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} gdrapi)
+target_compile_options(kvlib_cpu_gather PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:${SGL_KERNEL_CUDA_FLAGS}>
+)
+if(SGL_KERNEL_ENABLE_KVLIB)
+  # Match common_ops compile-time feature flags so offload code paths behave
+  # the same as in the main CUDA extension.
+  target_compile_options(kvlib_cpu_gather PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mf16c>)
+  target_compile_definitions(kvlib_cpu_gather PRIVATE KVLIB_GDR_AVAILABLE KVLIB_RAFT_AVAILABLE)
+endif()
+if(SGL_KERNEL_ENABLE_KVLIB)
+  target_link_libraries(kvlib_cpu_gather PRIVATE kvlib_offload_core)
+endif()
+target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} ${TORCH_PYTHON_LIBRARY} gdrapi)
 target_include_directories(kvlib_cpu_gather PRIVATE
     ${PROJECT_SOURCE_DIR}/csrc
     ${PROJECT_SOURCE_DIR}/include
 )
+message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
 set_target_properties(kvlib_cpu_gather PROPERTIES
     OUTPUT_NAME "kvlib_cpu_gather"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python/sgl_kernel"
 )
-
+get_target_property(_kvlib_out kvlib_cpu_gather LIBRARY_OUTPUT_DIRECTORY)
+message(STATUS "kvlib_cpu_gather will be built to: ${_kvlib_out}")
+install(TARGETS kvlib_cpu_gather LIBRARY DESTINATION python/sgl_kernel)
 # ============================ Optional Install: FA3 ============================= #
 # set flash-attention sources file
 # Now FA3 support sm80/sm86/sm90
