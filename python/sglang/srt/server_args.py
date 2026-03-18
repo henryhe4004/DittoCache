@@ -2197,8 +2197,13 @@ class ServerArgs:
                 self.page_size = 128
 
         # Dual chunk flash attention backend
+        # NOTE: LiteCache/myTransformer integration has its own attention/cache path.
+        # For this architecture, skip dual-chunk backend gating in SGLang server args.
+        model_archs = getattr(model_config.hf_config, "architectures", []) or []
+        is_litecache_arch = "LiteCacheLlamaForCausalLM" in model_archs
         if (
-            getattr(model_config.hf_config, "dual_chunk_attention_config", None)
+            not is_litecache_arch
+            and getattr(model_config.hf_config, "dual_chunk_attention_config", None)
             is not None
         ):
             if self.attention_backend is None:

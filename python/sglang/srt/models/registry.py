@@ -94,23 +94,31 @@ def import_model_classes(package_name: str, strict: bool = False):
     model_arch_name_to_cls = {}
     package = importlib.import_module(package_name)
     for _, name, ispkg in pkgutil.iter_modules(package.__path__, package_name + "."):
-        if not ispkg:
-            if name.split(".")[-1] in envs.SGLANG_DISABLED_MODEL_ARCHS.get():
-                logger.debug(f"Skip loading {name} due to SGLANG_DISABLED_MODEL_ARCHS")
-                continue
+        module_candidates = []
+        if ispkg:
+            # Support package-scoped model entries, e.g.
+            # sglang.srt.models.litecache/litecache.py
+            leaf = name.split(".")[-1]
+            module_candidates.append(f"{name}.{leaf}")
+        else:
+            module_candidates.append(name)
 
+        for module_name in module_candidates:
+            if module_name.split(".")[-1] in envs.SGLANG_DISABLED_MODEL_ARCHS.get():
+                logger.debug(
+                    f"Skip loading {module_name} due to SGLANG_DISABLED_MODEL_ARCHS"
+                )
+                continue
             try:
-                module = importlib.import_module(name)
+                module = importlib.import_module(module_name)
             except Exception as e:
                 if strict:
                     raise
-                logger.warning(f"Ignore import error when loading {name}: {e}")
+                logger.warning(f"Ignore import error when loading {module_name}: {e}")
                 continue
             if hasattr(module, "EntryClass"):
                 entry = module.EntryClass
-                if isinstance(
-                    entry, list
-                ):  # To support multiple model classes in one module
+                if isinstance(entry, list):  # Support multiple model classes in one module
                     for tmp in entry:
                         assert (
                             tmp.__name__ not in model_arch_name_to_cls
