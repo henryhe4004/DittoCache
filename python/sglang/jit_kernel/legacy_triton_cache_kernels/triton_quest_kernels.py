@@ -81,6 +81,9 @@ def _quest_score_kernel(
     q_data = tl.load(q_block_ptr, boundary_check=(1, 0),
                      padding_option="zero")  # (BLOCK_M, HEAD_DIM)
     q_mask = q_data >= 0
+    q_zero = tl.zeros_like(q_data)
+    q_pos = tl.where(q_mask, q_data, q_zero)
+    q_neg = tl.where(q_mask, q_zero, q_data)
 
     k_max_data = tl.load(k_max_block_ptr,
                          boundary_check=(0, 1),
@@ -88,8 +91,8 @@ def _quest_score_kernel(
     k_min_data = tl.load(k_min_block_ptr,
                          boundary_check=(0, 1),
                          padding_option="zero")
-    acc = (tl.dot(q_data * q_mask, k_max_data) +
-           tl.dot(q_data * ~q_mask, k_min_data)) / SCALE  # (BLOCK_M, BLOCK_N)
+    acc = (tl.dot(q_pos, k_max_data) +
+           tl.dot(q_neg, k_min_data)) / SCALE  # (BLOCK_M, BLOCK_N)
     acc = tl.sum(acc, 0, keep_dims=True)  # (1, BLOCK_N)
 
     if FP16_OUTPUT:
@@ -176,6 +179,9 @@ def _quest_score_head_mask_kernel(
                          boundary_check=(1, 0),
                          padding_option="zero")  # (BLOCK_M, HEAD_DIM)
         q_mask = q_data >= 0
+        q_zero = tl.zeros_like(q_data)
+        q_pos = tl.where(q_mask, q_data, q_zero)
+        q_neg = tl.where(q_mask, q_zero, q_data)
 
         k_max_data = tl.load(k_max_block_ptr,
                              boundary_check=(0, 1),
@@ -183,8 +189,8 @@ def _quest_score_head_mask_kernel(
         k_min_data = tl.load(k_min_block_ptr,
                              boundary_check=(0, 1),
                              padding_option="zero")
-        acc = (tl.dot(q_data * q_mask, k_max_data) + tl.dot(
-            q_data * ~q_mask, k_min_data)) / SCALE  # (BLOCK_M, BLOCK_N)
+        acc = (tl.dot(q_pos, k_max_data) + tl.dot(
+            q_neg, k_min_data)) / SCALE  # (BLOCK_M, BLOCK_N)
         acc = tl.sum(acc, 0, keep_dims=True)  # (1, BLOCK_N)
 
         if FP16_OUTPUT:

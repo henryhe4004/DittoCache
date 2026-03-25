@@ -2200,7 +2200,7 @@ class ServerArgs:
         # NOTE: LiteCache/myTransformer integration has its own attention/cache path.
         # For this architecture, skip dual-chunk backend gating in SGLang server args.
         model_archs = getattr(model_config.hf_config, "architectures", []) or []
-        is_litecache_arch = "LiteCacheLlamaForCausalLM" in model_archs
+        is_litecache_arch = any(str(arch).startswith("LiteCache") for arch in model_archs)
         if (
             not is_litecache_arch
             and getattr(model_config.hf_config, "dual_chunk_attention_config", None)

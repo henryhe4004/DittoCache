@@ -11,6 +11,7 @@
 #include "cpu_gather_engine.h"
 #endif
 #include "operator.h"
+#include "cuda-attn/flash_api.h"
 #include "tl_operator.h"
 
 namespace {
@@ -154,6 +155,14 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
   m.def("kvlib_batch_topk(Tensor data, int k, bool largest) -> Tensor");
   m.def("kvlib_batch_topk_masked(Tensor data, Tensor bh_mask, Tensor out_index, Tensor out_values, "
         "Tensor real_len, Tensor real_k, bool largest) -> ()");
+  // Flash-attention decode
+  m.def("kvlib_flash_index_decode(Tensor query_states, Tensor key_states, Tensor value_states, "
+        "Tensor gather_idx, float scale) -> Tensor[]");
+  m.def("kvlib_flash_mixed_decode(Tensor query_states, Tensor cached_keys, Tensor cached_values, "
+        "Tensor top_index, Tensor buffer_keys, Tensor buffer_values, Tensor k_head_mask, "
+        "Tensor k_head_index, int real_seq_len, float scale) -> Tensor[]");
+  m.def("kvlib_flash_decode(Tensor query_states, Tensor key_states, Tensor value_states, "
+        "float scale, int real_seq_len) -> Tensor[]");
   // KVCache append
   m.def("kvlib_kvcache_append(Tensor kv_cache, Tensor key, Tensor value, int insert_pos) -> ()");
   m.def("kvlib_kvcache_append_head_sparse(Tensor kv_cache, Tensor key, Tensor value, "
@@ -249,6 +258,55 @@ TORCH_LIBRARY_IMPL(sgl_kernel, CUDA, m) {
                static_cast<int32_t>(recent),
                static_cast<int32_t>(skip_sink),
                static_cast<int32_t>(skip_recent));
+         });
+  m.impl("kvlib_flash_index_decode",
+         [](torch::Tensor query_states,
+            torch::Tensor key_states,
+            torch::Tensor value_states,
+            torch::Tensor gather_idx,
+            double scale) {
+           return kvlib::mha_index_decode_fwd(
+               query_states,
+               key_states,
+               value_states,
+               gather_idx,
+               static_cast<float>(scale));
+         });
+  m.impl("kvlib_flash_mixed_decode",
+         [](torch::Tensor query_states,
+            torch::Tensor cached_keys,
+            torch::Tensor cached_values,
+            torch::Tensor top_index,
+            torch::Tensor buffer_keys,
+            torch::Tensor buffer_values,
+            torch::Tensor k_head_mask,
+            torch::Tensor k_head_index,
+            int64_t real_seq_len,
+            double scale) {
+           return kvlib::mha_mixed_decode_fwd(
+               query_states,
+               cached_keys,
+               cached_values,
+               top_index,
+               buffer_keys,
+               buffer_values,
+               k_head_mask,
+               k_head_index,
+               static_cast<int>(real_seq_len),
+               static_cast<float>(scale));
+         });
+  m.impl("kvlib_flash_decode",
+         [](torch::Tensor query_states,
+            torch::Tensor key_states,
+            torch::Tensor value_states,
+            double scale,
+            int64_t real_seq_len) {
+           return kvlib::mha_decode_fwd(
+               query_states,
+               key_states,
+               value_states,
+               static_cast<float>(scale),
+               static_cast<int32_t>(real_seq_len));
          });
 #if defined(KVLIB_RAFT_AVAILABLE)
   m.impl("kvlib_batch_topk",

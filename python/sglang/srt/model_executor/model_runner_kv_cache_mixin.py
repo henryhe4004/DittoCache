@@ -335,11 +335,103 @@ class ModelRunnerKVCacheMixin:
         logger.info(
             f"Use sliding window memory pool. full_layer_tokens={self.full_max_total_num_tokens}, swa_layer_tokens={self.swa_max_total_num_tokens}"
         )
+    
+    @staticmethod
+    def _litecache_cfg_get(obj, key, default):
+        if obj is None:
+            return default
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
+
+    @staticmethod
+    def _litecache_cfg_set(obj, key, value):
+        if obj is None:
+            return False
+        if isinstance(obj, dict):
+            obj[key] = value
+            return True
+        setattr(obj, key, value)
+        return True
+
+    def _sync_litecache_max_tokens_to_runtime_cap(self: ModelRunner):
+        archs = getattr(self.model_config.hf_config, "architectures", None) or []
+        if not any(str(arch).startswith("LiteCache") for arch in archs):
+            return
+
+        runtime_cap = int(self.max_total_num_tokens)
+        if runtime_cap <= 0:
+            return
+
+        changed = False
+        old_values = []
+
+        custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
+        if custom_cfg is not None:
+            kmc = self._litecache_cfg_get(custom_cfg, "kvcache_manager_config", None)
+            if kmc is not None:
+                current = self._litecache_cfg_get(kmc, "max_tokens", None)
+                if current is not None:
+                    current = int(current)
+                    old_values.append(current)
+                    if current > runtime_cap:
+                        self._litecache_cfg_set(kmc, "max_tokens", runtime_cap)
+                        changed = True
+
+        model_custom_cfg = getattr(getattr(self, "model", None), "_custom_config", None)
+        model_kmc = self._litecache_cfg_get(model_custom_cfg, "kvcache_manager_config", None)
+        if model_kmc is not None:
+            model_current = self._litecache_cfg_get(model_kmc, "max_tokens", None)
+            if model_current is not None:
+                model_current = int(model_current)
+                old_values.append(model_current)
+                if model_current > runtime_cap:
+                    self._litecache_cfg_set(model_kmc, "max_tokens", runtime_cap)
+                    changed = True
+
+        if changed:
+            old_max = max(old_values) if old_values else None
+            logger.warning(
+                "Clamp LiteCache kvcache_manager_config.max_tokens to runtime token cap: "
+                f"{old_max} -> {runtime_cap}"
+            )
+
+    def get_litecache_profile_cap(self: ModelRunner, profiled_tokens: int):
+        archs = getattr(self.model_config.hf_config, "architectures", None) or []
+        if not any(str(arch).startswith("LiteCache") for arch in archs):
+            return None
+
+        custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
+        kmc = self._litecache_cfg_get(custom_cfg, "kvcache_manager_config", None)
+        litecache_max_tokens = int(
+            self._litecache_cfg_get(kmc, "max_tokens", profiled_tokens)
+        )
+        reserve_ratio = float(
+            self._litecache_cfg_get(custom_cfg, "profile_reserve_ratio", 0.85)
+        )
+        reserve_ratio = max(0.1, min(1.0, reserve_ratio))
+        dedicated_cap = min(litecache_max_tokens, int(profiled_tokens * reserve_ratio))
+        return max(dedicated_cap, self.server_args.page_size)
 
     def init_memory_pool(self: ModelRunner, total_gpu_memory: int):
         max_num_reqs = self.server_args.max_running_requests
         max_total_tokens = self.server_args.max_total_tokens
         self.max_total_num_tokens = self.profile_max_num_token(total_gpu_memory)
+
+        litecache_profile_cap = self.get_litecache_profile_cap(
+            self.max_total_num_tokens
+        )
+        if litecache_profile_cap is not None:
+            raw_profiled_tokens = self.max_total_num_tokens
+            if max_total_tokens is not None:
+                litecache_profile_cap = min(litecache_profile_cap, max_total_tokens)
+            logger.info(
+                "Use LiteCache-specific profile route. "
+                f"raw_profiled_tokens={raw_profiled_tokens}, "
+                f"litecache_token_cap={litecache_profile_cap}, "
+                f"user_max_total_tokens={max_total_tokens}"
+            )
+            self.max_total_num_tokens = litecache_profile_cap
 
         if max_num_reqs is None:
             max_num_reqs = min(
@@ -375,7 +467,7 @@ class ModelRunnerKVCacheMixin:
                     max_num_reqs, self.server_args.max_running_requests // self.dp_size
                 )
 
-        if max_total_tokens is not None:
+        if litecache_profile_cap is None and max_total_tokens is not None:
             if max_total_tokens > self.max_total_num_tokens:
                 logging.warning(
                     f"max_total_tokens={max_total_tokens} is larger than the profiled value "
@@ -411,6 +503,10 @@ class ModelRunnerKVCacheMixin:
             # Draft worker should use SWA adjusted max_total_num_tokens for cache size, otherwise it may cause oob in kv cache store
             self.server_args.draft_runner_cache_size = self.max_total_num_tokens
             self.server_args.max_num_reqs = max_num_reqs
+
+        # Keep LiteCache local max_tokens in sync with runtime token capacity.
+        # This avoids metadata/buffer handshake drift in CPUGather+prefetch path.
+        self._sync_litecache_max_tokens_to_runtime_cap()
 
         if self.max_total_num_tokens <= 0:
             raise RuntimeError(

@@ -15,7 +15,7 @@ class CustomStaticCache(Cache):
         device: torch.device = None,
         layer_device_map: Optional[Dict[int, Union[str, torch.device, int]]] = None,
     ) -> None:
-        super().__init__()
+        super().__init__(layers=[])
 
         self.model_config = config
         self.config = custom_config

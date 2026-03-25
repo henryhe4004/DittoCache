@@ -144,6 +144,11 @@ class QuestOffloadingCache(OffloadingCache):
         else:
             fetch_block_num = min(int(self.topk_ratio) // self.block_size, valid_block_num)
 
+        # Triton quest kernels require both dot operands to share dtype.
+        target_dtype = self.layers_block_max_cache[layer_idx].dtype
+        if query.dtype != target_dtype:
+            query = query.to(target_dtype)
+
         score = quest_score(
             query,
             self.layers_block_max_cache[layer_idx],
@@ -153,7 +158,7 @@ class QuestOffloadingCache(OffloadingCache):
         )
 
         if is_prefetch:
-            topk_indices = KVLib.batch_topk_masked(score, mask, fetch_block_num, True)
+            topk_indices = self._batch_topk_masked_compat(score, mask, fetch_block_num, True)
             topk_indices = KVLib.block_id_to_token_id_head_mask(
                 topk_indices,
                 self.block_size,
@@ -166,7 +171,7 @@ class QuestOffloadingCache(OffloadingCache):
             return topk_indices.view(-1, fetch_num)
 
         if mask is not None:
-            topk_indices = KVLib.batch_topk_masked(score, mask, fetch_block_num, True)
+            topk_indices = self._batch_topk_masked_compat(score, mask, fetch_block_num, True)
             recent_budget = int(
                 self.metadata_tensors[f"topk_current_k_{query.device.index}"][0].item()
                 - self.config.sparse_attention_config.sink_budget

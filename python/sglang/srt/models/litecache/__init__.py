@@ -1,2 +1,5 @@
-from .litecache import EntryClass, LiteCacheLlamaForCausalLM
-
+from .litecache import (
+    EntryClass,
+    LiteCacheLlamaForCausalLM,
+    LiteCacheQwen2ForCausalLM,
+)

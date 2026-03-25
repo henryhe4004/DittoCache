@@ -6,8 +6,10 @@
 // of the torch headers.
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDAGuard.h>
+// NOTE: Do not include torch/python.h here. common_ops is built with USE_SABI
+// (Py_LIMITED_API), and torch/python.h depends on CPython macros unavailable
+// in the stable ABI build.
 #include <torch/nn/functional.h>
-#include <torch/python.h>
 
 #include <cutlass/numeric_types.h>
 

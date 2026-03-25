@@ -25,6 +25,20 @@ class OffloadingCache(_BaseOffloadingCache):
         # myTransformer API name
         return self.sync_offload_prefill()
 
+    def is_first_decode_step(self):
+        # myTransformer API name.
+        return self.first_decode_layer_step
+
+    def need_prefetch(self, layer_idx: int):
+        # myTransformer API name.
+        layer_idx = layer_idx % self.num_layers
+        return not self.layers_full_gpu_mask[layer_idx]
+
+    def has_gpu_heads(self, layer_idx: int):
+        # myTransformer API name.
+        layer_idx = layer_idx % self.num_layers
+        return self.layers_num_gpu_buffer_heads[layer_idx] < self.num_key_value_heads
+
     def prefill_append(
         self,
         query_states: torch.Tensor,
@@ -32,8 +46,27 @@ class OffloadingCache(_BaseOffloadingCache):
         value_states: torch.Tensor,
         layer_idx: int,
     ):
-        # query_states is used by append_topk_cache_prefill in subclasses.
-        return self.append_prefill(key_states, value_states, layer_idx, query_states)
+        # Keep myTransformer semantics: prefill updates both KV cache and topk data.
+        key_states, value_states = self.append_prefill(key_states, value_states, layer_idx)
+        self.append_topk_cache_prefill(query_states, key_states, value_states, layer_idx)
+        return key_states, value_states
+
+    def decode_append(
+        self,
+        key_states: torch.Tensor,
+        value_states: torch.Tensor,
+        layer_idx: int,
+        prefetch_query_states: Optional[torch.Tensor] = None,
+        current_query_states: Optional[torch.Tensor] = None,
+    ):
+        # myTransformer API name.
+        return self.append_decode(
+            key_states,
+            value_states,
+            layer_idx,
+            prefetch_query_states,
+            current_query_states,
+        )
 
     def decode_get_attn_data_full_gpu(self, layer_idx: int):
         device_idx = self.layer_devices[layer_idx]

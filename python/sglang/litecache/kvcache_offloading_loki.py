@@ -224,14 +224,24 @@ class LokiOffloadingCache(OffloadingCache):
                     - self.config.sparse_attention_config.recent_budget,
                 )
             fetch_num = max(fetch_num, 0)
+            valid_seq_len = (
+                cache_length - self.config.sparse_attention_config.recent_budget
+            )
+            if fetch_num == 0 or valid_seq_len <= 0:
+                return torch.empty(
+                    (query.shape[0] * self.num_key_value_heads, 0),
+                    dtype=torch.int32,
+                    device=query.device,
+                )
+
             score = loki_score(
                 query,
                 self.layers_partial_key_cache[layer_idx],
-                cache_length - self.config.sparse_attention_config.recent_budget,
+                valid_seq_len,
                 head_mask=mask,
             )
             score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).min
-            topk_indices = KVLib.batch_topk_masked(score, mask, fetch_num, True).view(-1, fetch_num)
+            topk_indices = self._batch_topk_masked_compat(score, mask, fetch_num, True).view(-1, fetch_num)
             topk_indices = topk_indices - self.config.sparse_attention_config.sink_budget
             return topk_indices
 
@@ -255,7 +265,7 @@ class LokiOffloadingCache(OffloadingCache):
             score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).max
             if self.config.sparse_attention_config.recent_budget > 0:
                 score[..., -self.config.sparse_attention_config.recent_budget :] = torch.finfo(score.dtype).max
-            topk_indices = KVLib.batch_topk_masked(score, mask, fetch_num, True).view(-1, fetch_num)
+            topk_indices = self._batch_topk_masked_compat(score, mask, fetch_num, True).view(-1, fetch_num)
         else:
             score = loki_score(query, self.layers_partial_key_cache[layer_idx], cache_length)
             score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).max

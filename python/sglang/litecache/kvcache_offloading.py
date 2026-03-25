@@ -2,6 +2,7 @@ from typing import Dict, Optional, Union, Any
 import os
 import csv
 import math
+import time
 import torch
 import logging
 import pandas as pd
@@ -78,8 +79,65 @@ class OffloadingCache(CustomStaticCache):
             self.max_sparse_tokens = int(self.topk_ratio)
         self.max_sparse_tokens = max(self.max_sparse_tokens, (self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1) * self.config.kvcache_manager_config.max_batch_size)
 
+        # Debug switch for diagnosing potential CPUGather stalls.
+        self.debug_cpugather = os.environ.get("LITECACHE_DEBUG_CPUGATHER", "0") == "1"
+        # Coarse-grained stage tracing for timeout diagnosis.
+        self.debug_stall = os.environ.get("LITECACHE_DEBUG_STALL", "0") == "1"
+        self.debug_stall_min_ms = float(
+            os.environ.get("LITECACHE_DEBUG_STALL_MIN_MS", "0")
+        )
+        # Safety switch: bypass prefetch kernel launch to keep system runnable.
+        self.disable_prefetch = os.environ.get("LITECACHE_DISABLE_PREFETCH", "0") == "1"
+
     def _plan_topk_used_gpu_memory(self):
         raise NotImplementedError
+
+    def _debug_cpugather_log(self, stage: str, layer_idx: int, **kwargs):
+        if not self.debug_cpugather:
+            return
+        ts = time.time()
+        details = " ".join(f"{k}={v}" for k, v in kwargs.items())
+        msg = f"[LiteCacheCPUGather] ts={ts:.6f} stage={stage} layer={layer_idx}"
+        if details:
+            msg += f" {details}"
+        print(msg, flush=True)
+
+    def _debug_stall_log(self, stage: str, layer_idx: int, **kwargs):
+        if not self.debug_stall:
+            return
+        ts = time.time()
+        details = " ".join(f"{k}={v}" for k, v in kwargs.items())
+        msg = f"[LiteCacheStall] ts={ts:.6f} stage={stage} layer={layer_idx}"
+        if details:
+            msg += f" {details}"
+        print(msg, flush=True)
+
+    def _debug_stall_duration(self, stage: str, layer_idx: int, t0: float, **kwargs):
+        if not self.debug_stall:
+            return
+        ms = (time.perf_counter() - t0) * 1000.0
+        if ms < self.debug_stall_min_ms:
+            return
+        self._debug_stall_log(stage, layer_idx, ms=f"{ms:.2f}", **kwargs)
+
+    def _debug_ready_flag_snapshot(
+        self,
+        stage: str,
+        layer_idx: int,
+        total_heads: Optional[int] = None,
+    ):
+        if not self.debug_cpugather:
+            return
+        if total_heads is None:
+            total_heads = self.curr_batch_size * self.num_key_value_heads
+        ready = self.metadata_tensors["ready_flag"][layer_idx][:total_heads]
+        ready_true = int(ready.sum().item())
+        self._debug_cpugather_log(
+            stage,
+            layer_idx,
+            ready_true=ready_true,
+            ready_total=total_heads,
+        )
 
     def _init_kv_placement(self):
         # Read head importance and cosine similarity data
@@ -111,14 +169,17 @@ class OffloadingCache(CustomStaticCache):
         stacked_reuse_thresholds = []
         self.layers_reuse_thresholds = []
         for l in range(self.num_layers):
-            reuse_thresholds = head_importance[l]
-            high = math.acos(self.config.offload_config.reuse_threshold_upper)
-            low = math.acos(self.config.offload_config.reuse_threshold_lower)
-            reuse_thresholds = torch.cos(
-                low + (high - low) *
-                reuse_thresholds**self.config.offload_config.decay_p)
+            reuse_thresholds = head_importance[l].clone()
             if USE_FIXED_THRESHOLDS:
                 reuse_thresholds[:] = self.config.offload_config.reuse_threshold_upper
+            else:
+                # Keep threshold mapping identical to myTransformer offloading:
+                # angle-space interpolation between lower/upper with decay_p.
+                high = math.acos(self.config.offload_config.reuse_threshold_upper)
+                low = math.acos(self.config.offload_config.reuse_threshold_lower)
+                reuse_thresholds = torch.cos(
+                    low + (high - low) *
+                    reuse_thresholds**self.config.offload_config.decay_p)
             self.layers_reuse_thresholds.append(
                 reuse_thresholds.to(self.layer_devices[l]))
             stacked_reuse_thresholds.append(reuse_thresholds)
@@ -558,6 +619,8 @@ class OffloadingCache(CustomStaticCache):
         )
 
         for l in range(self.num_layers):
+            # Reset must mark prefetch buffers as not-ready.
+            # myTransformer decode kernels rely on this invariant.
             self.metadata_tensors['ready_flag'][l][:] = False
             self.metadata_tensors['gather_mask'][l][:] = True
             self.metadata_tensors['cached_query'][l].zero_()
@@ -597,12 +660,27 @@ class OffloadingCache(CustomStaticCache):
         # gather and copy engine
         self.cpu_gather_engine = None
         if self.num_cpu_layers > 0:
+            # CPUGatherEngineV3 pybind requires list[Tensor].
+            # Keep tensor refs on self so C++ side pointers remain valid.
+            self.cpu_gather_gpu_buffers = []
+            for layer_idx, gpu_buffer_data in enumerate(
+                    self.cache_tensors['gpu_buffer_data']):
+                if gpu_buffer_data is None:
+                    # Use 0-sized tensor so C++ wrapper converts it to nullopt
+                    # and skips GDR pin/map for layers without offload buffers.
+                    gpu_buffer_data = torch.empty(
+                        (0, ),
+                        dtype=self.dtype,
+                        device=self.layer_devices[layer_idx],
+                    )
+                self.cpu_gather_gpu_buffers.append(gpu_buffer_data)
+
             print(
                 f"Set {self.config.offload_config.num_omp_threads} omp threads for CPUGatherEngine")
             self.cpu_gather_engine = KVLib.CPUGatherEngineV3(
                 self.config.offload_config.num_omp_threads,
                 self.cache_tensors['cpu_cache_data'],
-                self.cache_tensors['gpu_buffer_data'],
+                self.cpu_gather_gpu_buffers,
                 self.layers_mixed_head_index_cpu,
                 self.layers_num_gpu_buffer_heads,
                 self.metadata_tensors['cpu_indices_data'],
@@ -620,14 +698,26 @@ class OffloadingCache(CustomStaticCache):
             self.first_decode_layer_step = True
         else:
             curr_seqlen = self.get_seq_length(0)
+            # Clamp sink/recent by current sequence length to avoid invalid budgets
+            # on short prompts (e.g. seq_len < sink+recent).
+            sink = min(self.config.sparse_attention_config.sink_budget, curr_seqlen)
+            recent = min(
+                self.config.sparse_attention_config.recent_budget,
+                max(curr_seqlen - sink, 0),
+            )
+            keep_budget = min(curr_seqlen, sink + recent + 1)
+
             if self.topk_ratio < 1:
-                topk_prefetch_k = int(curr_seqlen * self.topk_ratio) - self.config.sparse_attention_config.sink_budget - self.config.sparse_attention_config.recent_budget - 1
-                topk_current_k = int(curr_seqlen * self.topk_ratio)
+                raw_k = int(curr_seqlen * self.topk_ratio)
             else:
-                topk_prefetch_k = int(self.topk_ratio) - self.config.sparse_attention_config.sink_budget - self.config.sparse_attention_config.recent_budget - 1
-                topk_current_k = int(self.topk_ratio)
+                raw_k = int(self.topk_ratio)
+
+            topk_prefetch_k = raw_k - keep_budget
+            topk_current_k = raw_k
+
             topk_prefetch_k = max(min(topk_prefetch_k, self.max_prefetch_topk_len), 0)
-            topk_current_k = max(min(topk_current_k, self.max_current_topk_len), self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1)
+            topk_current_k = max(min(topk_current_k, self.max_current_topk_len), keep_budget)
+            topk_current_k = min(topk_current_k, curr_seqlen)
 
             for device_idx in self.unique_devices:
                 if self.first_decode_layer_step:
@@ -669,59 +759,144 @@ class OffloadingCache(CustomStaticCache):
                                          self.head_dim)
         prefill_len = key_states.shape[1]
 
+        gpu_seq_offset = None
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
             torch.cuda.nvtx.range_push("append gpu cache")
-            assert prefill_len <= self.max_seq_len, \
-                f"input kv states length {prefill_len}, " \
+            seq_len_tensor = self.cache_tensors['cache_length'][layer_idx]
+            gpu_seq_offset = int(seq_len_tensor.item())
+            new_gpu_seq_len = gpu_seq_offset + prefill_len
+            assert new_gpu_seq_len <= self.max_seq_len, \
+                f"input kv states length {prefill_len} + current seq length {gpu_seq_offset}, " \
                 f"should be less than max_seq_len = {self.max_seq_len}"
             self.kv_caches[layer_idx][0, :,
-                                    :prefill_len, :, :].copy_(key_states[:, :,
+                                    gpu_seq_offset:new_gpu_seq_len, :, :].copy_(key_states[:, :,
                                     self.layers_gpu_head_ids[layer_idx], :])
             self.kv_caches[layer_idx][1, :,
-                                    :prefill_len, :, :].copy_(value_states[:, :,
+                                    gpu_seq_offset:new_gpu_seq_len, :, :].copy_(value_states[:, :,
                                     self.layers_gpu_head_ids[layer_idx], :])
-            seq_len_tensor = self.cache_tensors['cache_length'][layer_idx]
-            seq_len_tensor[0] = prefill_len
+            seq_len_tensor[0] = new_gpu_seq_len
             torch.cuda.nvtx.range_pop()
 
         if not self.layers_full_gpu_mask[layer_idx]:
-            sink = self.config.sparse_attention_config.sink_budget
-            recent = min(self.config.sparse_attention_config.recent_budget, prefill_len - sink)
-
-            assert prefill_len <= self.max_seq_len, \
-                f"input kv states length {prefill_len}, " \
+            cpu_seq_len_tensor = self.cache_tensors['cpu_cache_length'][layer_idx]
+            cpu_seq_offset = int(cpu_seq_len_tensor.item())
+            if gpu_seq_offset is not None and gpu_seq_offset != cpu_seq_offset:
+                raise RuntimeError(
+                    f"LiteCache GPU/CPU seq length mismatch at layer={layer_idx}: "
+                    f"gpu={gpu_seq_offset} cpu={cpu_seq_offset}"
+                )
+            new_cpu_seq_len = cpu_seq_offset + prefill_len
+            assert new_cpu_seq_len <= self.max_seq_len, \
+                f"input kv states length {prefill_len} + current seq length {cpu_seq_offset}, " \
                 f"should be less than max_seq_len = {self.max_seq_len}"
 
             with torch.cuda.stream(self.transfer_stream):
                 for bsz in range(key_states.shape[0]):
                     # pytorch doesn't support cudaMemcpy2DAsync, so offload batch by batch
                     self.cpu_kv_caches[layer_idx][
-                        0, bsz:bsz + 1, :prefill_len,
+                        0, bsz:bsz + 1, cpu_seq_offset:new_cpu_seq_len,
                         ...].copy_(key_states[bsz:bsz + 1, ...], non_blocking=True)
                     self.cpu_kv_caches[layer_idx][
-                        1, bsz:bsz + 1, :prefill_len,
+                        1, bsz:bsz + 1, cpu_seq_offset:new_cpu_seq_len,
                         ...].copy_(value_states[bsz:bsz + 1, ...], non_blocking=True)
                 self.transfer_event.record(self.transfer_stream)
 
             self.prefill_copy_buffer = (key_states, value_states)
-            cpu_seq_len_tensor = self.cache_tensors['cpu_cache_length'][layer_idx]
-            cpu_seq_len_tensor[0] = prefill_len
+            cpu_seq_len_tensor[0] = new_cpu_seq_len
+            # Ensure D2H prefill copies are visible before rebuilding sink/recent windows.
+            self.transfer_event.synchronize()
 
             # 2. save sink recent tokens (checked)
             torch.cuda.nvtx.range_push("append sink recent")
+            cpu_head_ids = self.layers_cpu_head_ids[layer_idx]
+            cpu_head_ids_cpu = cpu_head_ids.cpu()
+            sink = min(
+                self.config.sparse_attention_config.sink_budget,
+                new_cpu_seq_len,
+            )
+            recent = min(
+                self.config.sparse_attention_config.recent_budget,
+                max(new_cpu_seq_len - sink, 0),
+            )
+
+            def _align_for_gpu_buffer(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+                if src.shape == dst.shape:
+                    return src
+                # Some runtime stacks return [B, H, T, D] for sparse head slices.
+                # Normalize to the buffer layout [B, T, H, D].
+                if (
+                    src.ndim == 4
+                    and src.shape[0] == dst.shape[0]
+                    and src.shape[1] == dst.shape[2]
+                    and src.shape[2] == dst.shape[1]
+                    and src.shape[3] == dst.shape[3]
+                ):
+                    return src.transpose(1, 2).contiguous()
+                raise RuntimeError(
+                    f"LiteCache prefill shape mismatch at layer={layer_idx}: "
+                    f"src={tuple(src.shape)} dst={tuple(dst.shape)}"
+                )
+
             if sink > 0:
-                self.gpu_kv_buffers[layer_idx][
-                    0, :, :sink, :, :].copy_(key_states[:, :sink, self.layers_cpu_head_ids[layer_idx], :])
-                self.gpu_kv_buffers[layer_idx][
-                    1, :, :sink, :, :].copy_(value_states[:, :sink, self.layers_cpu_head_ids[layer_idx], :])
+                sink_key_states = self.cpu_kv_caches[layer_idx][
+                    0, :, :sink, cpu_head_ids_cpu, :
+                ]
+                sink_value_states = self.cpu_kv_caches[layer_idx][
+                    1, :, :sink, cpu_head_ids_cpu, :
+                ]
+                sink_key_target = self.gpu_kv_buffers[layer_idx][0, :, :sink, :, :]
+                sink_value_target = self.gpu_kv_buffers[layer_idx][1, :, :sink, :, :]
+                sink_key_target.copy_(
+                    _align_for_gpu_buffer(sink_key_states, sink_key_target)
+                )
+                sink_value_target.copy_(
+                    _align_for_gpu_buffer(sink_value_states, sink_value_target)
+                )
             if recent > 0:
-                self.gpu_kv_buffers[layer_idx][
-                    0, :, sink:sink + recent, :, :].copy_(key_states[:, -recent:, self.layers_cpu_head_ids[layer_idx], :])
-                self.gpu_kv_buffers[layer_idx][
-                    1, :, sink:sink + recent, :, :].copy_(value_states[:, -recent:, self.layers_cpu_head_ids[layer_idx], :])
+                recent_start = new_cpu_seq_len - recent
+                recent_key_states = self.cpu_kv_caches[layer_idx][
+                    0, :, recent_start:new_cpu_seq_len, cpu_head_ids_cpu, :
+                ]
+                recent_value_states = self.cpu_kv_caches[layer_idx][
+                    1, :, recent_start:new_cpu_seq_len, cpu_head_ids_cpu, :
+                ]
+                recent_key_target = self.gpu_kv_buffers[layer_idx][
+                    0, :, sink:sink + recent, :, :
+                ]
+                recent_value_target = self.gpu_kv_buffers[layer_idx][
+                    1, :, sink:sink + recent, :, :
+                ]
+                recent_key_target.copy_(
+                    _align_for_gpu_buffer(recent_key_states, recent_key_target)
+                )
+                recent_value_target.copy_(
+                    _align_for_gpu_buffer(recent_value_states, recent_value_target)
+                )
             torch.cuda.nvtx.range_pop()
 
-        return key_states, value_states
+        # For external chunked prefill, attention in this step must see all
+        # prefix tokens accumulated so far.
+        if self.layers_full_gpu_mask[layer_idx]:
+            full_seq_len = int(self.cache_tensors["cache_length"][layer_idx].item())
+            return (
+                self.kv_caches[layer_idx][0, :, :full_seq_len, :, :],
+                self.kv_caches[layer_idx][1, :, :full_seq_len, :, :],
+            )
+
+        full_seq_len = int(self.cache_tensors["cpu_cache_length"][layer_idx].item())
+        if full_seq_len <= prefill_len:
+            return key_states, value_states
+
+        layer_device = key_states.device
+        full_key_states = self.cpu_kv_caches[layer_idx][0, :, :full_seq_len, :, :].to(
+            layer_device,
+            non_blocking=True,
+        )
+        full_value_states = self.cpu_kv_caches[layer_idx][1, :, :full_seq_len, :, :].to(
+            layer_device,
+            non_blocking=True,
+        )
+        return full_key_states, full_value_states
 
     def append_topk_cache_prefill(
         self,
@@ -811,7 +986,23 @@ class OffloadingCache(CustomStaticCache):
         layer_idx: int
     ):
         torch.cuda.nvtx.range_push("append and wait data")
-        print(f'[jhe] before decode append wait layer {layer_idx}')
+        total_heads = self.curr_batch_size * self.num_key_value_heads
+        ptr_before = int(self.cache_tensors['gpu_buffer_ptr'][layer_idx].item())
+        cpu_len_before = int(self.cache_tensors['cpu_cache_length'][layer_idx].item())
+        self._debug_cpugather_log(
+            "wait_enter",
+            layer_idx,
+            ptr=ptr_before,
+            cpu_len=cpu_len_before,
+        )
+        self._debug_ready_flag_snapshot("wait_ready_before", layer_idx, total_heads)
+        stream = torch.cuda.current_stream(device=key_states.device)
+        self._debug_cpugather_log(
+            "wait_stream_before",
+            layer_idx,
+            stream_ready=stream.query(),
+        )
+        t0 = time.perf_counter()
         KVLib.decode_append_offload_tensor_pos_wait(
             key_states,
             value_states,
@@ -822,7 +1013,24 @@ class OffloadingCache(CustomStaticCache):
             self.metadata_tensors['ready_flag'][layer_idx],
             self.layers_cpu_head_ids[layer_idx],
         )
-        print(f'[jhe] after decode append wait layer {layer_idx}')
+        wait_ms = (time.perf_counter() - t0) * 1000.0
+        self._debug_cpugather_log(
+            "wait_exit",
+            layer_idx,
+            wait_ms=f"{wait_ms:.2f}",
+        )
+        if wait_ms > 5000:
+            self._debug_cpugather_log(
+                "SUSPECT_CPUGATHER_BLOCK",
+                layer_idx,
+                wait_ms=f"{wait_ms:.2f}",
+            )
+        self._debug_cpugather_log(
+            "wait_kernel_enqueued",
+            layer_idx,
+            stream_ready=stream.query(),
+        )
+        self._debug_ready_flag_snapshot("wait_ready_after_enqueue", layer_idx, total_heads)
         self.cache_tensors['cpu_cache_length'][layer_idx] += 1
         self.cache_tensors['gpu_buffer_ptr'][layer_idx] += 1
         torch.cuda.nvtx.range_pop()
@@ -832,6 +1040,161 @@ class OffloadingCache(CustomStaticCache):
                         prefetch_layer_idx: int):
         torch.cuda.nvtx.range_push("real indices")
         device_idx = indices.device.index
+        total_heads = self.curr_batch_size * self.num_key_value_heads
+        self._debug_cpugather_log(
+            "prefetch_enter",
+            prefetch_layer_idx,
+            device=device_idx,
+            indices_shape=tuple(indices.shape),
+            indices_dtype=str(indices.dtype),
+            head_mask_shape=tuple(head_mask.shape),
+            head_mask_dtype=str(head_mask.dtype),
+        )
+        stream = torch.cuda.current_stream(device=indices.device)
+        self._debug_cpugather_log(
+            "prefetch_stream_before",
+            prefetch_layer_idx,
+            stream_ready=stream.query(),
+        )
+        self._debug_ready_flag_snapshot("prefetch_ready_before", prefetch_layer_idx, total_heads)
+
+        prefetch_k_shape = int(indices.shape[-1]) if indices.ndim >= 2 else 0
+        k_tensor = self.metadata_tensors[f"topk_prefetch_k_{device_idx}"]
+        requested_prefetch_k = int(k_tensor[0].item())
+        prefetch_k = max(
+            0,
+            min(requested_prefetch_k, prefetch_k_shape, self.max_prefetch_topk_len),
+        )
+        if requested_prefetch_k != prefetch_k:
+            k_tensor[0] = prefetch_k
+
+        if indices.dtype != torch.int32:
+            t_cast = time.perf_counter()
+            self._debug_cpugather_log("prefetch_cast_indices_enter", prefetch_layer_idx)
+            indices = indices.to(torch.int32)
+            self._debug_cpugather_log(
+                "prefetch_cast_indices_exit",
+                prefetch_layer_idx,
+                ms=f"{(time.perf_counter() - t_cast) * 1000.0:.2f}",
+            )
+        if not indices.is_contiguous():
+            t_contig = time.perf_counter()
+            self._debug_cpugather_log("prefetch_contig_indices_enter", prefetch_layer_idx)
+            indices = indices.contiguous()
+            self._debug_cpugather_log(
+                "prefetch_contig_indices_exit",
+                prefetch_layer_idx,
+                ms=f"{(time.perf_counter() - t_contig) * 1000.0:.2f}",
+            )
+        if head_mask.dtype != torch.bool:
+            t_mask_cast = time.perf_counter()
+            self._debug_cpugather_log("prefetch_cast_mask_enter", prefetch_layer_idx)
+            head_mask = head_mask.to(torch.bool)
+            self._debug_cpugather_log(
+                "prefetch_cast_mask_exit",
+                prefetch_layer_idx,
+                ms=f"{(time.perf_counter() - t_mask_cast) * 1000.0:.2f}",
+            )
+        if not head_mask.is_contiguous():
+            t_mask_contig = time.perf_counter()
+            self._debug_cpugather_log("prefetch_contig_mask_enter", prefetch_layer_idx)
+            head_mask = head_mask.contiguous()
+            self._debug_cpugather_log(
+                "prefetch_contig_mask_exit",
+                prefetch_layer_idx,
+                ms=f"{(time.perf_counter() - t_mask_contig) * 1000.0:.2f}",
+            )
+
+        # Switch to static_launch_prefetch for myTransformer parity.
+        # Keep the previous real_indices path commented below for fallback/debug.
+        if prefetch_k != prefetch_k_shape:
+            indices = indices[..., :prefetch_k].contiguous()
+            self._debug_cpugather_log(
+                "prefetch_k_clamped",
+                prefetch_layer_idx,
+                requested_k=requested_prefetch_k,
+                shape_k=prefetch_k_shape,
+                use_k=prefetch_k,
+            )
+
+        if self.disable_prefetch:
+            self.metadata_tensors["ready_flag"][prefetch_layer_idx][:total_heads] = True
+            self._debug_cpugather_log(
+                "prefetch_skip_disabled",
+                prefetch_layer_idx,
+                shape_k=prefetch_k_shape,
+            )
+            torch.cuda.nvtx.range_pop()
+            return
+
+        if prefetch_k == 0:
+            self.metadata_tensors["ready_flag"][prefetch_layer_idx][:total_heads] = True
+            self._debug_cpugather_log(
+                "prefetch_skip_zero",
+                prefetch_layer_idx,
+                requested_k=requested_prefetch_k,
+                shape_k=prefetch_k_shape,
+            )
+            torch.cuda.nvtx.range_pop()
+            return
+
+        self._debug_cpugather_log(
+            "prefetch_launch",
+            prefetch_layer_idx,
+            prefetch_k=prefetch_k,
+            requested_k=requested_prefetch_k,
+            indices_shape=tuple(indices.shape),
+        )
+        if self.debug_cpugather:
+            try:
+                indices_2d = indices.reshape(-1, indices.shape[-1])
+                launch_k = prefetch_k
+                if launch_k > 0:
+                    used_indices = indices_2d[:, :launch_k]
+                    idx_min = int(used_indices.min().item())
+                    idx_max = int(used_indices.max().item())
+                    neg_count = int((used_indices < 0).sum().item())
+                else:
+                    idx_min = 0
+                    idx_max = -1
+                    neg_count = 0
+                seq_cap = (
+                    int(self.cache_tensors["topk_code_length"][prefetch_layer_idx].item())
+                    if "topk_code_length" in self.cache_tensors
+                    else -1
+                )
+                self._debug_cpugather_log(
+                    "prefetch_index_stats",
+                    prefetch_layer_idx,
+                    launch_k=launch_k,
+                    idx_min=idx_min,
+                    idx_max=idx_max,
+                    neg=neg_count,
+                    seq_cap=seq_cap,
+                )
+            except Exception as exc:
+                self._debug_cpugather_log(
+                    "prefetch_index_stats_err",
+                    prefetch_layer_idx,
+                    err=repr(exc),
+                )
+        self._debug_cpugather_log(
+            "prefetch_native_call_enter",
+            prefetch_layer_idx,
+            stream_ready=stream.query(),
+            gather_meta=tuple(int(x) for x in self.metadata_tensors['gather_engine_metadata'][:6]),
+        )
+        # KVLib.real_indices_and_launch_prefetch(
+        #     indices,
+        #     head_mask,
+        #     self.cpu_indices_buffer,
+        #     self.metadata_tensors['gather_engine_metadata'],
+        #     self.metadata_tensors['ready_flag'][prefetch_layer_idx],
+        #     self.max_seq_len,
+        #     self.curr_batch_size,
+        #     self.num_key_value_heads,
+        #     prefetch_layer_idx,
+        # )
         KVLib.static_launch_prefetch(
             indices,
             head_mask,
@@ -844,7 +1207,77 @@ class OffloadingCache(CustomStaticCache):
             self.num_key_value_heads,
             prefetch_layer_idx,
         )
+        self._debug_cpugather_log(
+            "prefetch_native_call_exit",
+            prefetch_layer_idx,
+            stream_ready=stream.query(),
+        )
         torch.cuda.nvtx.range_pop()
+
+    def _batch_topk_masked_compat(
+        self,
+        data: torch.Tensor,
+        bh_mask: torch.Tensor,
+        k: int,
+        largest: bool = True,
+    ) -> torch.Tensor:
+        max_k = int(data.size(2))
+        if k > max_k:
+            k = max_k
+        if k <= 0:
+            return torch.empty(
+                (data.size(0), data.size(1), 0),
+                dtype=torch.int32,
+                device=data.device,
+            )
+
+        if not hasattr(self, "_batch_topk_masked_param_count"):
+            import inspect
+            self._batch_topk_masked_param_count = len(
+                inspect.signature(KVLib.batch_topk_masked).parameters
+            )
+
+        # RAFT masked top-k kernel supports fp16/fp32 (not bf16).
+        if data.dtype == torch.bfloat16:
+            topk_data = data.to(torch.float16)
+        else:
+            topk_data = data
+        if not topk_data.is_contiguous():
+            topk_data = topk_data.contiguous()
+        if bh_mask.device != topk_data.device:
+            bh_mask = bh_mask.to(topk_data.device, non_blocking=True)
+        if bh_mask.dtype != torch.bool:
+            bh_mask = bh_mask.to(torch.bool)
+        if not bh_mask.is_contiguous():
+            bh_mask = bh_mask.contiguous()
+
+        if self._batch_topk_masked_param_count <= 4:
+            # myTransformer-style API: returns indices tensor directly.
+            return KVLib.batch_topk_masked(topk_data, bh_mask, k, largest)
+
+        # sgl-kernel API: requires output buffers + real_len/real_k.
+        out_index = torch.empty(
+            (topk_data.size(0), topk_data.size(1), k),
+            dtype=torch.int32,
+            device=topk_data.device,
+        )
+        out_values = torch.empty(
+            (topk_data.size(0), topk_data.size(1), k),
+            dtype=topk_data.dtype,
+            device=topk_data.device,
+        )
+        real_len = torch.tensor([topk_data.size(2)], dtype=torch.int32, device=topk_data.device)
+        real_k = torch.tensor([k], dtype=torch.int32, device=topk_data.device)
+        KVLib.batch_topk_masked(
+            topk_data,
+            bh_mask,
+            out_index,
+            out_values,
+            real_len,
+            real_k,
+            largest,
+        )
+        return out_index
 
     def compute_topk(self, query, layer_idx, mask, is_prefetch=False):
         raise NotImplementedError
@@ -857,6 +1290,7 @@ class OffloadingCache(CustomStaticCache):
         prefetch_query_states: Optional[torch.Tensor] = None,
         current_query_states: Optional[torch.Tensor] = None,
     ):
+        self._debug_stall_log("decode_enter", layer_idx)
         key_states = key_states.view(self.curr_batch_size, 1,
                                      self.num_key_value_heads, self.head_dim)
         value_states = value_states.view(self.curr_batch_size, 1,
@@ -864,17 +1298,25 @@ class OffloadingCache(CustomStaticCache):
 
         # 1. gpu kvcache append (checked)
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
+            t_step = time.perf_counter()
+            self._debug_stall_log("step1_gpu_append_enter", layer_idx)
             self.append_gpu_cache_decode(key_states, value_states,
                                             layer_idx)
+            self._debug_stall_duration("step1_gpu_append_exit", layer_idx, t_step)
 
         # 2. gpu topk cache append and process query (checked)
+        t_step = time.perf_counter()
+        self._debug_stall_log("step2_topk_append_enter", layer_idx)
         prefetch_query, current_query = self.append_topk_cache_decode(
             key_states, value_states, layer_idx, prefetch_query_states,
             current_query_states)
+        self._debug_stall_duration("step2_topk_append_exit", layer_idx, t_step)
 
         # 3. compute prefetch top-k indices (checked)
         next_layer_idx = (layer_idx + 1) % self.num_layers
         if not self.layers_full_gpu_mask[next_layer_idx]:
+            t_step = time.perf_counter()
+            self._debug_stall_log("step3_prefetch_topk_enter", layer_idx, next_layer=next_layer_idx)
             gather_mask = self.cache_query_and_update(
                 prefetch_query_states, next_layer_idx)
             prefetch_topk_indices = self.compute_topk(
@@ -883,23 +1325,38 @@ class OffloadingCache(CustomStaticCache):
                 gather_mask,
                 is_prefetch=True,
             )
+            self._debug_stall_duration(
+                "step3_prefetch_topk_exit",
+                layer_idx,
+                t_step,
+                next_layer=next_layer_idx,
+                prefetch_shape=tuple(prefetch_topk_indices.shape),
+            )
 
         # 4. append cpu kvcache, gpu recent buffer, and sync prefetch (checked)
         if not self.layers_full_gpu_mask[layer_idx]:
+            t_step = time.perf_counter()
+            self._debug_stall_log("step4_cpu_append_wait_enter", layer_idx)
             torch.cuda.nvtx.range_push(f"append cpu and wait layer{layer_idx}")
             self.append_cpu_cache_decode_and_wait(key_states, value_states, layer_idx)
             torch.cuda.nvtx.range_pop()
+            self._debug_stall_duration("step4_cpu_append_wait_exit", layer_idx, t_step)
 
         # 5. launch prefetching (checked)
         if not self.layers_full_gpu_mask[next_layer_idx]:
+            t_step = time.perf_counter()
+            self._debug_stall_log("step5_launch_prefetch_enter", layer_idx, next_layer=next_layer_idx)
             torch.cuda.nvtx.range_push("real indices")
             self.launch_prefetch(prefetch_topk_indices, gather_mask,
                                  next_layer_idx)
             torch.cuda.nvtx.range_pop()
+            self._debug_stall_duration("step5_launch_prefetch_exit", layer_idx, t_step, next_layer=next_layer_idx)
 
         # 6. compute top-k for current layer (checked)
         self.current_topk_indices = None
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
+            t_step = time.perf_counter()
+            self._debug_stall_log("step6_current_topk_enter", layer_idx)
             self.current_topk_indices = self.compute_topk(
                 current_query,
                 layer_idx,
@@ -907,6 +1364,30 @@ class OffloadingCache(CustomStaticCache):
                                                    self.num_key_value_heads],
                 is_prefetch=False
             )
+            if self.current_topk_indices is not None and self.current_topk_indices.dim() == 2:
+                # decode kernels expect gather_idx as [batch, kv_heads, k].
+                expected_rows = self.curr_batch_size * self.num_key_value_heads
+                if self.current_topk_indices.size(0) != expected_rows:
+                    raise RuntimeError(
+                        "Unexpected top-k shape for decode attention: "
+                        f"got {tuple(self.current_topk_indices.shape)}, "
+                        f"expected first dim {expected_rows} "
+                        f"(batch_size={self.curr_batch_size}, "
+                        f"num_key_value_heads={self.num_key_value_heads})."
+                    )
+                self.current_topk_indices = self.current_topk_indices.view(
+                    self.curr_batch_size,
+                    self.num_key_value_heads,
+                    self.current_topk_indices.size(1),
+                ).contiguous()
+            self._debug_stall_duration(
+                "step6_current_topk_exit",
+                layer_idx,
+                t_step,
+                current_shape=tuple(self.current_topk_indices.shape),
+            )
+
+        self._debug_stall_log("decode_exit", layer_idx)
 
     def get_attention_data(self, layer_idx: int, device_idx: int):
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:

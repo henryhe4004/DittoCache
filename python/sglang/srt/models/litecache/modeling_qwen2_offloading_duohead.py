@@ -1,57 +1,52 @@
+from __future__ import annotations
+
 import gc
-import os
 import math
 import time
 from typing import Optional, Tuple, Union
 
+import torch
+import torch.nn as nn
 import torch.nn.functional as F
+import transformers
+from transformers.modeling_outputs import BaseModelOutputWithPast
+from transformers.models.qwen2.modeling_qwen2 import (
+    Qwen2Attention,
+    Qwen2DecoderLayer,
+    Qwen2ForCausalLM,
+    Qwen2Model,
+)
+from transformers.utils import logging
+
+try:
+    # transformers<=4.47
+    from transformers.models.qwen2.modeling_qwen2 import (
+        Qwen2FlashAttention2 as _Qwen2FlashAttention2,
+    )
+except ImportError:
+    # transformers>=4.57 removed Qwen2FlashAttention2 symbol. Keep a thin wrapper
+    # so downstream custom attention can continue to subclass the same semantic base.
+    class _Qwen2FlashAttention2(Qwen2Attention):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+
+import sgl_kernel.kvlib as KVLib
+from sglang.litecache.kvcache_offloading_duohead_base import OffloadingCache
+from sglang.srt.models.litecache.qwen2_utils import (
+    CustomerQwen2MLP,
+    CustomQwen2RMSNorm,
+    CustomQwen2RotaryEmbedding,
+)
 
 try:
     import flash_attn as _flash_attn
 except ImportError:
     _flash_attn = None
 
-import sgl_kernel.kvlib as KVLib
-import torch
-import torch.nn as nn
-import transformers
-from transformers.modeling_outputs import BaseModelOutputWithPast
-from transformers.models.llama.modeling_llama import (
-    LlamaDecoderLayer,
-    LlamaFlashAttention2,
-    LlamaForCausalLM,
-    LlamaModel,
-)
-from transformers.utils import logging
-
-try:
-    from transformers.masking_utils import create_causal_mask as hf_create_causal_mask
-except ImportError:
-    hf_create_causal_mask = None
-
-from sglang.litecache.kvcache_offloading_duohead_base import OffloadingCache
-from sglang.srt.models.litecache.llama_utils import (
-    CustomerLlamaMLP,
-    CustomLlamaRMSNorm,
-    CustomLlamaRotaryEmbedding,
-)
-
 logger = logging.get_logger(__name__)
 
 CHUNK_SIZE = 8192
-_STALL_DEBUG = os.environ.get("LITECACHE_DEBUG_STALL", "0") == "1"
-
-
-def _stall_log(stage: str, layer_idx: int, **kwargs):
-    if not _STALL_DEBUG:
-        return
-    ts = time.time()
-    details = " ".join(f"{k}={v}" for k, v in kwargs.items())
-    msg = f"[LiteCacheStall] ts={ts:.6f} stage={stage} layer={layer_idx}"
-    if details:
-        msg += f" {details}"
-    print(msg, flush=True)
-
 
 def _replace_backbone_model(parent: nn.Module, model_cls, config) -> None:
     """
@@ -67,7 +62,13 @@ def _replace_backbone_model(parent: nn.Module, model_cls, config) -> None:
         torch.cuda.empty_cache()
     parent.model = model_cls(config)
 
-def _flash_attn_with_kvcache(query_states: torch.Tensor, k_cache: torch.Tensor, v_cache: torch.Tensor, causal: bool = True):
+
+def _flash_attn_with_kvcache(
+    query_states: torch.Tensor,
+    k_cache: torch.Tensor,
+    v_cache: torch.Tensor,
+    causal: bool = True,
+) -> torch.Tensor:
     if _flash_attn is not None:
         return _flash_attn.flash_attn_with_kvcache(
             query_states,
@@ -102,16 +103,15 @@ def _flash_attn_with_kvcache(query_states: torch.Tensor, k_cache: torch.Tensor, 
     return out.transpose(1, 2).contiguous()
 
 
-
-class CustomLlamaAttention(LlamaFlashAttention2):
+class CustomQwen2Attention(_Qwen2FlashAttention2):
     def __init__(self, config, layer_idx):
         super().__init__(config, layer_idx)
-        # transformers>=4.5x renamed/removed some legacy attention fields.
+        # transformers>=4.57 no longer exposes these legacy attrs on Qwen2Attention.
         self.num_heads = getattr(self, "num_heads", config.num_attention_heads)
         self.num_key_value_heads = getattr(
             self, "num_key_value_heads", config.num_key_value_heads
         )
-        self.rotary_emb = CustomLlamaRotaryEmbedding(config)
+        self.rotary_emb = CustomQwen2RotaryEmbedding(config)
         self.scale = 1 / math.sqrt(self.head_dim)
         self.next_input_layernorm = None
         self.next_q_proj = None
@@ -148,18 +148,12 @@ class CustomLlamaAttention(LlamaFlashAttention2):
         **kwargs,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         del attention_mask, position_ids, output_attentions, use_cache, cache_position, position_embeddings, kwargs
+
         batch_size = past_key_value.curr_batch_size
         q_len = past_key_value.get_cur_q_len()
         is_prefill = q_len > 1
         token_num, hidden_size = hidden_states.size()
         num_chunks = (token_num + CHUNK_SIZE - 1) // CHUNK_SIZE
-        _stall_log(
-            "attn_enter",
-            self.layer_idx,
-            q_len=q_len,
-            token_num=token_num,
-            is_prefill=is_prefill,
-        )
 
         if is_prefill:
             past_key_value.prefill_sync()
@@ -188,9 +182,7 @@ class CustomLlamaAttention(LlamaFlashAttention2):
         value_states = value_states.view(batch_size, -1, self.num_key_value_heads, self.head_dim)
 
         if is_prefill:
-            _stall_log("prefill_append_enter", self.layer_idx, q_len=q_len)
             past_key_value.prefill_append(query_states, key_states, value_states, self.layer_idx)
-            _stall_log("prefill_append_exit", self.layer_idx, q_len=q_len)
             if token_num < CHUNK_SIZE:
                 attn_output = _flash_attn_with_kvcache(
                     query_states,
@@ -217,17 +209,13 @@ class CustomLlamaAttention(LlamaFlashAttention2):
                 attn_output = query_states
         else:
             if past_key_value.need_prefetch(self.layer_idx + 1):
-                _stall_log("compute_sim_query_enter", self.layer_idx)
                 prefetch_query_states = self.compute_sim_query(residual, past_key_value)
-                _stall_log("compute_sim_query_exit", self.layer_idx)
             else:
                 prefetch_query_states = None
 
-            _stall_log("decode_append_enter", self.layer_idx)
             past_key_value.decode_append(
                 key_states, value_states, self.layer_idx, prefetch_query_states, query_states
             )
-            _stall_log("decode_append_exit", self.layer_idx)
 
             if past_key_value.need_prefetch(self.layer_idx):
                 if past_key_value.has_gpu_heads(self.layer_idx):
@@ -241,7 +229,6 @@ class CustomLlamaAttention(LlamaFlashAttention2):
                         hindex,
                         buffer_len,
                     ) = past_key_value.decode_get_attn_data_mixed(self.layer_idx)
-                    _stall_log("attn_mixed_enter", self.layer_idx, buffer_len=buffer_len)
                     attn_output, _ = KVLib.flash_mixed_decode(
                         query_states,
                         key_cache,
@@ -254,25 +241,20 @@ class CustomLlamaAttention(LlamaFlashAttention2):
                         buffer_len,
                         self.scale,
                     )
-                    _stall_log("attn_mixed_exit", self.layer_idx, buffer_len=buffer_len)
                 else:
                     key_states, value_states = past_key_value.decode_get_attn_data_full_cpu(
                         self.layer_idx
                     )
-                    _stall_log("attn_full_cpu_enter", self.layer_idx)
                     attn_output = _flash_attn_with_kvcache(
                         query_states, k_cache=key_states, v_cache=value_states
                     )
-                    _stall_log("attn_full_cpu_exit", self.layer_idx)
             else:
                 key_states, value_states, topk_indices = past_key_value.decode_get_attn_data_full_gpu(
                     self.layer_idx
                 )
-                _stall_log("attn_full_gpu_enter", self.layer_idx)
                 attn_output, _ = KVLib.flash_index_decode(
                     query_states, key_states, value_states, topk_indices, self.scale
                 )
-                _stall_log("attn_full_gpu_exit", self.layer_idx)
 
         attn_output = attn_output.view(-1, hidden_size)
         if is_prefill and token_num > CHUNK_SIZE:
@@ -285,11 +267,10 @@ class CustomLlamaAttention(LlamaFlashAttention2):
         else:
             attn_output = self.o_proj(attn_output)
 
-        _stall_log("attn_exit", self.layer_idx, is_prefill=is_prefill)
         return attn_output, None, past_key_value
 
 
-class CustomLlamaDecoderLayer(LlamaDecoderLayer):
+class CustomQwen2DecoderLayer(Qwen2DecoderLayer):
     def __init__(self, config, layer_idx):
         super().__init__(config, layer_idx)
         self.self_attn = None
@@ -299,10 +280,10 @@ class CustomLlamaDecoderLayer(LlamaDecoderLayer):
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        self.self_attn = CustomLlamaAttention(config, layer_idx)
-        self.input_layernorm = CustomLlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.post_attention_layernorm = CustomLlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.mlp = CustomerLlamaMLP(config=config)
+        self.self_attn = CustomQwen2Attention(config, layer_idx)
+        self.input_layernorm = CustomQwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.post_attention_layernorm = CustomQwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.mlp = CustomerQwen2MLP(config=config)
 
     def forward(
         self,
@@ -345,7 +326,7 @@ class CustomLlamaDecoderLayer(LlamaDecoderLayer):
         return outputs
 
 
-class CustomLlamaModel(LlamaModel):
+class CustomQwen2Model(Qwen2Model):
     def __init__(self, config):
         super().__init__(config)
         self.layers = None
@@ -355,9 +336,9 @@ class CustomLlamaModel(LlamaModel):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         self.layers = nn.ModuleList(
-            [CustomLlamaDecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
+            [CustomQwen2DecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
         )
-        self.norm = CustomLlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.norm = CustomQwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
         for i in range(config.num_hidden_layers):
             next_id = (i + 1) % config.num_hidden_layers
@@ -401,28 +382,9 @@ class CustomLlamaModel(LlamaModel):
         if position_ids is None:
             position_ids = cache_position.unsqueeze(0)
 
-        if hf_create_causal_mask is not None:
-            causal_mask = hf_create_causal_mask(
-                config=self.config,
-                input_embeds=inputs_embeds,
-                attention_mask=attention_mask,
-                cache_position=cache_position,
-                past_key_values=past_key_values,
-                position_ids=position_ids,
-            )
-        elif hasattr(self, "_update_causal_mask"):
-            causal_mask = self._update_causal_mask(
-                attention_mask,
-                inputs_embeds,
-                cache_position,
-                past_key_values,
-                output_attentions,
-            )
-        else:
-            raise RuntimeError(
-                "No causal mask helper found. Expected transformers.masking_utils.create_causal_mask "
-                "or LlamaModel._update_causal_mask."
-            )
+        # In transformers>=4.57, Qwen2Model no longer exposes `_update_causal_mask`.
+        # LiteCache attention path does not consume this mask, so keep behavior by using None.
+        causal_mask = None
         hidden_states = inputs_embeds
         bsz, seq_len, _ = hidden_states.shape
 
@@ -479,10 +441,10 @@ class CustomLlamaModel(LlamaModel):
         )
 
 
-class HashLlamaForCausalLM(LlamaForCausalLM):
+class HashQwen2ForCausalLM(Qwen2ForCausalLM):
     def __init__(self, config):
         super().__init__(config)
-        _replace_backbone_model(self, CustomLlamaModel, config)
+        _replace_backbone_model(self, CustomQwen2Model, config)
         from sglang.litecache.kvcache_offloading_hash import prepare_cache_for_generation
 
         transformers.generation.utils.GenerationMixin._prepare_cache_for_generation = (
@@ -490,10 +452,10 @@ class HashLlamaForCausalLM(LlamaForCausalLM):
         )
 
 
-class LokiLlamaForCausalLM(LlamaForCausalLM):
+class LokiQwen2ForCausalLM(Qwen2ForCausalLM):
     def __init__(self, config):
         super().__init__(config)
-        _replace_backbone_model(self, CustomLlamaModel, config)
+        _replace_backbone_model(self, CustomQwen2Model, config)
         from sglang.litecache.kvcache_offloading_loki import prepare_cache_for_generation
 
         transformers.generation.utils.GenerationMixin._prepare_cache_for_generation = (
@@ -501,26 +463,23 @@ class LokiLlamaForCausalLM(LlamaForCausalLM):
         )
 
 
-class InfiniGenLlamaForCausalLM(LlamaForCausalLM):
+class InfiniGenQwen2ForCausalLM(Qwen2ForCausalLM):
     def __init__(self, config):
         super().__init__(config)
-        _replace_backbone_model(self, CustomLlamaModel, config)
-        from sglang.litecache.kvcache_offloading_infinigen import (
-            prepare_cache_for_generation,
-        )
+        _replace_backbone_model(self, CustomQwen2Model, config)
+        from sglang.litecache.kvcache_offloading_infinigen import prepare_cache_for_generation
 
         transformers.generation.utils.GenerationMixin._prepare_cache_for_generation = (
             prepare_cache_for_generation
         )
 
 
-class QuestLlamaForCausalLM(LlamaForCausalLM):
+class QuestQwen2ForCausalLM(Qwen2ForCausalLM):
     def __init__(self, config):
         super().__init__(config)
-        _replace_backbone_model(self, CustomLlamaModel, config)
+        _replace_backbone_model(self, CustomQwen2Model, config)
         from sglang.litecache.kvcache_offloading_quest import prepare_cache_for_generation
 
         transformers.generation.utils.GenerationMixin._prepare_cache_for_generation = (
             prepare_cache_for_generation
         )
-

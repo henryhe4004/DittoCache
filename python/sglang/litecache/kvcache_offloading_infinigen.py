@@ -145,7 +145,7 @@ class InfiniGenOffloadingCache(OffloadingCache):
                 head_mask=mask,
             )
             score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).min
-            topk_indices = KVLib.batch_topk_masked(score, mask, fetch_num, True).view(-1, fetch_num)
+            topk_indices = self._batch_topk_masked_compat(score, mask, fetch_num, True).view(-1, fetch_num)
             return topk_indices - self.config.sparse_attention_config.sink_budget
 
         cache_length = self.layers_gpu_partial_key_cache_length[layer_idx]
@@ -163,7 +163,7 @@ class InfiniGenOffloadingCache(OffloadingCache):
             score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).max
             if self.config.sparse_attention_config.recent_budget > 0:
                 score[..., -self.config.sparse_attention_config.recent_budget :] = torch.finfo(score.dtype).max
-            return KVLib.batch_topk_masked(score, mask, fetch_num, True).view(-1, fetch_num)
+            return self._batch_topk_masked_compat(score, mask, fetch_num, True).view(-1, fetch_num)
 
         score = loki_score(query, self.layers_partial_key_cache[layer_idx], cache_length)
         score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).max

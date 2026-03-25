@@ -87,13 +87,18 @@ class HashOffloadingCache(OffloadingCache):
     def append_topk_cache_prefill(self, query_states, key_states, values_states, layer_idx):
         del query_states, values_states
         sequence_length = key_states.shape[1]
+        seq_offset = int(self.layers_gpu_hash_cache_length[layer_idx])
+        new_seq_len = seq_offset + sequence_length
+        assert new_seq_len <= self.max_seq_len, \
+            f"hash cache append exceeds max_seq_len at layer={layer_idx}: " \
+            f"{seq_offset} + {sequence_length} > {self.max_seq_len}"
         prefill_multi_hash_encode(
             key_states,
             self.layers_hash_weight[layer_idx],
-            self.layers_hash_cache[layer_idx],
+            self.layers_hash_cache[layer_idx][:, seq_offset:new_seq_len, :, :],
             self.hash_packbit_aux_tensors[key_states.device.index],
         )
-        self.layers_gpu_hash_cache_length[layer_idx] += sequence_length
+        self.layers_gpu_hash_cache_length[layer_idx] = new_seq_len
 
     def _decode_append_hash_qk(self, query_states, key_states, query_layer_idx, key_layer_idx):
         query_out = torch.zeros(
@@ -173,56 +178,70 @@ class HashOffloadingCache(OffloadingCache):
         return None, None
 
     def compute_topk(self, query, layer_idx, mask, is_prefetch=False):
+        """
+        Align hash top-k flow with myTransformer kvcache_hash:
+        static_hamming_score_mask -> batch_topk_masked using preallocated buffers.
+        """
+        device_idx = query.device.index
+
         if is_prefetch:
-            cache_length = self.layers_gpu_hash_cache_length[layer_idx]
-            if self.topk_ratio < 1:
-                fetch_num = int((cache_length + 1) * self.topk_ratio)
-                fetch_num = min(fetch_num, cache_length - self.config.sparse_attention_config.sink_budget - self.config.sparse_attention_config.recent_budget)
-            else:
-                fetch_num = min(int(self.topk_ratio), cache_length - self.config.sparse_attention_config.sink_budget - self.config.sparse_attention_config.recent_budget)
-            fetch_num = max(fetch_num, 0)
-            score = KVLib.hamming_score_head_mask(
-                self.layers_hash_cache[layer_idx],
-                query,
-                mask,
-                self.rbits,
-                cache_length - self.config.sparse_attention_config.recent_budget,
-            )
-            score[..., : self.config.sparse_attention_config.sink_budget] = torch.finfo(score.dtype).max
-            topk_indices = KVLib.batch_topk_masked(score, mask, fetch_num, False).view(-1, fetch_num)
-            return topk_indices - self.config.sparse_attention_config.sink_budget
-
-        cache_length = self.layers_gpu_hash_cache_length[layer_idx]
-        if self.layers_full_gpu_mask[layer_idx]:
-            if self.topk_ratio < 1:
-                fetch_num = int(cache_length * self.topk_ratio) + self.config.sparse_attention_config.recent_budget + self.config.sparse_attention_config.sink_budget
-                fetch_num = min(fetch_num, cache_length)
-            else:
-                fetch_num = min(int(self.topk_ratio) + self.config.sparse_attention_config.recent_budget + self.config.sparse_attention_config.sink_budget, cache_length)
+            include_sink = 0
+            include_recent = 0
+            exclude_sink = self.config.sparse_attention_config.sink_budget
+            exclude_recent = self.config.sparse_attention_config.recent_budget
+            k_tensor = self.metadata_tensors[f"topk_prefetch_k_{device_idx}"]
         else:
-            fetch_num = int(self.metadata_tensors[f"topk_current_k_{query.device.index}"][0].item())
+            include_sink = self.config.sparse_attention_config.sink_budget
+            include_recent = self.config.sparse_attention_config.recent_budget
+            exclude_sink = 0
+            exclude_recent = 0
+            k_tensor = self.metadata_tensors[f"topk_current_k_{device_idx}"]
 
-        if mask is not None:
-            score = KVLib.hamming_score_head_mask(
-                self.layers_hash_cache[layer_idx],
-                query,
-                mask,
-                self.rbits,
-                cache_length,
-                sink=self.config.sparse_attention_config.sink_budget,
-                recent=self.config.sparse_attention_config.recent_budget,
+        k = int(k_tensor[0].item())
+        if k <= 0:
+            return torch.empty(
+                (self.curr_batch_size * self.num_key_value_heads, 0),
+                dtype=torch.int32,
+                device=query.device,
             )
-            return KVLib.batch_topk_masked(score, mask, fetch_num, False).view(-1, fetch_num)
 
-        score = KVLib.hamming_score(
+        seq_len_tensor = torch.tensor(
+            [int(self.layers_gpu_hash_cache_length[layer_idx])],
+            dtype=torch.int32,
+            device=query.device,
+        )
+
+        KVLib.static_hamming_score_mask(
             self.layers_hash_cache[layer_idx],
             query,
+            mask,
+            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            seq_len_tensor,
             self.rbits,
-            cache_length,
-            sink=self.config.sparse_attention_config.sink_budget,
-            recent=self.config.sparse_attention_config.recent_budget,
+            float(torch.finfo(torch.float16).max),
+            0.0,
+            include_sink,
+            include_recent,
+            exclude_sink,
+            exclude_recent,
         )
-        return KVLib.batch_topk(score, fetch_num, False).view(-1, fetch_num)
+
+        KVLib.batch_topk_masked(
+            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            mask,
+            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"],
+            self.metadata_tensors[f"gpu_topk_values_{device_idx}"],
+            seq_len_tensor,
+            k_tensor,
+            False,
+        )
+        seq_len = int(seq_len_tensor[0].item())
+        if seq_len <= 0:
+            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"].zero_()
+        else:
+            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"].clamp_(0, seq_len - 1)
+
+        return self.metadata_tensors[f"gpu_topk_indices_{device_idx}"]
 
 
 def prepare_cache_for_generation(

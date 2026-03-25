@@ -811,3 +811,19 @@ def flash_mixed_decode(
         real_seq_len,
         scale,
     )
+
+
+def flash_decode(
+    query_states: torch.Tensor,
+    key_states: torch.Tensor,
+    value_states: torch.Tensor,
+    scale: float,
+    real_seq_len: int,
+):
+    return torch.ops.sgl_kernel.kvlib_flash_decode(
+        query_states,
+        key_states,
+        value_states,
+        scale,
+        real_seq_len,
+    )
