@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import threading
+import time
+from datetime import datetime
 from pathlib import Path
 
 from transformers import AutoConfig
@@ -9,11 +13,82 @@ from transformers import AutoConfig
 from sglang import Engine
 
 
+def _utc_ts() -> str:
+    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + "Z"
+
+
+def _child_process_snapshot(parent_pid: int) -> list[str]:
+    children_path = Path(f"/proc/{parent_pid}/task/{parent_pid}/children")
+    if not children_path.exists():
+        return []
+
+    try:
+        child_pids = [int(x) for x in children_path.read_text().strip().split() if x.strip()]
+    except Exception:
+        return []
+
+    snapshot: list[str] = []
+    for pid in child_pids:
+        status_path = Path(f"/proc/{pid}/status")
+        if not status_path.exists():
+            snapshot.append(f"{pid}:exited")
+            continue
+        try:
+            lines = status_path.read_text().splitlines()
+            name = "unknown"
+            state = "unknown"
+            for line in lines:
+                if line.startswith("Name:"):
+                    name = line.split(":", 1)[1].strip()
+                elif line.startswith("State:"):
+                    state = line.split(":", 1)[1].strip()
+            snapshot.append(f"{pid}:{name}:{state}")
+        except Exception:
+            snapshot.append(f"{pid}:status_read_error")
+    return snapshot
+
+
+def _start_generate_heartbeat(interval_sec: float) -> tuple[threading.Event, threading.Thread | None]:
+    stop_event = threading.Event()
+    if interval_sec <= 0:
+        return stop_event, None
+
+    parent_pid = os.getpid()
+    start_time = time.perf_counter()
+
+    def _run():
+        while not stop_event.wait(interval_sec):
+            elapsed = time.perf_counter() - start_time
+            children = _child_process_snapshot(parent_pid)
+            print(
+                "[litecache] generate heartbeat "
+                f"ts={_utc_ts()} elapsed_s={elapsed:.2f} "
+                f"parent_pid={parent_pid} children={children}",
+                flush=True,
+            )
+
+    thread = threading.Thread(target=_run, name="litecache-generate-heartbeat", daemon=True)
+    thread.start()
+    return stop_event, thread
+
+
 def build_args():
     parser = argparse.ArgumentParser(description="LiteCache minimal smoke test.")
     parser.add_argument("--model-path", type=str, required=True)
     parser.add_argument("--prompt", type=str, default="Hello LiteCache")
-    parser.add_argument("--variant", type=str, default="loki", choices=["loki", "hash", "infinigen", "quest"])
+    parser.add_argument(
+        "--variant",
+        type=str,
+        default="offloading",
+        choices=["offloading", "loki", "hash", "infinigen", "quest"],
+    )
+    parser.add_argument(
+        "--offloading-method",
+        type=str,
+        default="hash",
+        choices=["hash", "loki", "infinigen", "quest"],
+        help="Only used when --variant offloading.",
+    )
     parser.add_argument("--max-new-tokens", type=int, default=16)
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--max-batch-size", type=int, default=1)
@@ -27,12 +102,20 @@ def build_args():
     parser.add_argument("--aux-data-path", type=str, default=None)
     parser.add_argument("--attn-pattern-path", type=str, default="")
     parser.add_argument("--num-omp-threads", type=int, default=4)
+    parser.add_argument("--num-skip-layers", type=int, default=0)
+    parser.add_argument("--num-overlapped-heads", type=int, default=0)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--attention-backend", type=str, default=None)
     parser.add_argument("--mem-fraction-static", type=float, default=0.92)
     parser.add_argument("--max-total-tokens", type=int, default=512)
     parser.add_argument("--max-running-requests", type=int, default=1)
     parser.add_argument("--page-size", type=int, default=1)
+    parser.add_argument(
+        "--generate-heartbeat-sec",
+        type=float,
+        default=10.0,
+        help="Heartbeat interval while waiting in engine.generate; <=0 disables heartbeat.",
+    )
     parser.add_argument(
         "--disable-cuda-graph",
         dest="disable_cuda_graph",
@@ -45,6 +128,19 @@ def build_args():
         dest="disable_cuda_graph",
         action="store_false",
         help="Enable CUDA graph capture (may improve perf after bring-up is stable).",
+    )
+    parser.add_argument(
+        "--litecache-disable-cuda-graph",
+        dest="litecache_enable_cuda_graph",
+        action="store_false",
+        default=False,
+        help="Disable LiteCache internal CUDA graph path in custom_config (default).",
+    )
+    parser.add_argument(
+        "--litecache-enable-cuda-graph",
+        dest="litecache_enable_cuda_graph",
+        action="store_true",
+        help="Enable LiteCache internal CUDA graph path in custom_config.",
     )
     parser.add_argument(
         "--litecache-custom-config-path",
@@ -82,11 +178,11 @@ def resolve_litecache_architecture(model_path: str) -> str:
 
 def build_litecache_override(args) -> dict:
     architecture = resolve_litecache_architecture(args.model_path)
-    return {
+    override = {
         "architectures": [architecture],
         "litecache_variant": args.variant,
         "custom_config": {
-            "enable_cuda_graph": False,
+            "enable_cuda_graph": bool(args.litecache_enable_cuda_graph),
             "new_config": True,
             "is_profiling": False,
             "num_channels": args.num_channels,
@@ -109,12 +205,16 @@ def build_litecache_override(args) -> dict:
                 "reuse_threshold_lower": 0.7,
                 "decay_p": 2.0,
                 "cosine_padding": 0.02,
-                "num_skip_layers": 0,
-                "num_overlapped_heads": 0,
+                "num_skip_layers": int(args.num_skip_layers),
+                "num_overlapped_heads": int(args.num_overlapped_heads),
                 "num_omp_threads": args.num_omp_threads,
             },
         },
     }
+    if args.variant == "offloading":
+        override["offloading_method"] = args.offloading_method
+        override["custom_config"]["offloading_method"] = args.offloading_method
+    return override
 
 
 def main():
@@ -138,7 +238,8 @@ def main():
     if args.disable_dual_chunk_config:
         print(
             "[litecache] --disable-dual-chunk-config is deprecated and ignored. "
-            "No dual_chunk_attention_config override is injected."
+            "No dual_chunk_attention_config override is injected.",
+            flush=True,
         )
 
     engine = Engine(
@@ -165,7 +266,13 @@ def main():
     print(
         "[litecache] active override: "
         f"architectures={model_override.get('architectures')}, "
-        f"variant={model_override.get('litecache_variant', args.variant)}"
+        f"variant={model_override.get('litecache_variant', args.variant)}, "
+        f"offloading_method={model_override.get('offloading_method', model_override.get('custom_config', {}).get('offloading_method'))}, "
+        f"num_skip_layers={model_override.get('custom_config', {}).get('offload_config', {}).get('num_skip_layers')}, "
+        f"num_overlapped_heads={model_override.get('custom_config', {}).get('offload_config', {}).get('num_overlapped_heads')}, "
+        f"litecache_enable_cuda_graph={model_override.get('custom_config', {}).get('enable_cuda_graph')}, "
+        f"engine_disable_cuda_graph={args.disable_cuda_graph}",
+        flush=True,
     )
 
     sampling_params = {
@@ -173,8 +280,37 @@ def main():
         "top_p": 1.0,
         "max_new_tokens": args.max_new_tokens,
     }
-    out = engine.generate(prompt=args.prompt, sampling_params=sampling_params)
-    print(out)
+
+    print(
+        "[litecache] entering engine.generate "
+        f"ts={_utc_ts()} prompt_chars={len(args.prompt)} "
+        f"max_new_tokens={args.max_new_tokens}",
+        flush=True,
+    )
+
+    stop_event, heartbeat_thread = _start_generate_heartbeat(args.generate_heartbeat_sec)
+    t0 = time.perf_counter()
+    try:
+        out = engine.generate(prompt=args.prompt, sampling_params=sampling_params)
+    except Exception as exc:
+        elapsed = time.perf_counter() - t0
+        print(
+            "[litecache] engine.generate raised "
+            f"ts={_utc_ts()} elapsed_s={elapsed:.2f} err={repr(exc)}",
+            flush=True,
+        )
+        raise
+    finally:
+        stop_event.set()
+        if heartbeat_thread is not None:
+            heartbeat_thread.join(timeout=1.0)
+
+    elapsed = time.perf_counter() - t0
+    print(
+        f"[litecache] engine.generate returned ts={_utc_ts()} elapsed_s={elapsed:.2f}",
+        flush=True,
+    )
+    print(out, flush=True)
 
 
 if __name__ == "__main__":

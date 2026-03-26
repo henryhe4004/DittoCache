@@ -600,7 +600,13 @@ def llm_sparse_offloading_decode_forward(
     past_key_values.update_metadata(q_len)
     hidden_states = hidden_states.view(bsz * q_len, -1)
 
-    if past_key_values.config.enable_cuda_graph:
+    in_outer_cuda_graph_capture = False
+    try:
+        in_outer_cuda_graph_capture = torch.cuda.is_current_stream_capturing()
+    except Exception:
+        in_outer_cuda_graph_capture = False
+
+    if past_key_values.config.enable_cuda_graph and not in_outer_cuda_graph_capture:
         if bsz not in self._graph_buffers:
             llm_sparse_offloading_prepare_cuda_graph_metadata(
                 self,

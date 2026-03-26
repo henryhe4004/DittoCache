@@ -88,6 +88,10 @@ class OffloadingCache(CustomStaticCache):
         )
         # Safety switch: bypass prefetch kernel launch to keep system runnable.
         self.disable_prefetch = os.environ.get("LITECACHE_DISABLE_PREFETCH", "0") == "1"
+        # Keep a host mirror of prefetch-k to avoid CUDA tensor .item() during graph capture.
+        self.topk_prefetch_k_host = 0
+        self.cache_length_host = [0 for _ in range(self.num_layers)]
+        self.cpu_cache_length_host = [0 for _ in range(self.num_layers)]
 
     def _plan_topk_used_gpu_memory(self):
         raise NotImplementedError
@@ -101,6 +105,20 @@ class OffloadingCache(CustomStaticCache):
         if details:
             msg += f" {details}"
         print(msg, flush=True)
+
+    def _safe_stream_query(self, stream):
+        # stream.query() is not permitted during CUDA graph capture.
+        if not self.debug_cpugather:
+            return None
+        try:
+            if torch.cuda.is_current_stream_capturing():
+                return "capturing"
+        except Exception:
+            pass
+        try:
+            return stream.query()
+        except Exception as exc:
+            return f"query_err={type(exc).__name__}"
 
     def _debug_stall_log(self, stage: str, layer_idx: int, **kwargs):
         if not self.debug_stall:
@@ -545,6 +563,7 @@ class OffloadingCache(CustomStaticCache):
                                                num_gpu_heads, self.head_dim)
             cache_length = self.cache_tensors['cache_length'][l]
             cache_length.zero_()
+            self.cache_length_host[l] = 0
 
     def _reset_offload_tensors(self, batch_size):
         # reset cpu kv cache
@@ -560,6 +579,7 @@ class OffloadingCache(CustomStaticCache):
                                                        self.head_dim)
             cpu_cache_length = self.cache_tensors['cpu_cache_length'][l]
             cpu_cache_length.zero_()
+            self.cpu_cache_length_host[l] = 0
 
             num_cpu_heads = self.layers_cpu_head_ids[l].numel()
             if num_cpu_heads == 0:
@@ -645,9 +665,9 @@ class OffloadingCache(CustomStaticCache):
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
-            return self.cache_tensors['cache_length'][layer_idx].item()
+            return int(self.cache_length_host[layer_idx])
         else:
-            return self.cache_tensors['cpu_cache_length'][layer_idx].item()
+            return int(self.cpu_cache_length_host[layer_idx])
 
     # ==================== Copy Engine ====================
     def _init_offloading(self):
@@ -718,23 +738,28 @@ class OffloadingCache(CustomStaticCache):
             topk_prefetch_k = max(min(topk_prefetch_k, self.max_prefetch_topk_len), 0)
             topk_current_k = max(min(topk_current_k, self.max_current_topk_len), keep_budget)
             topk_current_k = min(topk_current_k, curr_seqlen)
+            self.topk_prefetch_k_host = int(topk_prefetch_k)
 
             for device_idx in self.unique_devices:
                 if self.first_decode_layer_step:
-                    self.metadata_tensors[f'query_cache_valid_{device_idx}'][0] = False
+                    self.metadata_tensors[f'query_cache_valid_{device_idx}'].fill_(False)
                     self.first_decode_layer_step = False
                 else:
-                    self.metadata_tensors[f'query_cache_valid_{device_idx}'][0] = True
-                self.metadata_tensors[f'topk_prefetch_k_{device_idx}'][0] = topk_prefetch_k
-                self.metadata_tensors[f'topk_current_k_{device_idx}'][0] = topk_current_k
+                    self.metadata_tensors[f'query_cache_valid_{device_idx}'].fill_(True)
+                self.metadata_tensors[f'topk_prefetch_k_{device_idx}'].fill_(topk_prefetch_k)
+                self.metadata_tensors[f'topk_current_k_{device_idx}'].fill_(topk_current_k)
 
             for l in range(self.num_layers):
                 num_cpu_heads = self.layers_cpu_head_ids[l].numel()
                 if num_cpu_heads == 0:
                     continue
                 buffer_append_ptr = self.cache_tensors['gpu_buffer_ptr'][l]
-                if buffer_append_ptr[0].item() >= (self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1):
-                    buffer_append_ptr[0] = self.config.sparse_attention_config.sink_budget
+                limit = self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1
+                buffer_append_ptr[0] = torch.where(
+                    buffer_append_ptr[0] >= limit,
+                    self.config.sparse_attention_config.sink_budget,
+                    buffer_append_ptr[0],
+                )
 
         # print("\nupdate metadata", q_len)
         # print("cache_length", self.cache_tensors['cache_length'])
@@ -775,6 +800,7 @@ class OffloadingCache(CustomStaticCache):
                                     gpu_seq_offset:new_gpu_seq_len, :, :].copy_(value_states[:, :,
                                     self.layers_gpu_head_ids[layer_idx], :])
             seq_len_tensor[0] = new_gpu_seq_len
+            self.cache_length_host[layer_idx] = int(new_gpu_seq_len)
             torch.cuda.nvtx.range_pop()
 
         if not self.layers_full_gpu_mask[layer_idx]:
@@ -803,6 +829,7 @@ class OffloadingCache(CustomStaticCache):
 
             self.prefill_copy_buffer = (key_states, value_states)
             cpu_seq_len_tensor[0] = new_cpu_seq_len
+            self.cpu_cache_length_host[layer_idx] = int(new_cpu_seq_len)
             # Ensure D2H prefill copies are visible before rebuilding sink/recent windows.
             self.transfer_event.synchronize()
 
@@ -935,6 +962,7 @@ class OffloadingCache(CustomStaticCache):
                 self.layers_gpu_head_ids[layer_idx],
                 self.cache_tensors['cache_length'][layer_idx])
         self.cache_tensors['cache_length'][layer_idx] += 1
+        self.cache_length_host[layer_idx] += 1
         torch.cuda.nvtx.range_pop()
 
     def append_topk_cache_decode(
@@ -987,20 +1015,21 @@ class OffloadingCache(CustomStaticCache):
     ):
         torch.cuda.nvtx.range_push("append and wait data")
         total_heads = self.curr_batch_size * self.num_key_value_heads
-        ptr_before = int(self.cache_tensors['gpu_buffer_ptr'][layer_idx].item())
-        cpu_len_before = int(self.cache_tensors['cpu_cache_length'][layer_idx].item())
-        self._debug_cpugather_log(
-            "wait_enter",
-            layer_idx,
-            ptr=ptr_before,
-            cpu_len=cpu_len_before,
-        )
+        if self.debug_cpugather:
+            ptr_before = int(self.cache_tensors['gpu_buffer_ptr'][layer_idx].item())
+            cpu_len_before = int(self.cache_tensors['cpu_cache_length'][layer_idx].item())
+            self._debug_cpugather_log(
+                "wait_enter",
+                layer_idx,
+                ptr=ptr_before,
+                cpu_len=cpu_len_before,
+            )
         self._debug_ready_flag_snapshot("wait_ready_before", layer_idx, total_heads)
         stream = torch.cuda.current_stream(device=key_states.device)
         self._debug_cpugather_log(
             "wait_stream_before",
             layer_idx,
-            stream_ready=stream.query(),
+            stream_ready=self._safe_stream_query(stream),
         )
         t0 = time.perf_counter()
         KVLib.decode_append_offload_tensor_pos_wait(
@@ -1028,10 +1057,11 @@ class OffloadingCache(CustomStaticCache):
         self._debug_cpugather_log(
             "wait_kernel_enqueued",
             layer_idx,
-            stream_ready=stream.query(),
+            stream_ready=self._safe_stream_query(stream),
         )
         self._debug_ready_flag_snapshot("wait_ready_after_enqueue", layer_idx, total_heads)
         self.cache_tensors['cpu_cache_length'][layer_idx] += 1
+        self.cpu_cache_length_host[layer_idx] += 1
         self.cache_tensors['gpu_buffer_ptr'][layer_idx] += 1
         torch.cuda.nvtx.range_pop()
 
@@ -1054,13 +1084,19 @@ class OffloadingCache(CustomStaticCache):
         self._debug_cpugather_log(
             "prefetch_stream_before",
             prefetch_layer_idx,
-            stream_ready=stream.query(),
+            stream_ready=self._safe_stream_query(stream),
         )
         self._debug_ready_flag_snapshot("prefetch_ready_before", prefetch_layer_idx, total_heads)
 
         prefetch_k_shape = int(indices.shape[-1]) if indices.ndim >= 2 else 0
         k_tensor = self.metadata_tensors[f"topk_prefetch_k_{device_idx}"]
-        requested_prefetch_k = int(k_tensor[0].item())
+        requested_prefetch_k = int(self.topk_prefetch_k_host)
+        try:
+            if not torch.cuda.is_current_stream_capturing():
+                requested_prefetch_k = int(k_tensor[0].item())
+        except Exception:
+            # Fall back to host mirror when stream capture state/query is unavailable.
+            pass
         prefetch_k = max(
             0,
             min(requested_prefetch_k, prefetch_k_shape, self.max_prefetch_topk_len),
@@ -1181,7 +1217,7 @@ class OffloadingCache(CustomStaticCache):
         self._debug_cpugather_log(
             "prefetch_native_call_enter",
             prefetch_layer_idx,
-            stream_ready=stream.query(),
+            stream_ready=self._safe_stream_query(stream),
             gather_meta=tuple(int(x) for x in self.metadata_tensors['gather_engine_metadata'][:6]),
         )
         # KVLib.real_indices_and_launch_prefetch(
@@ -1210,7 +1246,7 @@ class OffloadingCache(CustomStaticCache):
         self._debug_cpugather_log(
             "prefetch_native_call_exit",
             prefetch_layer_idx,
-            stream_ready=stream.query(),
+            stream_ready=self._safe_stream_query(stream),
         )
         torch.cuda.nvtx.range_pop()
 

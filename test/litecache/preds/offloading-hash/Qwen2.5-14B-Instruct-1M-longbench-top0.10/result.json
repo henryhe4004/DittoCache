@@ -2,7 +2,7 @@
     "hotpotqa": 65.82,
     "multifieldqa_en": 53.35,
     "2wikimqa": 61.79,
-    "lcc": 52.47,
+    "lcc": 64.0,
     "qasper": 42.49,
     "passage_retrieval_en": 99.67,
     "triviaqa": 88.56,
