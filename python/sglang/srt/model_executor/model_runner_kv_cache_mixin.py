@@ -43,6 +43,40 @@ logger = logging.getLogger(__name__)
 _is_npu = is_npu()
 
 
+class LiteCacheTokenToKVPoolPlaceholder:
+    """
+    Lightweight token pool holder for LiteCache models.
+
+    LiteCache keeps KV tensors in its model-local cache implementation, while
+    SGLang still needs token index allocation for scheduling.
+    """
+
+    def __init__(
+        self,
+        size: int,
+        page_size: int,
+        dtype: torch.dtype,
+        device: str,
+        start_layer: int,
+        end_layer: int,
+    ):
+        self.size = size
+        self.page_size = page_size
+        self.dtype = dtype
+        self.device = device
+        self.start_layer = start_layer
+        self.end_layer = end_layer
+
+    def get_cpu_copy(self, indices):
+        _ = indices
+        return None
+
+    def load_cpu_copy(self, kv_cache_cpu, indices):
+        _ = kv_cache_cpu
+        _ = indices
+        return None
+
+
 class ModelRunnerKVCacheMixin:
     def get_cell_size_per_token(self: ModelRunner, num_layers: int) -> int:
         kv_size = torch._utils._element_size(self.kv_cache_dtype)
@@ -354,9 +388,22 @@ class ModelRunnerKVCacheMixin:
         setattr(obj, key, value)
         return True
 
-    def _sync_litecache_max_tokens_to_runtime_cap(self: ModelRunner):
+    def _is_litecache_model(self: ModelRunner):
         archs = getattr(self.model_config.hf_config, "architectures", None) or []
-        if not any(str(arch).startswith("LiteCache") for arch in archs):
+        return any(str(arch).startswith("LiteCache") for arch in archs)
+
+    def _get_litecache_cfg_max_tokens(self: ModelRunner, fallback: int):
+        custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
+        kmc = self._litecache_cfg_get(custom_cfg, "kvcache_manager_config", None)
+        raw = self._litecache_cfg_get(kmc, "max_tokens", fallback)
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            value = int(fallback)
+        return max(value, self.server_args.page_size)
+
+    def _sync_litecache_max_tokens_to_runtime_cap(self: ModelRunner):
+        if not self._is_litecache_model():
             return
 
         runtime_cap = int(self.max_total_num_tokens)
@@ -397,8 +444,7 @@ class ModelRunnerKVCacheMixin:
             )
 
     def get_litecache_profile_cap(self: ModelRunner, profiled_tokens: int):
-        archs = getattr(self.model_config.hf_config, "architectures", None) or []
-        if not any(str(arch).startswith("LiteCache") for arch in archs):
+        if not self._is_litecache_model():
             return None
 
         custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
@@ -416,22 +462,37 @@ class ModelRunnerKVCacheMixin:
     def init_memory_pool(self: ModelRunner, total_gpu_memory: int):
         max_num_reqs = self.server_args.max_running_requests
         max_total_tokens = self.server_args.max_total_tokens
-        self.max_total_num_tokens = self.profile_max_num_token(total_gpu_memory)
-
-        litecache_profile_cap = self.get_litecache_profile_cap(
-            self.max_total_num_tokens
-        )
-        if litecache_profile_cap is not None:
-            raw_profiled_tokens = self.max_total_num_tokens
+        litecache_enabled = self._is_litecache_model()
+        if litecache_enabled:
+            litecache_cfg_max_tokens = self._get_litecache_cfg_max_tokens(
+                self.model_config.context_len
+            )
+            litecache_profile_cap = litecache_cfg_max_tokens
             if max_total_tokens is not None:
                 litecache_profile_cap = min(litecache_profile_cap, max_total_tokens)
             logger.info(
-                "Use LiteCache-specific profile route. "
-                f"raw_profiled_tokens={raw_profiled_tokens}, "
+                "Use LiteCache dedicated token cap route. "
+                f"litecache_cfg_max_tokens={litecache_cfg_max_tokens}, "
                 f"litecache_token_cap={litecache_profile_cap}, "
                 f"user_max_total_tokens={max_total_tokens}"
             )
             self.max_total_num_tokens = litecache_profile_cap
+        else:
+            self.max_total_num_tokens = self.profile_max_num_token(total_gpu_memory)
+            litecache_profile_cap = self.get_litecache_profile_cap(
+                self.max_total_num_tokens
+            )
+            if litecache_profile_cap is not None:
+                raw_profiled_tokens = self.max_total_num_tokens
+                if max_total_tokens is not None:
+                    litecache_profile_cap = min(litecache_profile_cap, max_total_tokens)
+                logger.info(
+                    "Use LiteCache-specific profile route. "
+                    f"raw_profiled_tokens={raw_profiled_tokens}, "
+                    f"litecache_token_cap={litecache_profile_cap}, "
+                    f"user_max_total_tokens={max_total_tokens}"
+                )
+                self.max_total_num_tokens = litecache_profile_cap
 
         if max_num_reqs is None:
             max_num_reqs = min(
@@ -581,7 +642,21 @@ class ModelRunnerKVCacheMixin:
 
         # Initialize token_to_kv_pool
         is_nsa_model = is_deepseek_nsa(self.model_config.hf_config)
-        if self.server_args.attention_backend == "ascend":
+        if litecache_enabled:
+            self.token_to_kv_pool = LiteCacheTokenToKVPoolPlaceholder(
+                size=self.max_total_num_tokens,
+                page_size=self.page_size,
+                dtype=self.kv_cache_dtype,
+                device=self.device,
+                start_layer=self.start_layer,
+                end_layer=self.end_layer,
+            )
+            logger.info(
+                "Use LiteCache token pool placeholder. size=%d, page_size=%d",
+                self.max_total_num_tokens,
+                self.page_size,
+            )
+        elif self.server_args.attention_backend == "ascend":
             if self.use_mla_backend:
                 from sglang.srt.hardware_backend.npu.memory_pool_npu import (
                     NPUMLATokenToKVPool,

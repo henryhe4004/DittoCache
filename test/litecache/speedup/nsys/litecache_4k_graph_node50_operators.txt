@@ -1,0 +1,66 @@
+=== CUDA Graph API Summary ===
+Time (%),Total Time (ns),Num Calls,Avg (ns),Med (ns),Min (ns),Max (ns),StdDev (ns),Name
+1.1,86318786,23,3752990.7,3661282.0,3571246,4673044,249278.2,cudaGraphLaunch_v10000
+0.2,16756194,1,16756194.0,16756194.0,16756194,16756194,0.0,cudaGraphInstantiateWithFlags_v11040
+0.0,88584,1,88584.0,88584.0,88584,88584,0.0,cudaStreamEndCapture_v10000
+0.0,50568,5,10113.6,10496.0,5028,13911,3573.8,cuDeviceGetName
+0.0,7401,1,7401.0,7401.0,7401,7401,0.0,cudaGraphGetNodes_v10000
+0.0,2264,1,2264.0,2264.0,2264,2264,0.0,cudaStreamBeginCapture_v10000
+
+=== CUDA API Trace (first 30 graph-related rows) ===
+28273538285,2264,cudaStreamBeginCapture_v10000,0,191177,496388,496388,20,sglang::schedul
+28333554004,88584,cudaStreamEndCapture_v10000,0,219864,496388,496388,20,sglang::schedul
+28333654226,7401,cudaGraphGetNodes_v10000,0,219865,496388,496388,20,sglang::schedul
+28333663160,16756194,cudaGraphInstantiateWithFlags_v11040,0,219867,496388,496388,20,sglang::schedul
+28358511554,3802126,cudaGraphLaunch_v10000,0,223242,496388,496388,20,sglang::schedul
+28415412198,3644377,cudaGraphLaunch_v10000,0,226615,496388,496388,20,sglang::schedul
+28472172910,3603975,cudaGraphLaunch_v10000,0,229989,496388,496388,20,sglang::schedul
+28528871338,3655784,cudaGraphLaunch_v10000,0,233363,496388,496388,20,sglang::schedul
+28585431246,3628793,cudaGraphLaunch_v10000,0,236737,496388,496388,20,sglang::schedul
+28642052066,3661282,cudaGraphLaunch_v10000,0,240111,496388,496388,20,sglang::schedul
+28698673036,3728745,cudaGraphLaunch_v10000,0,243485,496388,496388,20,sglang::schedul
+28755256830,3706000,cudaGraphLaunch_v10000,0,246859,496388,496388,20,sglang::schedul
+28812198907,4232176,cudaGraphLaunch_v10000,0,250233,496388,496388,20,sglang::schedul
+28869199612,3781705,cudaGraphLaunch_v10000,0,253607,496388,496388,20,sglang::schedul
+28925869807,4673044,cudaGraphLaunch_v10000,0,256981,496388,496388,20,sglang::schedul
+28983458833,3611477,cudaGraphLaunch_v10000,0,260355,496388,496388,20,sglang::schedul
+29039977939,3632950,cudaGraphLaunch_v10000,0,263729,496388,496388,20,sglang::schedul
+29096752061,4024192,cudaGraphLaunch_v10000,0,267103,496388,496388,20,sglang::schedul
+29153412401,3571246,cudaGraphLaunch_v10000,0,270477,496388,496388,20,sglang::schedul
+29209935704,3613089,cudaGraphLaunch_v10000,0,273851,496388,496388,20,sglang::schedul
+29266467029,3656144,cudaGraphLaunch_v10000,0,277225,496388,496388,20,sglang::schedul
+29323045555,3609023,cudaGraphLaunch_v10000,0,280599,496388,496388,20,sglang::schedul
+29379558642,3617446,cudaGraphLaunch_v10000,0,283973,496388,496388,20,sglang::schedul
+29436125070,3738709,cudaGraphLaunch_v10000,0,287347,496388,496388,20,sglang::schedul
+29492637796,3689035,cudaGraphLaunch_v10000,0,290721,496388,496388,20,sglang::schedul
+29549254531,3687722,cudaGraphLaunch_v10000,0,294095,496388,496388,20,sglang::schedul
+29605766496,3749746,cudaGraphLaunch_v10000,0,297469,496388,496388,20,sglang::schedul
+
+=== Graph-Node Kernels (graphNodeId IS NOT NULL, Top 20 by total time) ===
+kernel_name,instances,total_ms,avg_us
+ampere_bf16_s16816gemm_bf16_64x64_ldg8_f2f_stages_64x5_tn,2278,505.692,221.989
+"void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_128x2_tn_align8>(T1::Params)",3418,289.232,84.62
+"std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)7, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)",3419,288.8,84.469
+_fwd_mix_kernel,1139,14.519,12.748
+"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",3442,10.21,2.966
+"void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, (int)4, (int)4>>(T3)",3442,9.855,2.863
+"void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char *, (unsigned long)3>>(int, T2, T3)",6837,9.698,1.419
+"void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)3>>(int, T2, T3)",4580,8.374,1.828
+"void cublasLt::splitKreduce_kernel<(int)32, (int)16, int, __nv_bfloat16, __nv_bfloat16, float, __nv_bfloat16, (bool)0, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, (bool)1, (bool)0, (bool)0>(cublasLt::cublasSplitKParams<T6>, const T4 *, const T10 *, T9 *, T5 *, const T6 *, const T6 *, const T11 *, const T4 *, T11 *, void *, long, T6 *, int *, T6 *, T6 *, const T6 *, const T6 *, const T6 *, const T6 *, const T6 *)",3418,7.779,2.276
+"void flashinfer::BatchQKApplyRotaryKernel<(bool)0, (unsigned int)128, (unsigned int)8, (unsigned int)16, __nv_bfloat16, int>(T5 *, T5 *, T5 *, T5 *, T6 *, T6 *, unsigned int, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, float, float, float, float)",2279,5.435,2.385
+"void at::native::elementwise_kernel<(int)128, (int)2, void at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",3442,5.397,1.568
+"void at::native::vectorized_elementwise_kernel<(int)4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 2)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)",3442,5.075,1.474
+_check_reuse_with_importance,1116,4.764,4.269
+"void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char *, (unsigned long)2>>(int, T2, T3)",3442,4.619,1.342
+"void at::native::vectorized_elementwise_kernel<(int)4, void at::native::<unnamed>::pow_tensor_scalar_kernel_impl<float, float>(at::TensorIteratorBase &, T2)::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)",3442,4.257,1.237
+"void at::native::vectorized_elementwise_kernel<(int)4, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)",3442,4.223,1.227
+"void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctorOnSelf_add<int>, std::array<char *, (unsigned long)2>>(int, T2, T3)",3393,4.182,1.232
+_hash_encode_append_decode_qk,1092,4.021,3.682
+"void kvlib::LaunchPrefetchingKernel<int>(T1 *, bool *, int *, volatile long *, int *, volatile bool *, long, long, long, long, long, long, long)",1116,3.654,3.274
+"void kvlib::CUDAAppendOffloadTensorPosWait<c10::BFloat16>(T1 *, T1 *, T1 *, T1 *, long *, int *, int *, volatile bool *, int, int, int, int, long, long, long, long, long, long, long, long)",1115,2.941,2.638
+
+=== Graph-Node Coverage ===
+graph_node_events
+8558
+graph_kernels
+65016

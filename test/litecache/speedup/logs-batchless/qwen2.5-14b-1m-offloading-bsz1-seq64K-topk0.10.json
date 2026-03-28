@@ -1,0 +1,51 @@
+{
+  "status": "ok",
+  "method": "offloading",
+  "config_file": "/jhe/myTransformer/config/hata_offloading/Qwen2.5-14B-Instruct-1M-64K.yaml",
+  "data": "/jhe/sglang/test/litecache/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-64K.jsonl",
+  "batch_size": 1,
+  "max_seq_len": 64000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 63865,
+  "avg_elapsed_s": 42.647621215359926,
+  "p50_elapsed_s": 42.64998060814105,
+  "avg_tokens_per_s": 1.1958473595618573,
+  "overall_tokens_per_s": 1.1958462991983216,
+  "epoch_elapsed_s": [
+    42.69558170181699,
+    42.597301336121745,
+    42.64998060814105
+  ],
+  "epoch_tokens_per_s": [
+    1.194502989938877,
+    1.197258943649393,
+    1.1957801450973016
+  ],
+  "avg_prefill_latency_s": 40.454159267712384,
+  "avg_decode_latency_ms_per_step": 54.836548691188604,
+  "avg_decode_tokens_per_s": 18.23601292429298,
+  "epoch_prefill_latency_s": [
+    40.50234252389055,
+    40.403528783121146,
+    40.45660649612546
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    54.83097944816109,
+    54.84431382501498,
+    54.83435280038975
+  ],
+  "epoch_decode_tokens_per_s": [
+    18.237864981883664,
+    18.23343078355538,
+    18.236743007439895
+  ],
+  "runtime_meta": {
+    "litecache_enabled": true,
+    "variant": "offloading",
+    "offloading_method": "hash",
+    "max_total_tokens": null,
+    "sglang_cuda_graph_enabled": false,
+    "litecache_cuda_graph_enabled": true
+  }
+}

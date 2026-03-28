@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 import logging
 import time
 from collections import defaultdict
@@ -87,6 +88,37 @@ class KvMetrics:
 
 
 class SchedulerMetricsMixin:
+    def _detect_litecache_cuda_graph_enabled(self: Scheduler) -> Optional[bool]:
+        """Try to detect LiteCache's internal CUDA graph switch from model override args."""
+        raw_override = getattr(self.server_args, "json_model_override_args", None)
+        if not raw_override:
+            return None
+
+        try:
+            parsed_override = json.loads(raw_override)
+        except Exception:
+            return None
+        if not isinstance(parsed_override, dict):
+            return None
+
+        # LiteCache bridge injects these fields through json_model_override_args.
+        if (
+            parsed_override.get("litecache_variant") is None
+            and parsed_override.get("custom_config") is None
+        ):
+            return None
+
+        custom_config = parsed_override.get("custom_config")
+        if not isinstance(custom_config, dict):
+            return None
+
+        enabled = custom_config.get("enable_cuda_graph")
+        if isinstance(enabled, bool):
+            return enabled
+        if isinstance(enabled, (int, float)):
+            return bool(enabled)
+        return None
+
     def init_metrics(
         self: Scheduler, tp_rank: int, pp_rank: int, dp_rank: Optional[int]
     ):
@@ -99,6 +131,9 @@ class SchedulerMetricsMixin:
         self.last_gen_throughput: float = 0.0
         self.last_input_throughput: float = 0.0
         self.step_time_dict = defaultdict(list)  # Dict[batch size -> step time]
+        self.litecache_cuda_graph_enabled: Optional[bool] = (
+            self._detect_litecache_cuda_graph_enabled()
+        )
 
         # The number of accepted tokens and forward ct for the recent `decode_log_interval` batches (for logging)
         self.spec_num_accepted_tokens = 0
@@ -261,6 +296,8 @@ class SchedulerMetricsMixin:
         )
 
         msg += f"{graph_backend[self.device]}: {can_run_cuda_graph}"
+        if self.litecache_cuda_graph_enabled is not None:
+            msg += f", litecache cuda graph: {self.litecache_cuda_graph_enabled}"
 
         logger.info(msg)
 
@@ -434,8 +471,14 @@ class SchedulerMetricsMixin:
                 "npu": "npu graph",
             },
         )
+        litecache_graph_msg = ""
+        if self.litecache_cuda_graph_enabled is not None:
+            litecache_graph_msg = (
+                f"litecache cuda graph: {self.litecache_cuda_graph_enabled}, "
+            )
         msg += (
             f"{graph_backend[self.device]}: {can_run_cuda_graph}, "
+            f"{litecache_graph_msg}"
             f"gen throughput (token/s): {self.last_gen_throughput:.2f}, "
             f"#queue-req: {len(self.waiting_queue)}"
         )

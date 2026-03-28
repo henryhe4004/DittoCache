@@ -362,6 +362,14 @@ class SchedulerOutputProcessorMixin:
         if result.copy_done is not None:
             result.copy_done.synchronize()
 
+        # Record decode-step forward completion immediately after model output is ready.
+        # This keeps benchmark timing closer to myTransformer's timer scope
+        # (around model forward), instead of including Python post-processing below.
+        for req in batch.reqs:
+            if self.enable_overlap and (req.finished() or req.is_retracted):
+                continue
+            req.time_stats.set_last_decode_finish_time()
+
         logits_output, next_token_ids, can_run_cuda_graph = (
             result.logits_output,
             result.next_token_ids,
@@ -406,8 +414,6 @@ class SchedulerOutputProcessorMixin:
 
             # Update Mamba last track seqlen
             self._mamba_prefix_cache_update(req, batch, result, i)
-
-            req.time_stats.set_last_decode_finish_time()
 
             req.check_finished(new_accepted_len)
 

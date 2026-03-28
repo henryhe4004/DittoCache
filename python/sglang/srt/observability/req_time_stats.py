@@ -554,7 +554,13 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
     scheduler_recv_time: float = 0.0
     last_chunked_prefill_finish_time: float = 0.0
     last_decode_finish_time: float = 0.0
+    prefill_forward_latency_sum: float = 0.0
+    prefill_forward_steps: int = 0
     decode_ct: int = 0
+    decode_forward_latency_sum: float = 0.0
+    decode_forward_steps: int = 0
+    decode_forward_prefix10_latency_sum: float = 0.0
+    decode_forward_prefix10_steps: int = 0
     last_decode_scheduled_time: float = 0.0
     last_forward_entry_time: float = 0.0
     last_prefill_finished_time: float = 0.0
@@ -567,15 +573,20 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
 
     def __getstate__(self) -> object:
         # send to detokenizer/tokenizer
-        if not self.enable_metrics:
-            return {}
-
+        # Keep forwarding request time stats even when metrics collector is disabled.
+        # This is needed by benchmark tools that read per-request forward timing from meta_info.
         state = {
             "wait_queue_entry_time": self.wait_queue_entry_time,
             "forward_entry_time": self.forward_entry_time,
             "prefill_run_batch_start_time": self.prefill_run_batch_start_time,
             "prefill_run_batch_end_time": self.prefill_run_batch_end_time,
             "prefill_finished_time": self.prefill_finished_time,
+            "prefill_forward_latency_sum": self.prefill_forward_latency_sum,
+            "prefill_forward_steps": self.prefill_forward_steps,
+            "decode_forward_latency_sum": self.decode_forward_latency_sum,
+            "decode_forward_steps": self.decode_forward_steps,
+            "decode_forward_prefix10_latency_sum": self.decode_forward_prefix10_latency_sum,
+            "decode_forward_prefix10_steps": self.decode_forward_prefix10_steps,
             "diff_realtime_monotonic": global_diff_realtime_monotonic,
         }
         return state
@@ -664,6 +675,11 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
         if ts is None:
             ts = time.perf_counter()
         self.prefill_run_batch_end_time = ts
+        if self.prefill_run_batch_start_time > 0.0:
+            prefill_step_latency = ts - self.prefill_run_batch_start_time
+            if prefill_step_latency > 0.0:
+                self.prefill_forward_latency_sum += prefill_step_latency
+                self.prefill_forward_steps += 1
 
     def set_last_chunked_prefill_finish_time(self, ts=None):
         if ts is None:
@@ -728,23 +744,28 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
         last_time = self.last_decode_finish_time
         self.last_decode_finish_time = ts
 
-        if self.enable_metrics or self.trace_ctx.tracing_enable:
-            if last_time == 0.0:
-                if self.disagg_mode == DisaggregationMode.DECODE:
-                    last_time = self.decode_prebuilt_finish_time
+        if last_time == 0.0:
+            if self.disagg_mode == DisaggregationMode.DECODE:
+                last_time = self.decode_prebuilt_finish_time
+            else:
+                if self.last_decode_scheduled_time < self.last_prefill_finished_time:
+                    last_time = self.last_prefill_finished_time
                 else:
-                    if (
-                        self.last_decode_scheduled_time
-                        < self.last_prefill_finished_time
-                    ):
-                        last_time = self.last_prefill_finished_time
-                    else:
-                        last_time = self.last_decode_scheduled_time
+                    last_time = self.last_decode_scheduled_time
+        decode_step_latency = ts - last_time
+        if decode_step_latency > 0.0:
+            self.decode_forward_latency_sum += decode_step_latency
+            if self.decode_forward_prefix10_steps < 10:
+                self.decode_forward_prefix10_latency_sum += decode_step_latency
+                self.decode_forward_prefix10_steps += 1
+        self.decode_forward_steps += 1
+
+        if self.enable_metrics or self.trace_ctx.tracing_enable:
             stage = RequestStage.DECODE_LOOP
-            self.observe_per_stage_req_latency(stage, ts - last_time)
+            self.observe_per_stage_req_latency(stage, decode_step_latency)
             attrs = {"decode_ct": self.decode_ct}
             self.trace_slice(stage, last_time, ts, attrs)
-            self.decode_ct += 1
+        self.decode_ct += 1
 
     def set_last_scheduled_time(self, forward_mode: ForwardMode, ts=None, attrs=None):
         if ts is None:
@@ -920,11 +941,50 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
         return None
 
     def get_prefill_launch_latency(self) -> Optional[float]:
+        if self.prefill_forward_latency_sum > 0.0:
+            return self.prefill_forward_latency_sum
         if (
             self.prefill_run_batch_start_time > 0.0
             and self.prefill_run_batch_end_time > 0.0
         ):
             return self.prefill_run_batch_end_time - self.prefill_run_batch_start_time
+        return None
+
+    def get_prefill_forward_latency_ms_per_step(self) -> Optional[float]:
+        if self.prefill_forward_steps > 0 and self.prefill_forward_latency_sum > 0.0:
+            return self.prefill_forward_latency_sum / self.prefill_forward_steps * 1e3
+        return None
+
+    def get_decode_forward_latency(self) -> Optional[float]:
+        if self.decode_forward_latency_sum > 0.0:
+            return self.decode_forward_latency_sum
+        return None
+
+    def get_decode_forward_latency_ms_per_step(self) -> Optional[float]:
+        if self.decode_forward_steps > 0 and self.decode_forward_latency_sum > 0.0:
+            return self.decode_forward_latency_sum / self.decode_forward_steps * 1e3
+        return None
+
+    def get_decode_forward_latency_drop_first_10(self) -> Optional[float]:
+        if self.decode_forward_steps <= 10:
+            return None
+        latency = (
+            self.decode_forward_latency_sum - self.decode_forward_prefix10_latency_sum
+        )
+        if latency > 0.0:
+            return latency
+        return None
+
+    def get_decode_forward_steps_drop_first_10(self) -> Optional[int]:
+        if self.decode_forward_steps <= 10:
+            return None
+        return self.decode_forward_steps - 10
+
+    def get_decode_forward_latency_ms_per_step_drop_first_10(self) -> Optional[float]:
+        latency = self.get_decode_forward_latency_drop_first_10()
+        steps = self.get_decode_forward_steps_drop_first_10()
+        if latency is not None and steps is not None and steps > 0:
+            return latency / steps * 1e3
         return None
 
     def convert_to_duration(self) -> str:
@@ -1047,6 +1107,15 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
                 "queue_time": self.get_queueing_time(),
                 "prefill_waiting_latency": self.get_prefill_waiting_latency(),
                 "prefill_launch_latency": self.get_prefill_launch_latency(),
+                "prefill_forward_latency": self.get_prefill_launch_latency(),
+                "prefill_forward_steps": self.prefill_forward_steps,
+                "prefill_forward_latency_ms_per_step": self.get_prefill_forward_latency_ms_per_step(),
+                "decode_forward_latency": self.get_decode_forward_latency(),
+                "decode_forward_steps": self.decode_forward_steps,
+                "decode_forward_latency_ms_per_step": self.get_decode_forward_latency_ms_per_step(),
+                "decode_forward_latency_drop_first_10": self.get_decode_forward_latency_drop_first_10(),
+                "decode_forward_steps_drop_first_10": self.get_decode_forward_steps_drop_first_10(),
+                "decode_forward_latency_ms_per_step_drop_first_10": self.get_decode_forward_latency_ms_per_step_drop_first_10(),
             }
         )
         return meta_data

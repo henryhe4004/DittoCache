@@ -1,0 +1,49 @@
+{
+  "status": "ok",
+  "method": "offloading",
+  "config_file": "/jhe/myTransformer/config/hata_offloading/Qwen2.5-14B-Instruct-1M-8K.yaml",
+  "data": "/jhe/sglang/test/litecache/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-8K.jsonl",
+  "batch_size": 1,
+  "max_seq_len": 8000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 7710,
+  "avg_elapsed_s": 5.309869529989858,
+  "p50_elapsed_s": 5.310062345000915,
+  "avg_tokens_per_s": 9.604759904464657,
+  "overall_tokens_per_s": 9.60475576884794,
+  "epoch_elapsed_s": [
+    5.3055091759888455,
+    5.314037068979815,
+    5.310062345000915
+  ],
+  "epoch_tokens_per_s": [
+    9.612649475909082,
+    9.597223229342461,
+    9.604407008142427
+  ],
+  "avg_prefill_latency_s": 2.5652889556173855,
+  "avg_decode_latency_ms_per_step": 54.89161148744946,
+  "avg_decode_tokens_per_s": 18.21771990136931,
+  "epoch_prefill_latency_s": [
+    2.5611416179453954,
+    2.569353512953967,
+    2.5653717359527946
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    54.887351160869,
+    54.893671120516956,
+    54.89381218096241
+  ],
+  "epoch_decode_tokens_per_s": [
+    18.219133896061155,
+    18.217036310152007,
+    18.216989497894765
+  ],
+  "runtime_meta": {
+    "litecache_enabled": true,
+    "variant": "offloading",
+    "offloading_method": "hash",
+    "max_total_tokens": null
+  }
+}

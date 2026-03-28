@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import os
 from typing import Optional, Tuple, Union
 
 import torch
@@ -18,6 +20,9 @@ try:
     import flash_attn as _flash_attn
 except ImportError:
     _flash_attn = None
+
+logger = logging.getLogger(__name__)
+LITECACHE_CUDA_GRAPH_DEBUG = os.getenv("LITECACHE_CUDA_GRAPH_DEBUG", "0") == "1"
 
 
 def custom_linear_forward_wrapper(x, linear, out):
@@ -337,7 +342,7 @@ def _compute_prefetch_query(
     past_key_value: OffloadingCache,
 ):
     bsz, hidden_size = hidden_input_buffer.shape
-    hidden_normed = self.next_input_layernorm(hidden_input_buffer)
+    hidden_normed = self.next_input_layernorm(hidden_input_buffer, is_prefill=False)
     custom_linear_forward_wrapper(
         hidden_normed,
         self.next_q_proj,
@@ -475,7 +480,7 @@ def transformer_layer_sparse_offloading_forward_prefill(
     past_key_value: Optional[OffloadingCache] = None,
 ):
     residual = hidden_states.clone()
-    hidden_states = self.input_layernorm(hidden_states)
+    hidden_states = self.input_layernorm(hidden_states, is_prefill=True)
 
     hidden_states = self.self_attn(
         hidden_states=hidden_states,
@@ -484,8 +489,8 @@ def transformer_layer_sparse_offloading_forward_prefill(
     torch.add(residual, hidden_states, out=hidden_states)
 
     residual.copy_(hidden_states)
-    hidden_states = self.post_attention_layernorm(hidden_states)
-    hidden_states = self.mlp(hidden_states)
+    hidden_states = self.post_attention_layernorm(hidden_states, is_prefill=True)
+    hidden_states = self.mlp(hidden_states, is_prefill=True)
     torch.add(residual, hidden_states, out=hidden_states)
 
     return hidden_states
@@ -497,7 +502,7 @@ def transformer_layer_sparse_offloading_forward_decode(
     past_key_value: Optional[OffloadingCache] = None,
 ):
     torch.cuda.nvtx.range_push("layer forward")
-    hidden_prenorm_buffer = self.input_layernorm(hidden_input_buffer)
+    hidden_prenorm_buffer = self.input_layernorm(hidden_input_buffer, is_prefill=False)
     kwargs = {
         "residual": hidden_input_buffer,
     }
@@ -510,9 +515,12 @@ def transformer_layer_sparse_offloading_forward_decode(
     torch.cuda.nvtx.range_pop()
     hidden_input_buffer.add_(hidden_attn_buffer)
 
-    hidden_postnorm_buffer = self.post_attention_layernorm(hidden_input_buffer)
+    hidden_postnorm_buffer = self.post_attention_layernorm(
+        hidden_input_buffer,
+        is_prefill=False,
+    )
     torch.cuda.nvtx.range_push("ffn")
-    hidden_mlp_buffer = self.mlp(hidden_postnorm_buffer)
+    hidden_mlp_buffer = self.mlp(hidden_postnorm_buffer, is_prefill=False)
     torch.cuda.nvtx.range_pop()
     hidden_input_buffer.add_(hidden_mlp_buffer)
     torch.cuda.nvtx.range_pop()
@@ -576,8 +584,10 @@ def llm_sparse_offloading_prefill_forward(
             hidden_states,
             past_key_value=past_key_values,
         )
-    hidden_states = self.norm(hidden_states)
-    hidden_states = hidden_states.view(bsz, q_len, -1)
+    # Align with myTransformer: only keep the last prefill token as decode input.
+    hidden_states = hidden_states.view(bsz, q_len, -1)[:, -1, :].view(bsz, -1).contiguous()
+    hidden_states = self.norm(hidden_states, is_prefill=True)
+    hidden_states = hidden_states.view(bsz, 1, -1)
 
     past_key_values.sync_offload_prefill()
 
@@ -599,6 +609,7 @@ def llm_sparse_offloading_decode_forward(
     assert q_len == 1, "Only support decode with q_len == 1"
     past_key_values.update_metadata(q_len)
     hidden_states = hidden_states.view(bsz * q_len, -1)
+    graph_path = "eager"
 
     in_outer_cuda_graph_capture = False
     try:
@@ -608,6 +619,7 @@ def llm_sparse_offloading_decode_forward(
 
     if past_key_values.config.enable_cuda_graph and not in_outer_cuda_graph_capture:
         if bsz not in self._graph_buffers:
+            graph_path = "warmup"
             llm_sparse_offloading_prepare_cuda_graph_metadata(
                 self,
                 bsz,
@@ -622,10 +634,11 @@ def llm_sparse_offloading_decode_forward(
                     input_buffer,
                     past_key_value=past_key_values,
                 )
-            hidden_states = self.norm(input_buffer)
+            hidden_states = self.norm(input_buffer, is_prefill=False)
             self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
 
         elif bsz not in self._graphs:
+            graph_path = "capture"
             self._graphs[bsz] = torch.cuda.CUDAGraph()
             self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
 
@@ -636,16 +649,18 @@ def llm_sparse_offloading_decode_forward(
                         input_buffer,
                         past_key_value=past_key_values,
                     )
-                hidden_states = self.norm(input_buffer)
+                hidden_states = self.norm(input_buffer, is_prefill=False)
                 self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
 
         else:
+            graph_path = "replay"
             self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
             self._graphs[bsz].replay()
 
         hidden_states = self._graph_buffers[bsz]["output_hidden_states"]
 
     else:
+        graph_path = "fallback_eager"
         if bsz not in self._graph_buffers:
             llm_sparse_offloading_prepare_cuda_graph_metadata(
                 self,
@@ -661,9 +676,17 @@ def llm_sparse_offloading_decode_forward(
                 input_buffer,
                 past_key_value=past_key_values,
             )
-        hidden_states = self.norm(input_buffer)
+        hidden_states = self.norm(input_buffer, is_prefill=False)
         self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
         hidden_states = self._graph_buffers[bsz]["output_hidden_states"]
+    if LITECACHE_CUDA_GRAPH_DEBUG:
+        logger.info(
+            "LiteCache decode graph path=%s, enable_cuda_graph=%s, in_outer_capture=%s, bsz=%d",
+            graph_path,
+            bool(past_key_values.config.enable_cuda_graph),
+            bool(in_outer_cuda_graph_capture),
+            int(bsz),
+        )
 
     hidden_states = hidden_states.view(bsz, 1, -1)
 

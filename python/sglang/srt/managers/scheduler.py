@@ -2333,8 +2333,8 @@ class Scheduler(
             logger.info(f"Scheduler.run_batch sleep {self.forward_sleep_time}s")
             time.sleep(self.forward_sleep_time)
 
-        # Capture prefill start time for EXTEND mode
-        if batch.forward_mode == ForwardMode.EXTEND:
+        # Capture prefill start time for prefill-related forward modes.
+        if batch.forward_mode.is_prefill():
             set_time_batch(batch.reqs, "set_prefill_run_batch_start_time")
 
         # Place holder handling for pd-disagg decode event loop
@@ -2450,8 +2450,8 @@ class Scheduler(
                 embeddings = self.tp_worker.forward_batch_embedding(model_worker_batch)
                 ret = EmbeddingBatchResult(embeddings=embeddings)
 
-        # Capture prefill end time for EXTEND mode
-        if batch.forward_mode == ForwardMode.EXTEND:
+        # Capture prefill end time for prefill-related forward modes.
+        if batch.forward_mode.is_prefill():
             set_time_batch(batch.reqs, "set_prefill_run_batch_end_time")
 
         if (
