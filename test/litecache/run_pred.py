@@ -37,6 +37,23 @@ def log(msg: str):
     print(f"[{ts}] {msg}", flush=True)
 
 
+def _iter_asset_roots():
+    seen = set()
+    for raw_root in (
+        os.environ.get("LITECACHE_ROOT"),
+        THIS_DIR,
+        os.environ.get("MYTRANSFORMER_ROOT"),
+        "/jhe/myTransformer",
+    ):
+        if not raw_root:
+            continue
+        root = os.path.abspath(raw_root)
+        if root in seen:
+            continue
+        seen.add(root)
+        yield root
+
+
 def seed_everything(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -200,11 +217,12 @@ def resolve_path(path_value: str | None, config_file: str) -> str | None:
 
     config_dir = os.path.dirname(os.path.abspath(config_file))
     candidates = [os.path.normpath(os.path.join(config_dir, path_value))]
-
-    my_root = os.environ.get("MYTRANSFORMER_ROOT", "/jhe/myTransformer")
-    if path_value.startswith("../"):
-        candidates.append(os.path.normpath(os.path.join(my_root, path_value[3:])))
-    candidates.append(os.path.normpath(os.path.join(my_root, path_value)))
+    for asset_root in _iter_asset_roots():
+        if path_value.startswith("../"):
+            candidates.append(
+                os.path.normpath(os.path.join(asset_root, path_value[3:]))
+            )
+        candidates.append(os.path.normpath(os.path.join(asset_root, path_value)))
 
     for cand in candidates:
         if os.path.exists(cand):

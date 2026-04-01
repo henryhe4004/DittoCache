@@ -28,6 +28,25 @@ def log(msg: str) -> None:
     print(f"[{ts}] {msg}", flush=True)
 
 
+def iter_asset_roots() -> list[Path]:
+    roots: list[Path] = []
+    seen: set[Path] = set()
+    for raw_root in (
+        os.environ.get("LITECACHE_ROOT"),
+        str(THIS_DIR.parent),
+        os.environ.get("MYTRANSFORMER_ROOT"),
+        "/jhe/myTransformer",
+    ):
+        if not raw_root:
+            continue
+        root = Path(raw_root).resolve()
+        if root in seen:
+            continue
+        seen.add(root)
+        roots.append(root)
+    return roots
+
+
 def _as_int(value: Any) -> int | None:
     if isinstance(value, bool):
         return None
@@ -220,10 +239,12 @@ def resolve_path(path_value: str | None, config_file: str | None) -> str | None:
         config_dir = os.path.dirname(os.path.abspath(config_file))
         candidates.append(os.path.normpath(os.path.join(config_dir, path_value)))
 
-    my_root = os.environ.get("MYTRANSFORMER_ROOT", "/jhe/myTransformer")
-    if path_value.startswith("../"):
-        candidates.append(os.path.normpath(os.path.join(my_root, path_value[3:])))
-    candidates.append(os.path.normpath(os.path.join(my_root, path_value)))
+    for asset_root in iter_asset_roots():
+        if path_value.startswith("../"):
+            candidates.append(
+                os.path.normpath(os.path.join(asset_root, path_value[3:]))
+            )
+        candidates.append(os.path.normpath(os.path.join(asset_root, path_value)))
 
     for cand in candidates:
         if os.path.exists(cand):

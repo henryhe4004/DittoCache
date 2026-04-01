@@ -1,0 +1,6 @@
+kvcache_manager:
+  max_tokens: 32768
+  max_batch_size: 64
+  gpu_memory_budget: 40.0
+enable_cuda_graph: true
+chunk_prefill_size: 8192 # 0 for no chunking

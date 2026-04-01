@@ -29,22 +29,51 @@ is_code_completion_task_list() {
     return 0
 }
 
+pick_cuda_visible_devices() {
+    local need_gpus="$1"
+    local min_free_mb="$2"
+    local -a candidates=()
+
+    command -v nvidia-smi >/dev/null 2>&1 || return 1
+
+    mapfile -t candidates < <(
+        nvidia-smi --query-gpu=index,memory.free --format=csv,noheader,nounits \
+            | awk -F',' -v min_free_mb="${min_free_mb}" '
+                {
+                    gsub(/ /, "", $1);
+                    gsub(/ /, "", $2);
+                    if (($2 + 0) >= min_free_mb) {
+                        print $1 "," $2;
+                    }
+                }
+            ' \
+            | sort -t',' -k2,2nr -k1,1n \
+            | cut -d',' -f1
+    )
+
+    if (( ${#candidates[@]} < need_gpus )); then
+        return 1
+    fi
+
+    local -a picked=("${candidates[@]:0:need_gpus}")
+    local joined
+    joined="$(IFS=,; echo "${picked[*]}")"
+    echo "${joined}"
+}
+
 # =========================
 # Paths
 # =========================
 RUN_PRED_PY="${RUN_PRED_PY:-${SCRIPT_DIR}/run_pred.py}"
 EVAL_PY="${EVAL_PY:-${SCRIPT_DIR}/eval_longbench_infinitebench.py}"
 
-MYTRANSFORMER_ROOT="${MYTRANSFORMER_ROOT:-/jhe/myTransformer}"
-MODEL_PATH="${MODEL_PATH:-/jhe/Qwen2.5-14B-Instruct-1M}"
+LITECACHE_ROOT="${LITECACHE_ROOT:-${SCRIPT_DIR}}"
+MYTRANSFORMER_ROOT="${MYTRANSFORMER_ROOT:-${LITECACHE_ROOT}}"
+MODEL_PATH="${MODEL_PATH:-/jhe/Llama-3-8B-Instruct-Gradient-1048k}"
+MODEL_NAME="${MODEL_NAME:-$(basename "${MODEL_PATH}")}"
 DATASET_PATH="${DATASET_PATH:-/jhe/LongBench}"
 if [[ ! -d "${DATASET_PATH}" && -d "/jhe/dataset/LongBench" ]]; then
     DATASET_PATH="/jhe/dataset/LongBench"
-fi
-
-CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/config/Qwen2.5-14B-Instruct-1M-64K-top0.10.json}"
-if [[ ! -f "${CONFIG_FILE}" && -f "${MYTRANSFORMER_ROOT}/config/Qwen2.5-14B-Instruct-1M-64K-top0.10.json" ]]; then
-    CONFIG_FILE="${MYTRANSFORMER_ROOT}/config/Qwen2.5-14B-Instruct-1M-64K-top0.10.json"
 fi
 
 # =========================
@@ -59,7 +88,9 @@ MAX_SEQ_LEN="${MAX_SEQ_LEN:-131072}"
 BATCH_SIZE="${BATCH_SIZE:-1}"
 MP_NUM="${MP_NUM:-1}"
 PP_NUM="${PP_NUM:-1}"
-CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
+CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-}"
+AUTO_SELECT_GPUS="${AUTO_SELECT_GPUS:-1}"
+MIN_FREE_GPU_MEMORY_MB="${MIN_FREE_GPU_MEMORY_MB:-20000}"
 DATASET_LIMIT="${DATASET_LIMIT:-0}"
 
 # Debug / observability
@@ -75,6 +106,8 @@ MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-65536}"
 MEM_FRACTION_STATIC="${MEM_FRACTION_STATIC:-}"
 
 # Leave MAX_TOTAL_TOKENS empty by default so engine can profile token capacity from GPU memory.
+
+CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/config/${MODEL_NAME}-64K-top${TOPK}.json}"
 
 # Output + compare
 OUTPUT_ROOT="${OUTPUT_ROOT:-${SCRIPT_DIR}/preds}"
@@ -95,6 +128,24 @@ MAX_SINGLE_DROP="${MAX_SINGLE_DROP:-8.0}"
 [[ -e "${MODEL_PATH}" ]] || die "missing model: ${MODEL_PATH}"
 [[ -d "${DATASET_PATH}" ]] || die "missing dataset dir: ${DATASET_PATH}"
 [[ -f "${CONFIG_FILE}" ]] || die "missing config: ${CONFIG_FILE}"
+
+if [[ "${METHOD}" == offloading* || "${METHOD}" == *-offloading ]]; then
+    [[ "${MP_NUM}" == "1" ]] || die "LiteCache offloading currently requires MP_NUM=1."
+fi
+
+REQUESTED_GPU_COUNT=$(( MP_NUM * PP_NUM ))
+if (( REQUESTED_GPU_COUNT <= 0 )); then
+    die "invalid GPU count derived from MP_NUM=${MP_NUM} and PP_NUM=${PP_NUM}"
+fi
+
+if [[ -z "${CUDA_VISIBLE_DEVICES}" && "${AUTO_SELECT_GPUS}" == "1" ]]; then
+    CUDA_VISIBLE_DEVICES="$(pick_cuda_visible_devices "${REQUESTED_GPU_COUNT}" "${MIN_FREE_GPU_MEMORY_MB}")" \
+        || die "failed to auto-select ${REQUESTED_GPU_COUNT} GPU(s) with at least ${MIN_FREE_GPU_MEMORY_MB} MiB free; set CUDA_VISIBLE_DEVICES manually"
+fi
+
+if [[ -z "${CUDA_VISIBLE_DEVICES}" ]]; then
+    CUDA_VISIBLE_DEVICES="0"
+fi
 
 mkdir -p "${OUTPUT_DIR}"
 
@@ -134,7 +185,11 @@ EVAL_CMD=(python3 "${EVAL_PY}" --model "${OUTPUT_DIR}")
 
 log_info "output_dir=${OUTPUT_DIR}"
 log_info "model=$(basename "${MODEL_PATH}") method=${METHOD} topk=${TOPK}"
+log_info "config_file=${CONFIG_FILE}"
 log_info "dataset_path=${DATASET_PATH} gpus=${CUDA_VISIBLE_DEVICES} mp=${MP_NUM} pp=${PP_NUM}"
+if [[ "${MP_NUM}" == "1" ]]; then
+    log_info "single-rank run will use first visible GPU=${CUDA_VISIBLE_DEVICES%%,*}"
+fi
 log_info "heartbeat_sec=${HEARTBEAT_SEC} decode_log_interval=${DECODE_LOG_INTERVAL}"
 if [[ -n "${MAX_TOTAL_TOKENS}" ]]; then
     log_info "max_total_tokens=${MAX_TOTAL_TOKENS}"
@@ -149,6 +204,7 @@ fi
 # =========================
 # Run Prediction + Eval
 # =========================
+LITECACHE_ROOT="${LITECACHE_ROOT}" \
 MYTRANSFORMER_ROOT="${MYTRANSFORMER_ROOT}" \
 PYTHONUNBUFFERED="${PYTHONUNBUFFERED}" \
 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" \

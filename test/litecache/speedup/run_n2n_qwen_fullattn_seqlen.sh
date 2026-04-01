@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 MODEL_PATH="${MODEL_PATH:-/jhe/Qwen2.5-14B-Instruct-1M}"
-CONFIG_ROOT="${CONFIG_ROOT:-/jhe/myTransformer/config/full_attn}"
+CONFIG_ROOT="${CONFIG_ROOT:-${SCRIPT_DIR}/../config/full_attn}"
 DATA_ROOT="${DATA_ROOT:-${SCRIPT_DIR}/data}"
 LOG_DIR="${LOG_DIR:-${SCRIPT_DIR}/logs-cudagraph}"
 

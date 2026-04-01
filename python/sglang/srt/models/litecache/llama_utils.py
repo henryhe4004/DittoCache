@@ -3,6 +3,15 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 from transformers.models.llama.modeling_llama import LlamaMLP, LlamaRMSNorm
+from sglang.srt.models.litecache.common_utils import (
+    _dense_ffn_decode_forward,
+    _dense_ffn_prefill_forward,
+    _ffn_prepare_cuda_graph_metadata,
+    _fuse_gate_up_proj,
+    _layernorm_decode_forward,
+    _layernorm_prefill_forward,
+    _layernorm_prepare_cuda_graph_metadata,
+)
 
 
 class CustomerLlamaMLP(LlamaMLP):
@@ -12,9 +21,28 @@ class CustomerLlamaMLP(LlamaMLP):
 
     def __init__(self, config):
         super().__init__(config)
+        self.torch_dtype = config.torch_dtype
+        self.hidden_act = config.hidden_act
+        assert self.hidden_act in ["silu"]
 
-    def forward(self, x):
-        return super().forward(x)
+        self.converted = False
+        self._graph_buffers = {}
+
+    def forward(self, x, is_prefill=False):
+        if not self.converted:
+            _fuse_gate_up_proj(self)
+        if is_prefill:
+            return _dense_ffn_prefill_forward(self, x)
+
+        bsz = x.shape[0]
+        if bsz not in self._graph_buffers:
+            _ffn_prepare_cuda_graph_metadata(
+                self,
+                bsz,
+                x.dtype,
+                x.device,
+            )
+        return _dense_ffn_decode_forward(self, x)
 
 
 class CustomLlamaRMSNorm(LlamaRMSNorm):
@@ -22,9 +50,22 @@ class CustomLlamaRMSNorm(LlamaRMSNorm):
         super().__init__(hidden_size, eps)
         self.weight = nn.Parameter(torch.ones(hidden_size))
         self.variance_epsilon = eps
+        self._graph_buffers = {}
 
-    def forward(self, hidden_states):
-        return super().forward(hidden_states)
+    def forward(self, hidden_states, is_prefill=False):
+        if is_prefill:
+            return _layernorm_prefill_forward(self, hidden_states)
+
+        bsz = hidden_states.shape[0]
+        if bsz not in self._graph_buffers:
+            _layernorm_prepare_cuda_graph_metadata(
+                self,
+                bsz,
+                hidden_states.shape[-1],
+                dtype=hidden_states.dtype,
+                device=hidden_states.device,
+            )
+        return _layernorm_decode_forward(self, hidden_states)
 
 
 class CustomLlamaRotaryEmbedding(nn.Module):
@@ -68,4 +109,3 @@ class CustomLlamaRotaryEmbedding(nn.Module):
         indptr, offsets = past_key_values.get_rope_metadata(query_states.device)
         self.fn(query_states, key_states, indptr, offsets, **self.fn_kwargs)
         return query_states, key_states
-
