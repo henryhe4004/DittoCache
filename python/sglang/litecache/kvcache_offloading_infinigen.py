@@ -65,8 +65,11 @@ class InfiniGenOffloadingCache(OffloadingCache):
                     os.path.join(self.aux_data_path, f"skewing_martix_{layer:02d}.pt"),
                     weights_only=True,
                 )
-                skewing_matrix = skewing_matrix.view(
-                    self.num_key_value_heads, self.head_dim, self.head_dim
+                skewing_matrix = skewing_matrix.view(-1, self.head_dim, self.head_dim)
+                skewing_matrix = self._slice_local_kv_head_tensor(
+                    skewing_matrix,
+                    tensor_name=f"skewing_matrix_layer_{layer:02d}",
+                    head_dim=0,
                 ).to(self.dtype).to(self.layer_devices[layer])
             self.layers_skewing_matrix[layer] = skewing_matrix
 
@@ -223,4 +226,3 @@ def prepare_cache_for_generation(
     self._cache.reset(batch_size)
     model_kwargs["past_key_values"] = self._cache
     return True
-

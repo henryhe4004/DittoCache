@@ -67,7 +67,7 @@ __device__ uint4 dequantize_s4_to_fp16x2(uint32_t const& source) {
 
   return result;
 #else
-  assert(false);
+  // Unreachable on supported GPUs; avoid assert() (not always in scope for nvcc).
   return {};
 #endif
 }
@@ -109,7 +109,7 @@ __device__ uint4 dequantize_s4_to_bf16x2(uint32_t const& source) {
 
   return result;
 #else
-  assert(false);
+  // Unreachable on supported GPUs; avoid assert() (not always in scope for nvcc).
   return {};
 #endif
 }

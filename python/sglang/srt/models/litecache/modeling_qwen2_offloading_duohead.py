@@ -37,6 +37,7 @@ from sglang.srt.models.litecache.qwen2_utils import (
     CustomerQwen2MLP,
     CustomQwen2RMSNorm,
     CustomQwen2RotaryEmbedding,
+    apply_litecache_tp_attention_layout,
 )
 
 try:
@@ -47,6 +48,10 @@ except ImportError:
 logger = logging.get_logger(__name__)
 
 CHUNK_SIZE = 8192
+
+
+def _local_attn_hidden_size(self) -> int:
+    return int(getattr(self, "local_attn_hidden_size", self.num_heads * self.head_dim))
 
 def _replace_backbone_model(parent: nn.Module, model_cls, config) -> None:
     """
@@ -106,11 +111,7 @@ def _flash_attn_with_kvcache(
 class CustomQwen2Attention(_Qwen2FlashAttention2):
     def __init__(self, config, layer_idx):
         super().__init__(config, layer_idx)
-        # transformers>=4.57 no longer exposes these legacy attrs on Qwen2Attention.
-        self.num_heads = getattr(self, "num_heads", config.num_attention_heads)
-        self.num_key_value_heads = getattr(
-            self, "num_key_value_heads", config.num_key_value_heads
-        )
+        apply_litecache_tp_attention_layout(self, config)
         self.rotary_emb = CustomQwen2RotaryEmbedding(config)
         self.scale = 1 / math.sqrt(self.head_dim)
         self.next_input_layernorm = None
@@ -153,18 +154,27 @@ class CustomQwen2Attention(_Qwen2FlashAttention2):
         q_len = past_key_value.get_cur_q_len()
         is_prefill = q_len > 1
         token_num, hidden_size = hidden_states.size()
+        local_attn_hidden_size = _local_attn_hidden_size(self)
         num_chunks = (token_num + CHUNK_SIZE - 1) // CHUNK_SIZE
 
         if is_prefill:
             past_key_value.prefill_sync()
             key_states = self.k_proj(hidden_states)
             value_states = self.v_proj(hidden_states)
+            if local_attn_hidden_size == hidden_size:
+                query_states_2d = hidden_states
+            else:
+                query_states_2d = torch.empty(
+                    (token_num, local_attn_hidden_size),
+                    dtype=hidden_states.dtype,
+                    device=hidden_states.device,
+                )
             if token_num > CHUNK_SIZE:
                 for i in range(num_chunks):
                     start = i * CHUNK_SIZE
                     end = min(start + CHUNK_SIZE, token_num)
-                    hidden_states[start:end] = self.q_proj(hidden_states[start:end])
-                query_states = hidden_states
+                    query_states_2d[start:end] = self.q_proj(hidden_states[start:end])
+                query_states = query_states_2d
             else:
                 query_states = self.q_proj(hidden_states)
         else:
@@ -256,7 +266,7 @@ class CustomQwen2Attention(_Qwen2FlashAttention2):
                     query_states, key_states, value_states, topk_indices, self.scale
                 )
 
-        attn_output = attn_output.view(-1, hidden_size)
+        attn_output = attn_output.view(-1, local_attn_hidden_size)
         if is_prefill and token_num > CHUNK_SIZE:
             hidden_states = hidden_states.view(-1, hidden_size)
             for i in range(num_chunks):

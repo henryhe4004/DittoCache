@@ -3,6 +3,10 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 from transformers.models.qwen2.modeling_qwen2 import Qwen2MLP, Qwen2RMSNorm
+from sglang.srt.layers.dp_attention import (
+    get_attention_tp_rank,
+    get_attention_tp_size,
+)
 from sglang.srt.models.litecache.common_utils import (
     _dense_ffn_decode_forward,
     _dense_ffn_prefill_forward,
@@ -14,6 +18,41 @@ from sglang.srt.models.litecache.common_utils import (
 )
 
 
+def apply_litecache_tp_attention_layout(module: nn.Module, config) -> None:
+    module.hidden_size = int(config.hidden_size)
+    total_num_heads = int(config.num_attention_heads)
+    total_num_kv_heads = int(config.num_key_value_heads)
+    attn_tp_rank = int(get_attention_tp_rank())
+    attn_tp_size = int(get_attention_tp_size())
+
+    module.total_num_heads = total_num_heads
+    module.total_num_key_value_heads = total_num_kv_heads
+    module.attn_tp_rank = attn_tp_rank
+    module.attn_tp_size = attn_tp_size
+
+    if attn_tp_size > 1 and total_num_heads % attn_tp_size == 0:
+        module.num_heads = total_num_heads // attn_tp_size
+    else:
+        module.num_heads = total_num_heads
+
+    if attn_tp_size <= 1:
+        module.num_key_value_heads = total_num_kv_heads
+    elif total_num_kv_heads >= attn_tp_size:
+        if total_num_kv_heads % attn_tp_size != 0:
+            raise ValueError(
+                f"num_key_value_heads={total_num_kv_heads} is not divisible by attn_tp_size={attn_tp_size}"
+            )
+        module.num_key_value_heads = total_num_kv_heads // attn_tp_size
+    else:
+        if attn_tp_size % total_num_kv_heads != 0:
+            raise ValueError(
+                f"attn_tp_size={attn_tp_size} is not divisible by num_key_value_heads={total_num_kv_heads}"
+            )
+        module.num_key_value_heads = 1
+
+    module.local_attn_hidden_size = module.num_heads * module.head_dim
+
+
 class CustomerQwen2MLP(Qwen2MLP):
     def __init__(self, config):
         super().__init__(config)
@@ -22,6 +61,7 @@ class CustomerQwen2MLP(Qwen2MLP):
         assert self.hidden_act in ["silu"]
 
         self.converted = False
+        self.use_unfused_awq = False
         self._graph_buffers = {}
 
     def forward(self, x, is_prefill=False):

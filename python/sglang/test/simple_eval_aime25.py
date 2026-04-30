@@ -10,6 +10,8 @@ competition math exam. All answers are integers from 000 to 999.
 """
 
 import re
+import json
+import os
 from typing import Optional
 
 from sglang.test import simple_eval_common as common
@@ -42,6 +44,12 @@ def normalize_aime_answer(answer: str) -> Optional[str]:
         return None
     # Remove whitespace and convert to string
     answer = str(answer).strip()
+    # Handle outputs like "0 25" where model prepends a standalone zero
+    # before the real AIME answer.
+    spaced_leading_zero = re.match(r"^\s*0+\s+(-?\d+(?:\.\d+)?)\b", answer)
+    if spaced_leading_zero is not None:
+        answer = spaced_leading_zero.group(1)
+
     # Try to extract integer from answer
     try:
         # Handle various formats like "42", "042", "42.0", etc.
@@ -58,6 +66,7 @@ class AIME25Eval(Eval):
         self,
         num_examples: Optional[int],
         num_threads: int,
+        data_source: Optional[str] = None,
     ):
         try:
             from datasets import load_dataset
@@ -67,18 +76,48 @@ class AIME25Eval(Eval):
                 "Please install it with: pip install datasets"
             )
 
-        # Load AIME 2025 dataset from HuggingFace
-        dataset1 = load_dataset("opencompass/AIME2025", "AIME2025-I", split="test")
-        dataset2 = load_dataset("opencompass/AIME2025", "AIME2025-II", split="test")
-        examples1 = [
-            {"question": row["question"], "answer": str(row["answer"])}
-            for row in dataset1
-        ]
-        examples2 = [
-            {"question": row["question"], "answer": str(row["answer"])}
-            for row in dataset2
-        ]
-        examples = examples1 + examples2
+        examples = []
+        if data_source and os.path.exists(data_source):
+            candidate_files = []
+            if os.path.isdir(data_source):
+                combined = os.path.join(data_source, "combined.jsonl")
+                if os.path.isfile(combined):
+                    candidate_files = [combined]
+                else:
+                    candidate_files = [
+                        os.path.join(data_source, "AIME2025-I.jsonl"),
+                        os.path.join(data_source, "AIME2025-II.jsonl"),
+                        os.path.join(data_source, "aime2025_i.jsonl"),
+                        os.path.join(data_source, "aime2025_ii.jsonl"),
+                    ]
+            else:
+                candidate_files = [data_source]
+
+            for candidate in candidate_files:
+                if not os.path.isfile(candidate):
+                    continue
+                with open(candidate, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        row = json.loads(line)
+                        examples.append(
+                            {"question": row["question"], "answer": str(row["answer"])}
+                        )
+
+        if not examples:
+            dataset1 = load_dataset("opencompass/AIME2025", "AIME2025-I", split="test")
+            dataset2 = load_dataset("opencompass/AIME2025", "AIME2025-II", split="test")
+            examples1 = [
+                {"question": row["question"], "answer": str(row["answer"])}
+                for row in dataset1
+            ]
+            examples2 = [
+                {"question": row["question"], "answer": str(row["answer"])}
+                for row in dataset2
+            ]
+            examples = examples1 + examples2
 
         if num_examples:
             examples = examples[: min(num_examples, len(examples))]

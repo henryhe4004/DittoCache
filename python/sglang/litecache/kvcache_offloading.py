@@ -11,6 +11,12 @@ from transformers.configuration_utils import PretrainedConfig
 from transformers.generation.configuration_utils import GenerationConfig
 
 from .kvcache_full_attn import CustomStaticCache
+from .transfer_stats import (
+    record_decode_transfer_step,
+    reset_transfer_stats,
+    set_transfer_stats_enabled,
+    transfer_stats_enabled,
+)
 import sgl_kernel.kvlib as KVLib
 from sglang.jit_kernel.triton_kernels.cache.check_reuse import (
     check_reuse_with_importance,
@@ -78,6 +84,16 @@ class OffloadingCache(CustomStaticCache):
         else:
             self.max_sparse_tokens = int(self.topk_ratio)
         self.max_sparse_tokens = max(self.max_sparse_tokens, (self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1) * self.config.kvcache_manager_config.max_batch_size)
+        self.selective_start_len = max(
+            int(getattr(self.config.sparse_attention_config, "selective_start_len", 0)),
+            0,
+        )
+        # Max consecutive reuse count before forcing one gather refresh for each KV head.
+        # <=0 disables this forcing path entirely.
+        raw_max_reuse_count = int(
+            getattr(self.config.offload_config, "max_reuse_count", 0)
+        )
+        self.max_reuse_count = 0 if raw_max_reuse_count <= 0 else raw_max_reuse_count
 
         # Debug switch for diagnosing potential CPUGather stalls.
         self.debug_cpugather = os.environ.get("LITECACHE_DEBUG_CPUGATHER", "0") == "1"
@@ -92,9 +108,107 @@ class OffloadingCache(CustomStaticCache):
         self.topk_prefetch_k_host = 0
         self.cache_length_host = [0 for _ in range(self.num_layers)]
         self.cpu_cache_length_host = [0 for _ in range(self.num_layers)]
+        self._decode_transfer_step_idx = 0
+        self.record_overlap_stats = (
+            os.environ.get("LITECACHE_RECORD_OVERLAP_STATS", "0") == "1"
+        )
+        self.record_transfer_stats = (
+            os.environ.get("LITECACHE_RECORD_TRANSFER_STATS", "0") == "1"
+        ) or self.record_overlap_stats
+        set_transfer_stats_enabled(self.record_transfer_stats)
+        self._pending_overlap_prefetch = [None for _ in range(self.num_layers)]
+        self._pending_overlap_head_mask = [None for _ in range(self.num_layers)]
+        self._decode_overlap_metrics = [None for _ in range(self.num_layers)]
 
     def _plan_topk_used_gpu_memory(self):
         raise NotImplementedError
+
+    def _resolve_head_threshold_csv_path(self) -> str | None:
+        explicit = os.environ.get("LITECACHE_HEAD_THRESHOLD_CSV_FILE")
+        if explicit:
+            out_path = explicit
+        else:
+            csv_path_env = os.environ.get("LITECACHE_TRANSFER_STATS_CSV_FILE")
+            if csv_path_env:
+                root, ext = os.path.splitext(csv_path_env)
+                if ext.lower() == ".csv":
+                    out_path = f"{root}_head_thresholds.csv"
+                else:
+                    out_path = f"{csv_path_env}_head_thresholds.csv"
+            else:
+                json_path_env = os.environ.get("LITECACHE_TRANSFER_STATS_FILE")
+                if json_path_env:
+                    root, ext = os.path.splitext(json_path_env)
+                    if ext.lower() in {".json", ".jsonl"}:
+                        out_path = f"{root}_head_thresholds.csv"
+                    else:
+                        out_path = f"{json_path_env}_head_thresholds.csv"
+                else:
+                    return None
+
+        if self.attn_tp_size > 1:
+            root, ext = os.path.splitext(out_path)
+            return f"{root}.tp{self.attn_tp_rank:02d}{ext or '.csv'}"
+        return out_path
+
+    def _write_head_thresholds_csv(
+        self,
+        stacked_reuse_thresholds: torch.Tensor,
+        head_cos: torch.Tensor,
+        hard2reuse_head_mask: torch.Tensor,
+        reuse_difficulty: torch.Tensor,
+    ) -> None:
+        out_path = self._resolve_head_threshold_csv_path()
+        if not out_path:
+            return
+
+        rows = []
+        thresholds_cpu = stacked_reuse_thresholds.detach().cpu()
+        cos_cpu = head_cos.detach().cpu()
+        hard_cpu = hard2reuse_head_mask.detach().cpu()
+        diff_cpu = reuse_difficulty.detach().cpu()
+
+        for layer_idx in range(self.num_layers):
+            gpu_mask = self.layers_gpu_head_mask[layer_idx].detach().cpu().to(torch.bool)
+            for head_idx in range(self.num_key_value_heads):
+                global_head_idx = int(self.kv_head_start + head_idx)
+                rows.append(
+                    {
+                        "layer_idx": int(layer_idx),
+                        "head_idx": global_head_idx,
+                        "reuse_threshold": float(thresholds_cpu[layer_idx, head_idx].item()),
+                        "head_cosine": float(cos_cpu[layer_idx, head_idx].item()),
+                        "reuse_difficulty": float(diff_cpu[layer_idx, head_idx].item()),
+                        "hard_to_reuse": int(bool(hard_cpu[layer_idx, head_idx].item())),
+                        "placed_on_gpu": int(bool(gpu_mask[head_idx].item())),
+                        "offloaded_to_cpu": int(not bool(gpu_mask[head_idx].item())),
+                    }
+                )
+
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        with open(out_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=[
+                    "layer_idx",
+                    "head_idx",
+                    "reuse_threshold",
+                    "head_cosine",
+                    "reuse_difficulty",
+                    "hard_to_reuse",
+                    "placed_on_gpu",
+                    "offloaded_to_cpu",
+                ],
+            )
+            writer.writeheader()
+            if rows:
+                writer.writerows(rows)
+
+        print(f"Saved head thresholds CSV to: {out_path}")
+
+    @property
+    def _per_token_head_kv_bytes(self) -> int:
+        return 2 * self.head_dim * self.dtype.itemsize
 
     def _debug_cpugather_log(self, stage: str, layer_idx: int, **kwargs):
         if not self.debug_cpugather:
@@ -166,6 +280,51 @@ class OffloadingCache(CustomStaticCache):
         head_importance = pd.read_csv(k_head_importance_file, sep='\t', header=None).to_numpy()
         q_head_importance = pd.read_csv(q_head_importance_file, sep='\t', header=None).to_numpy()
         head_cos = pd.read_csv(cosine_file, sep=',', header=None).to_numpy()
+
+        # TP-aware slicing: auxiliary stats are often stored in global-head layout.
+        # Convert them to this TP rank's local head range when needed.
+        kv_cols = head_importance.shape[1]
+        if kv_cols != self.num_key_value_heads and kv_cols == self.total_num_key_value_heads:
+            kv_start = int(self.kv_head_start)
+            kv_end = kv_start + int(self.num_key_value_heads)
+            head_importance = head_importance[:, kv_start:kv_end]
+            head_cos = head_cos[:, kv_start:kv_end]
+
+        q_cols = q_head_importance.shape[1]
+        if q_cols != self.num_heads:
+            if q_cols == self.total_num_heads and self.total_num_key_value_heads > 0:
+                # Preferred path: map Q heads by GQA groups aligned to KV head shards.
+                if q_cols % self.total_num_key_value_heads != 0:
+                    raise ValueError(
+                        f"q_heads_importance columns={q_cols} not divisible by total_num_key_value_heads="
+                        f"{self.total_num_key_value_heads}"
+                    )
+                gqa_group = q_cols // self.total_num_key_value_heads
+                q_start = int(self.kv_head_start) * gqa_group
+                q_end = q_start + int(self.num_key_value_heads) * gqa_group
+                q_head_importance = q_head_importance[:, q_start:q_end]
+            elif self.attn_tp_size > 1 and q_cols % self.attn_tp_size == 0:
+                # Fallback: contiguous split by TP rank.
+                local_q = q_cols // self.attn_tp_size
+                q_start = self.attn_tp_rank * local_q
+                q_end = q_start + local_q
+                q_head_importance = q_head_importance[:, q_start:q_end]
+
+        if head_importance.shape[1] != self.num_key_value_heads:
+            raise ValueError(
+                f"head_importance columns={head_importance.shape[1]} mismatch local num_key_value_heads="
+                f"{self.num_key_value_heads} (total={self.total_num_key_value_heads}, tp={self.attn_tp_rank}/{self.attn_tp_size})"
+            )
+        if head_cos.shape[1] != self.num_key_value_heads:
+            raise ValueError(
+                f"head_cos columns={head_cos.shape[1]} mismatch local num_key_value_heads="
+                f"{self.num_key_value_heads} (total={self.total_num_key_value_heads}, tp={self.attn_tp_rank}/{self.attn_tp_size})"
+            )
+        if q_head_importance.shape[1] != self.num_heads:
+            raise ValueError(
+                f"q_head_importance columns={q_head_importance.shape[1]} mismatch local num_heads={self.num_heads} "
+                f"(total={self.total_num_heads}, tp={self.attn_tp_rank}/{self.attn_tp_size})"
+            )
 
         # Process head importance and cosine similarity
         head_cos = torch.from_numpy(head_cos)
@@ -352,7 +511,12 @@ class OffloadingCache(CustomStaticCache):
             self.num_gpu_heads += num_layer_gpu_heads
             self.layers_num_gpu_buffer_heads.append(self.num_key_value_heads -
                                                     num_layer_gpu_heads)
-            print(f"Layer {l:02d} on-GPU heads: {gpu_head_ids.cpu().tolist()}, offloaded heads: {cpu_head_ids.cpu().tolist()}")
+            gpu_global_head_ids = self._local_kv_head_ids_to_global(gpu_head_ids).cpu().tolist()
+            cpu_global_head_ids = self._local_kv_head_ids_to_global(cpu_head_ids).cpu().tolist()
+            print(
+                f"[TP{self.attn_tp_rank}] Layer {l:02d} on-GPU heads: {gpu_global_head_ids}, "
+                f"offloaded heads: {cpu_global_head_ids}"
+            )
 
             # Determine if layer is full GPU
             if num_layer_gpu_heads >= self.num_key_value_heads:
@@ -374,13 +538,20 @@ class OffloadingCache(CustomStaticCache):
             self.layers_mixed_head_index_cpu.append(mixed_head_index.int().cpu())
 
         # Set final counts
-        print("Total on-GPU heads number:", self.num_gpu_heads)
+        print(f"[TP{self.attn_tp_rank}] Total on-GPU heads number:", self.num_gpu_heads)
         self.num_cpu_layers = self.num_layers - self.num_full_gpu_layers
         self.num_cpu_heads = self.num_layers * self.num_key_value_heads - self.num_gpu_heads
         print(
             f"Cache and other layer's {self.num_gpu_heads} on-GPU heads consumed GPU memory: " \
             f"{remained_layers_mem / 1024**3:.2f} GB. " \
             f"{self.mem_budget / 1024**3:.2f} GB budget left.")
+
+        self._write_head_thresholds_csv(
+            stacked_reuse_thresholds=stacked_reuse_thresholds,
+            head_cos=head_cos,
+            hard2reuse_head_mask=hard2reuse_head_mask,
+            reuse_difficulty=reuse_difficulty,
+        )
 
     def _create_cache_tensors(self):
         # ==================== gpu heads ====================
@@ -479,6 +650,7 @@ class OffloadingCache(CustomStaticCache):
         self.metadata_tensors['ready_flag'] = [None for _ in range(self.num_layers)]
         self.metadata_tensors['cached_query'] = [None for _ in range(self.num_layers)]
         self.metadata_tensors['gather_mask'] = [None for _ in range(self.num_layers)]
+        self.metadata_tensors['reuse_count'] = [None for _ in range(self.num_layers)]
         for l in range(self.num_layers):
             self.metadata_tensors['ready_flag'][l] = torch.zeros(
                 (self.config.kvcache_manager_config.max_batch_size *
@@ -500,6 +672,12 @@ class OffloadingCache(CustomStaticCache):
                  self.num_key_value_heads, ),
                 dtype=torch.bool,
                 device=self.layer_devices[l])
+            self.metadata_tensors['reuse_count'][l] = torch.zeros(
+                (self.config.kvcache_manager_config.max_batch_size *
+                 self.num_key_value_heads, ),
+                dtype=torch.int32,
+                device=self.layer_devices[l],
+            )
 
         for device_idx in self.unique_devices:
             self.metadata_tensors[f'query_cache_valid_{device_idx}'] = torch.zeros(
@@ -643,6 +821,7 @@ class OffloadingCache(CustomStaticCache):
             # myTransformer decode kernels rely on this invariant.
             self.metadata_tensors['ready_flag'][l][:] = False
             self.metadata_tensors['gather_mask'][l][:] = True
+            self.metadata_tensors['reuse_count'][l][:] = 0
             self.metadata_tensors['cached_query'][l].zero_()
             self.is_first_prefill_chunk[l] = True
 
@@ -662,6 +841,9 @@ class OffloadingCache(CustomStaticCache):
 
         self.total_seqlen = 0
         self.first_decode_layer_step = True
+        self._pending_overlap_prefetch = [None for _ in range(self.num_layers)]
+        self._pending_overlap_head_mask = [None for _ in range(self.num_layers)]
+        self._decode_overlap_metrics = [None for _ in range(self.num_layers)]
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
@@ -716,6 +898,9 @@ class OffloadingCache(CustomStaticCache):
         super().update_metadata(q_len, is_prefill, layer_idx)
         if is_prefill:
             self.first_decode_layer_step = True
+            self._decode_transfer_step_idx = 0
+            if self.record_transfer_stats:
+                reset_transfer_stats()
         else:
             curr_seqlen = self.get_seq_length(0)
             # Clamp sink/recent by current sequence length to avoid invalid budgets
@@ -726,13 +911,20 @@ class OffloadingCache(CustomStaticCache):
                 max(curr_seqlen - sink, 0),
             )
             keep_budget = min(curr_seqlen, sink + recent + 1)
-
-            if self.topk_ratio < 1:
-                raw_k = int(curr_seqlen * self.topk_ratio)
+            selective_start_len = min(self.selective_start_len, curr_seqlen)
+            if curr_seqlen <= selective_start_len:
+                # Short context: keep all tokens (no sparsification), but still
+                # prefetch CPU-offloaded history so attention data is complete.
+                raw_k = curr_seqlen
+                topk_prefetch_k = raw_k - keep_budget
             else:
-                raw_k = int(self.topk_ratio)
-
-            topk_prefetch_k = raw_k - keep_budget
+                extra_len = curr_seqlen - selective_start_len
+                if self.topk_ratio < 1:
+                    raw_k = selective_start_len + int(extra_len * self.topk_ratio)
+                else:
+                    raw_k = selective_start_len + int(self.topk_ratio)
+                raw_k = max(raw_k, selective_start_len)
+                topk_prefetch_k = raw_k - keep_budget
             topk_current_k = raw_k
 
             topk_prefetch_k = max(min(topk_prefetch_k, self.max_prefetch_topk_len), 0)
@@ -769,6 +961,132 @@ class OffloadingCache(CustomStaticCache):
         # print("query_cache_valid", self.metadata_tensors[f'query_cache_valid_{self.layer_devices[0]}'])
         # print("topk_prefetch_k", self.metadata_tensors[f'topk_prefetch_k_{self.layer_devices[0]}'])
         # print("topk_current_k", self.metadata_tensors[f'topk_current_k_{self.layer_devices[0]}'])
+
+    def record_decode_transfer_step(self) -> None:
+        if not transfer_stats_enabled():
+            return
+
+        total_heads = self.curr_batch_size * self.num_key_value_heads
+        per_token_head_bytes = self._per_token_head_kv_bytes
+        prefetch_k = max(int(self.topk_prefetch_k_host), 0)
+        layer_h2d_bytes = [0] * self.num_layers
+        layer_d2h_bytes = [0] * self.num_layers
+        layer_prefetch_heads = [0] * self.num_layers
+        layer_offloaded_heads = [0] * self.num_layers
+
+        for layer_idx in range(self.num_layers):
+            cpu_heads = int(self.layers_cpu_head_ids[layer_idx].numel())
+            if cpu_heads <= 0:
+                continue
+
+            offloaded_heads = self.curr_batch_size * cpu_heads
+            layer_offloaded_heads[layer_idx] = offloaded_heads
+            layer_d2h_bytes[layer_idx] = offloaded_heads * per_token_head_bytes
+
+            if prefetch_k <= 0 or self.disable_prefetch:
+                continue
+
+            gather_mask = self.metadata_tensors["gather_mask"][layer_idx][:total_heads]
+            gather_heads = int(gather_mask.to(torch.int32).sum().item())
+            layer_prefetch_heads[layer_idx] = gather_heads
+            layer_h2d_bytes[layer_idx] = gather_heads * prefetch_k * per_token_head_bytes
+
+        overlap_summary = self._summarize_decode_overlap_step()
+        layer_selected_tokens = [0] * self.num_layers
+        layer_recalled_tokens = [0] * self.num_layers
+        layer_hit_tokens = [0] * self.num_layers
+        layer_hit_rates = [0.0] * self.num_layers
+        layer_overlap_sum_real_tokens = [0] * self.num_layers
+        layer_overlap_sum_prefetch_tokens = [0] * self.num_layers
+        layer_overlap_sum_hit_tokens = [0] * self.num_layers
+        layer_overlap_recall_tokens = [0] * self.num_layers
+        layer_overlap_prefetch_h2d_bytes_est = [0] * self.num_layers
+        layer_overlap_recall_h2d_bytes_est = [0] * self.num_layers
+        hit_source = "none"
+        if isinstance(overlap_summary, dict):
+            for layer_metrics in overlap_summary.get("layers", []):
+                layer_idx = int(layer_metrics.get("layer_idx", -1))
+                if layer_idx < 0 or layer_idx >= self.num_layers:
+                    continue
+                selected_tokens = int(layer_metrics.get("union_real_count", 0))
+                hit_tokens = int(layer_metrics.get("union_intersection_count", 0))
+                selected_tokens = max(selected_tokens, 0)
+                hit_tokens = max(min(hit_tokens, selected_tokens), 0)
+                recalled_tokens = max(selected_tokens - hit_tokens, 0)
+                layer_selected_tokens[layer_idx] = selected_tokens
+                layer_recalled_tokens[layer_idx] = recalled_tokens
+                layer_hit_tokens[layer_idx] = hit_tokens
+                layer_hit_rates[layer_idx] = (
+                    float(hit_tokens / selected_tokens) if selected_tokens > 0 else 0.0
+                )
+                sum_real_tokens = int(layer_metrics.get("sum_real_count", selected_tokens))
+                sum_prefetch_tokens = int(layer_metrics.get("sum_prefetch_count", 0))
+                sum_hit_tokens = int(layer_metrics.get("sum_intersection_count", hit_tokens))
+                sum_real_tokens = max(sum_real_tokens, 0)
+                sum_prefetch_tokens = max(sum_prefetch_tokens, 0)
+                sum_hit_tokens = max(min(sum_hit_tokens, sum_real_tokens), 0)
+                recall_tokens = max(sum_real_tokens - sum_hit_tokens, 0)
+                layer_overlap_sum_real_tokens[layer_idx] = sum_real_tokens
+                layer_overlap_sum_prefetch_tokens[layer_idx] = sum_prefetch_tokens
+                layer_overlap_sum_hit_tokens[layer_idx] = sum_hit_tokens
+                layer_overlap_recall_tokens[layer_idx] = recall_tokens
+                layer_overlap_prefetch_h2d_bytes_est[layer_idx] = (
+                    sum_prefetch_tokens * per_token_head_bytes
+                )
+                layer_overlap_recall_h2d_bytes_est[layer_idx] = (
+                    recall_tokens * per_token_head_bytes
+                )
+            hit_source = "overlap_union"
+
+        selected_tokens = int(sum(layer_selected_tokens))
+        recalled_tokens = int(sum(layer_recalled_tokens))
+        hit_tokens = int(sum(layer_hit_tokens))
+        hit_rate = float(hit_tokens / selected_tokens) if selected_tokens > 0 else 0.0
+
+        self._decode_transfer_step_idx += 1
+        step = {
+            "step": int(self._decode_transfer_step_idx),
+            "seq_len": int(self.get_seq_length(0)),
+            "prefetch_k": int(prefetch_k),
+            "h2d_bytes": int(sum(layer_h2d_bytes)),
+            "d2h_bytes": int(sum(layer_d2h_bytes)),
+            "total_bytes": int(sum(layer_h2d_bytes) + sum(layer_d2h_bytes)),
+            "layer_h2d_bytes": [int(v) for v in layer_h2d_bytes],
+            "layer_d2h_bytes": [int(v) for v in layer_d2h_bytes],
+            "layer_prefetch_heads": [int(v) for v in layer_prefetch_heads],
+            "layer_offloaded_heads": [int(v) for v in layer_offloaded_heads],
+            "selected_tokens": int(selected_tokens),
+            "recalled_tokens": int(recalled_tokens),
+            "hit_tokens": int(hit_tokens),
+            "hit_rate": float(hit_rate),
+            "layer_selected_tokens": [int(v) for v in layer_selected_tokens],
+            "layer_recalled_tokens": [int(v) for v in layer_recalled_tokens],
+            "layer_hit_tokens": [int(v) for v in layer_hit_tokens],
+            "layer_hit_rates": [float(v) for v in layer_hit_rates],
+            "layer_overlap_sum_real_tokens": [int(v) for v in layer_overlap_sum_real_tokens],
+            "layer_overlap_sum_prefetch_tokens": [
+                int(v) for v in layer_overlap_sum_prefetch_tokens
+            ],
+            "layer_overlap_sum_hit_tokens": [int(v) for v in layer_overlap_sum_hit_tokens],
+            "layer_overlap_recall_tokens": [int(v) for v in layer_overlap_recall_tokens],
+            "layer_overlap_prefetch_h2d_bytes_est": [
+                int(v) for v in layer_overlap_prefetch_h2d_bytes_est
+            ],
+            "layer_overlap_recall_h2d_bytes_est": [
+                int(v) for v in layer_overlap_recall_h2d_bytes_est
+            ],
+            "overlap_prefetch_h2d_bytes_est": int(
+                sum(layer_overlap_prefetch_h2d_bytes_est)
+            ),
+            "overlap_recall_h2d_bytes_est": int(
+                sum(layer_overlap_recall_h2d_bytes_est)
+            ),
+            "hit_source": hit_source,
+        }
+        if overlap_summary is not None:
+            step["overlap"] = overlap_summary
+        record_decode_transfer_step(step)
+        self._decode_overlap_metrics = [None for _ in range(self.num_layers)]
 
     # =====================================================
     def append_prefill(
@@ -982,6 +1300,8 @@ class OffloadingCache(CustomStaticCache):
     ):
         gather_mask = self.metadata_tensors['gather_mask'][layer_idx][
             :self.curr_batch_size * self.num_key_value_heads]
+        reuse_count = self.metadata_tensors['reuse_count'][layer_idx][
+            :self.curr_batch_size * self.num_key_value_heads]
 
         torch.cuda.nvtx.range_push("check reuse")
         if USE_INTRA_GQA_AGGREGATION and self.num_key_value_heads < self.num_heads:
@@ -990,19 +1310,23 @@ class OffloadingCache(CustomStaticCache):
                 self.metadata_tensors['cached_query'][layer_idx][:self.curr_batch_size],
                 self.layers_gpu_head_mask[layer_idx],
                 self.layers_q_importance[layer_idx],
+                reuse_count,
                 gather_mask.view(self.curr_batch_size,
                                 self.num_key_value_heads),
                 self.layers_reuse_thresholds[layer_idx],
-                self.metadata_tensors[f'query_cache_valid_{query_states.device.index}'])
+                self.metadata_tensors[f'query_cache_valid_{query_states.device.index}'],
+                self.max_reuse_count)
         else:
             check_reuse_head_threshold_with_gpu_head(
                 query_states,
                 self.metadata_tensors['cached_query'][layer_idx][:self.curr_batch_size],
                 self.layers_gpu_head_mask[layer_idx],
+                reuse_count,
                 gather_mask.view(self.curr_batch_size,
                                 self.num_key_value_heads),
                 self.layers_reuse_thresholds[layer_idx],
-                self.metadata_tensors[f'query_cache_valid_{query_states.device.index}'])
+                self.metadata_tensors[f'query_cache_valid_{query_states.device.index}'],
+                self.max_reuse_count)
         torch.cuda.nvtx.range_pop()
 
         return gather_mask
@@ -1013,7 +1337,7 @@ class OffloadingCache(CustomStaticCache):
         value_states: torch.Tensor,
         layer_idx: int
     ):
-        torch.cuda.nvtx.range_push("append and wait data")
+        torch.cuda.nvtx.range_push(f"decode_append_and_wait_layer{layer_idx}")
         total_heads = self.curr_batch_size * self.num_key_value_heads
         if self.debug_cpugather:
             ptr_before = int(self.cache_tensors['gpu_buffer_ptr'][layer_idx].item())
@@ -1032,6 +1356,9 @@ class OffloadingCache(CustomStaticCache):
             stream_ready=self._safe_stream_query(stream),
         )
         t0 = time.perf_counter()
+        torch.cuda.nvtx.range_push(
+            f"wait_op:decode_append_offload_tensor_pos_wait[layer={layer_idx}]"
+        )
         KVLib.decode_append_offload_tensor_pos_wait(
             key_states,
             value_states,
@@ -1042,6 +1369,7 @@ class OffloadingCache(CustomStaticCache):
             self.metadata_tensors['ready_flag'][layer_idx],
             self.layers_cpu_head_ids[layer_idx],
         )
+        torch.cuda.nvtx.range_pop()
         wait_ms = (time.perf_counter() - t0) * 1000.0
         self._debug_cpugather_log(
             "wait_exit",
@@ -1350,7 +1678,12 @@ class OffloadingCache(CustomStaticCache):
 
         # 3. compute prefetch top-k indices (checked)
         next_layer_idx = (layer_idx + 1) % self.num_layers
-        if not self.layers_full_gpu_mask[next_layer_idx]:
+        should_prefetch = (
+            (not self.layers_full_gpu_mask[next_layer_idx])
+            and (not self.disable_prefetch)
+            and (int(self.topk_prefetch_k_host) > 0)
+        )
+        if should_prefetch:
             t_step = time.perf_counter()
             self._debug_stall_log("step3_prefetch_topk_enter", layer_idx, next_layer=next_layer_idx)
             gather_mask = self.cache_query_and_update(
@@ -1361,6 +1694,12 @@ class OffloadingCache(CustomStaticCache):
                 gather_mask,
                 is_prefetch=True,
             )
+            if self.record_overlap_stats:
+                self._record_prefetch_overlap_candidate(
+                    next_layer_idx,
+                    prefetch_topk_indices,
+                    gather_mask,
+                )
             self._debug_stall_duration(
                 "step3_prefetch_topk_exit",
                 layer_idx,
@@ -1380,16 +1719,25 @@ class OffloadingCache(CustomStaticCache):
 
         # 5. launch prefetching (checked)
         if not self.layers_full_gpu_mask[next_layer_idx]:
-            t_step = time.perf_counter()
-            self._debug_stall_log("step5_launch_prefetch_enter", layer_idx, next_layer=next_layer_idx)
-            torch.cuda.nvtx.range_push("real indices")
-            self.launch_prefetch(prefetch_topk_indices, gather_mask,
-                                 next_layer_idx)
-            torch.cuda.nvtx.range_pop()
-            self._debug_stall_duration("step5_launch_prefetch_exit", layer_idx, t_step, next_layer=next_layer_idx)
+            if should_prefetch:
+                t_step = time.perf_counter()
+                self._debug_stall_log("step5_launch_prefetch_enter", layer_idx, next_layer=next_layer_idx)
+                torch.cuda.nvtx.range_push("real indices")
+                self.launch_prefetch(prefetch_topk_indices, gather_mask,
+                                     next_layer_idx)
+                torch.cuda.nvtx.range_pop()
+                self._debug_stall_duration("step5_launch_prefetch_exit", layer_idx, t_step, next_layer=next_layer_idx)
+            else:
+                total_heads = self.curr_batch_size * self.num_key_value_heads
+                self.metadata_tensors["ready_flag"][next_layer_idx][:total_heads] = True
 
         # 6. compute top-k for current layer (checked)
         self.current_topk_indices = None
+        if self.record_overlap_stats:
+            self._record_real_overlap_for_current_layer(
+                layer_idx,
+                current_query,
+            )
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
             t_step = time.perf_counter()
             self._debug_stall_log("step6_current_topk_enter", layer_idx)
@@ -1424,6 +1772,66 @@ class OffloadingCache(CustomStaticCache):
             )
 
         self._debug_stall_log("decode_exit", layer_idx)
+
+    def _record_prefetch_overlap_candidate(
+        self,
+        layer_idx: int,
+        prefetch_topk_indices: torch.Tensor,
+        gather_mask: torch.Tensor,
+    ) -> None:
+        del layer_idx, prefetch_topk_indices, gather_mask
+
+    def _record_real_overlap_for_current_layer(
+        self,
+        layer_idx: int,
+        current_query,
+    ) -> None:
+        del layer_idx, current_query
+
+    def _summarize_decode_overlap_step(self):
+        if not self.record_overlap_stats:
+            return None
+
+        layer_metrics = []
+        mean_recall = []
+        mean_precision = []
+        mean_jaccard = []
+        union_recall = []
+        union_precision = []
+        union_jaccard = []
+
+        for layer_idx, metrics in enumerate(self._decode_overlap_metrics):
+            if metrics is None:
+                continue
+            layer_metrics.append(
+                {
+                    "layer_idx": int(layer_idx),
+                    **metrics,
+                }
+            )
+            mean_recall.append(float(metrics["mean_recall"]))
+            mean_precision.append(float(metrics["mean_precision"]))
+            mean_jaccard.append(float(metrics["mean_jaccard"]))
+            union_recall.append(float(metrics["union_recall"]))
+            union_precision.append(float(metrics["union_precision"]))
+            union_jaccard.append(float(metrics["union_jaccard"]))
+
+        if not layer_metrics:
+            return None
+
+        def _avg(values):
+            return float(sum(values) / len(values)) if values else 0.0
+
+        return {
+            "matched_layers": int(len(layer_metrics)),
+            "mean_recall": _avg(mean_recall),
+            "mean_precision": _avg(mean_precision),
+            "mean_jaccard": _avg(mean_jaccard),
+            "union_recall": _avg(union_recall),
+            "union_precision": _avg(union_precision),
+            "union_jaccard": _avg(union_jaccard),
+            "layers": layer_metrics,
+        }
 
     def get_attention_data(self, layer_idx: int, device_idx: int):
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
@@ -1460,4 +1868,3 @@ class OffloadingCache(CustomStaticCache):
             mask,
             mixed_head_ids,
         )
-

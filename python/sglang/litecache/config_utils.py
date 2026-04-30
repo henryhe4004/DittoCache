@@ -39,6 +39,7 @@ def ensure_litecache_custom_config(custom_config: Optional[Any], hf_config: Opti
         enable_cuda_graph=bool(_get(src, "enable_cuda_graph", False)),
         new_config=bool(_get(src, "new_config", False)),
         is_profiling=bool(_get(src, "is_profiling", False)),
+        chunk_prefill_size=int(_get(src, "chunk_prefill_size", 0)),
         num_channels=int(_get(src, "num_channels", 32)),
         rbits=int(_get(src, "rbits", 32)),
         block_size=int(_get(src, "block_size", 64)),
@@ -52,6 +53,7 @@ def ensure_litecache_custom_config(custom_config: Optional[Any], hf_config: Opti
             token_budget=float(_get(sac, "token_budget", 0.2)),
             sink_budget=int(_get(sac, "sink_budget", 4)),
             recent_budget=int(_get(sac, "recent_budget", 128)),
+            selective_start_len=int(_get(sac, "selective_start_len", 0)),
         ),
         offload_config=_ns(
             attn_pattern_path=str(_get(ofc, "attn_pattern_path", "")),
@@ -59,10 +61,11 @@ def ensure_litecache_custom_config(custom_config: Optional[Any], hf_config: Opti
             reuse_threshold_lower=float(_get(ofc, "reuse_threshold_lower", 0.7)),
             decay_p=float(_get(ofc, "decay_p", 2.0)),
             cosine_padding=float(_get(ofc, "cosine_padding", 0.02)),
+            # <=0 means disabled: do not force gather refresh by reuse count.
+            max_reuse_count=int(_get(ofc, "max_reuse_count", 0)),
             num_skip_layers=int(_get(ofc, "num_skip_layers", 0)),
             num_overlapped_heads=int(_get(ofc, "num_overlapped_heads", 0)),
             num_omp_threads=int(_get(ofc, "num_omp_threads", 4)),
         ),
     )
     return normalized
-

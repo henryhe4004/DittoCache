@@ -98,10 +98,46 @@ def run_eval(args):
     elif args.eval_name == "gpqa":
         from sglang.test.simple_eval_gpqa import GPQAEval
 
-        filename = (
-            "https://openaipublic.blob.core.windows.net/simple-evals/gpqa_diamond.csv"
-        )
+        filename = args.dataset_path or "https://openaipublic.blob.core.windows.net/simple-evals/gpqa_diamond.csv"
         eval_obj = GPQAEval(filename, args.num_examples, args.num_threads)
+    elif args.eval_name == "mmlu_pro":
+        from sglang.test.simple_eval_mmlu_pro import MMLUProEval
+
+        eval_obj = MMLUProEval(args.dataset_path, args.num_examples, args.num_threads)
+    elif args.eval_name == "simpleqa":
+        from sglang.test.simple_eval_simpleqa import SimpleQAEval
+
+        judge_sampler = ChatCompletionSampler(
+            model=args.judge_model or args.model,
+            base_url=args.judge_base_url or base_url,
+            max_tokens=args.judge_max_tokens,
+            temperature=args.judge_temperature,
+            top_p=1.0,
+            reasoning_effort=args.judge_reasoning_effort,
+        )
+        eval_obj = SimpleQAEval(
+            grader_model=judge_sampler,
+            data_source=args.dataset_path,
+            num_examples=args.num_examples,
+            num_threads=args.num_threads,
+        )
+    elif args.eval_name == "hle":
+        from sglang.test.simple_eval_hle import HLEEval
+
+        judge_sampler = ChatCompletionSampler(
+            model=args.judge_model or args.model,
+            base_url=args.judge_base_url or base_url,
+            max_tokens=args.judge_max_tokens,
+            temperature=args.judge_temperature,
+            top_p=1.0,
+            reasoning_effort=args.judge_reasoning_effort,
+        )
+        eval_obj = HLEEval(
+            grader_model=judge_sampler,
+            data_source=args.dataset_path,
+            num_examples=args.num_examples,
+            num_threads=args.num_threads,
+        )
     elif args.eval_name == "humaneval":
         from sglang.test.simple_eval_humaneval import HumanEval
 
@@ -134,7 +170,7 @@ def run_eval(args):
     elif args.eval_name == "aime25":
         from sglang.test.simple_eval_aime25 import AIME25Eval
 
-        eval_obj = AIME25Eval(args.num_examples, args.num_threads)
+        eval_obj = AIME25Eval(args.num_examples, args.num_threads, args.dataset_path)
     elif args.eval_name == "gsm8k":
         from sglang.test.simple_eval_gsm8k import GSM8KEval
 
@@ -267,8 +303,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset-path",
         type=str,
-        default="THUDM/LongBench-v2",
-        help="Path to dataset file or HuggingFace dataset name for LongBench-v2",
+        default=None,
+        help="Optional local dataset path or HuggingFace dataset name override.",
     )
     parser.add_argument(
         "--categories",
@@ -297,6 +333,36 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Path to GSM8K data file (e.g., test.jsonl)",
+    )
+    parser.add_argument(
+        "--judge-model",
+        type=str,
+        default=None,
+        help="Optional judge model for grader-based benchmarks such as SimpleQA and HLE.",
+    )
+    parser.add_argument(
+        "--judge-base-url",
+        type=str,
+        default=None,
+        help="Optional judge endpoint base URL. Defaults to the main base URL.",
+    )
+    parser.add_argument(
+        "--judge-max-tokens",
+        type=int,
+        default=2048,
+        help="Maximum tokens for the judge model.",
+    )
+    parser.add_argument(
+        "--judge-temperature",
+        type=float,
+        default=0.0,
+        help="Judge model sampling temperature.",
+    )
+    parser.add_argument(
+        "--judge-reasoning-effort",
+        type=str,
+        default=None,
+        help="Judge model reasoning effort if supported by the endpoint.",
     )
 
     args = parser.parse_args()

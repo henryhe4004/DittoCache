@@ -15,18 +15,25 @@ if os.path.isdir(SGLANG_PY_ROOT) and SGLANG_PY_ROOT not in sys.path:
 
 import numpy as np
 import torch
+import yaml
 from tqdm import tqdm
 from transformers import AutoConfig, AutoTokenizer
 
 from sglang import Engine
 
 from dataloader import (
+    AIME24Manager,
+    AIME25Manager,
     ARCManager,
+    GPQAManager,
     HumanEvalManager,
+    LiveCodeBenchManager,
     InfiniteBenchManager,
     LongBenchManager,
     LongBenchV2Manager,
     MathManager,
+    Math500Manager,
+    MMLUProManager,
     NIAHManager,
     RULERManager,
 )
@@ -37,13 +44,25 @@ def log(msg: str):
     print(f"[{ts}] {msg}", flush=True)
 
 
+def normalize_longbench_task_name(task_name: str) -> str:
+    """Map known LongBench aliases/typos to canonical task names."""
+    if not isinstance(task_name, str):
+        return task_name
+    t = task_name.strip()
+    alias_map = {
+        "multinews": "multi_news",
+        "mulitinews": "multi_news",
+        "multinews_e": "multi_news_e",
+        "mulitinews_e": "multi_news_e",
+    }
+    return alias_map.get(t, t)
+
+
 def _iter_asset_roots():
     seen = set()
     for raw_root in (
         os.environ.get("LITECACHE_ROOT"),
         THIS_DIR,
-        os.environ.get("MYTRANSFORMER_ROOT"),
-        "/jhe/myTransformer",
     ):
         if not raw_root:
             continue
@@ -98,11 +117,12 @@ def get_dataset(args):
             "test",
             args.e,
         )
-        tasks = (
+        raw_tasks = (
             dataset_manager.get_dataset_names(with_e=args.e)
             if args.tasks is None
             else args.tasks.split(",")
         )
+        tasks = [normalize_longbench_task_name(t) for t in raw_tasks]
     elif args.dataset_name == "infinitebench":
         dataset_manager = InfiniteBenchManager(args.dataset_path, args.dataset_path)
         tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
@@ -118,9 +138,35 @@ def get_dataset(args):
     elif args.dataset_name == "math":
         dataset_manager = MathManager(args.dataset_path, args.dataset_path)
         tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "aime25":
+        dataset_manager = AIME25Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "aime24":
+        dataset_manager = AIME24Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "gpqa":
+        dataset_manager = GPQAManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "math500":
+        dataset_manager = Math500Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "mmlu_pro":
+        dataset_manager = MMLUProManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
     elif args.dataset_name == "humaneval":
         dataset_manager = HumanEvalManager(args.dataset_path, args.dataset_path)
         tasks = dataset_manager.get_dataset_names()
+    elif args.dataset_name == "livecodebench":
+        dataset_manager = LiveCodeBenchManager(
+            args.dataset_path,
+            args.dataset_path,
+            release_version=args.release_version,
+            not_fast=args.not_fast,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            max_new_tokens=args.lcb_max_new_tokens,
+        )
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
     elif args.dataset_name == "arc":
         dataset_manager = ARCManager(args.dataset_path, args.dataset_path)
         tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
@@ -231,12 +277,75 @@ def resolve_path(path_value: str | None, config_file: str) -> str | None:
     return candidates[0]
 
 
+def load_config_file(config_file: str):
+    with open(config_file, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    suffix = os.path.splitext(config_file)[1].lower()
+    if suffix in {".yaml", ".yml"}:
+        return yaml.safe_load(text)
+    if suffix == ".json":
+        return json.loads(text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return yaml.safe_load(text)
+
+
+def yaml_cfg_to_runtime(raw_cfg: dict, config_file: str) -> dict:
+    km = raw_cfg.get("kvcache_manager", {}) if isinstance(raw_cfg, dict) else {}
+    sparse = raw_cfg.get("sparse_attention", {}) if isinstance(raw_cfg, dict) else {}
+    offload = raw_cfg.get("offload", {}) if isinstance(raw_cfg, dict) else {}
+    method_cfg = sparse.get("method_config", {}) if isinstance(sparse, dict) else {}
+
+    cfg = {}
+
+    def set_if(key: str, value):
+        if value is not None:
+            cfg[key] = value
+
+    set_if("max_num_tokens", km.get("max_tokens"))
+    set_if("max_batch_size", km.get("max_batch_size"))
+    set_if("max_gpu_memory_size", km.get("gpu_memory_budget"))
+    set_if("topk", sparse.get("token_budget"))
+    set_if("sink_budget", sparse.get("sink_budget"))
+    set_if("recent_budget", sparse.get("recent_budget"))
+    set_if("selective_start_len", sparse.get("selective_start_len"))
+    set_if("reuse_threshold_lower", offload.get("reuse_threshold_lower"))
+    set_if("reuse_threshold_upper", offload.get("reuse_threshold_upper"))
+    set_if("decay_p", offload.get("decay_p"))
+    set_if("cosine_padding", offload.get("cosine_padding"))
+    set_if("num_omp_threads", offload.get("num_omp_threads"))
+    set_if("num_overlapped_heads", offload.get("num_overlapped_heads"))
+    set_if("num_skip_layers", offload.get("num_skip_layers"))
+    set_if("chunk_prefill_size", raw_cfg.get("chunk_prefill_size"))
+    set_if("_yaml_enable_cuda_graph", raw_cfg.get("enable_cuda_graph"))
+    set_if("_yaml_sparse_method", sparse.get("method"))
+    set_if("rbits", method_cfg.get("rbit", method_cfg.get("rbits")))
+    set_if("num_channels", method_cfg.get("num_channels"))
+    set_if("block_size", method_cfg.get("block_size"))
+
+    cfg["attn_pattern_path"] = resolve_path(offload.get("attn_pattern_path"), config_file)
+    cfg["aux_data_path"] = resolve_path(method_cfg.get("aux_data_path"), config_file)
+    return cfg
+
+
 def load_method_cfg(args):
     if not args.config_file:
         return {}, None
 
-    with open(args.config_file, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
+    raw_cfg = load_config_file(args.config_file)
+    if not isinstance(raw_cfg, dict):
+        raise ValueError(f"config_file={args.config_file} should contain a mapping object.")
+
+    if "kvcache_manager" in raw_cfg or os.path.splitext(args.config_file)[1].lower() in {".yaml", ".yml"}:
+        cfg = yaml_cfg_to_runtime(raw_cfg, args.config_file)
+        if args.topk is not None:
+            cfg["topk"] = args.topk
+        if args.selective_start_len is not None:
+            cfg["selective_start_len"] = args.selective_start_len
+        return cfg, "yaml"
 
     key = args.method.lower()
 
@@ -270,12 +379,12 @@ def load_method_cfg(args):
         if candidate in seen:
             continue
         seen.add(candidate)
-        method_cfg = cfg.get(candidate)
+        method_cfg = raw_cfg.get(candidate)
         if method_cfg is not None:
             resolved_key = candidate
             break
     if method_cfg is None:
-        available = ", ".join(sorted(cfg.keys()))
+        available = ", ".join(sorted(raw_cfg.keys()))
         raise ValueError(
             f"method={args.method} not found in config_file={args.config_file}. "
             f"Available keys: {available}"
@@ -284,6 +393,8 @@ def load_method_cfg(args):
     method_cfg = dict(method_cfg)
     if args.topk is not None:
         method_cfg["topk"] = args.topk
+    if args.selective_start_len is not None:
+        method_cfg["selective_start_len"] = args.selective_start_len
 
     method_cfg["attn_pattern_path"] = resolve_path(
         method_cfg.get("attn_pattern_path"), args.config_file
@@ -293,6 +404,38 @@ def load_method_cfg(args):
     )
 
     return method_cfg, resolved_key
+
+
+def build_sampling_params(
+    tokenizer,
+    dataset_name: str,
+    dataset_maxlen: int,
+    dataset_category,
+    temperature: float = 0.0,
+    top_p: float = 1.0,
+):
+    sampling_params = {
+        "temperature": float(temperature),
+        "top_p": float(top_p),
+        "max_new_tokens": dataset_maxlen,
+    }
+
+    task_name = dataset_name[:-2] if dataset_name.endswith("_e") else dataset_name
+    qa_newline_stop_tasks = {
+        "2wikimqa",
+        "hotpotqa",
+        "musique",
+        "multifieldqa_en",
+        "qasper",
+        "narrativeqa",
+        "samsum",
+    }
+    if task_name in qa_newline_stop_tasks and dataset_category is not None and "QA" in dataset_category:
+        newline_ids = tokenizer.encode("\n", add_special_tokens=False)
+        if newline_ids:
+            sampling_params["stop_token_ids"] = [newline_ids[-1]]
+
+    return sampling_params
 
 
 def build_engine(args):
@@ -318,12 +461,46 @@ def build_engine(args):
         max_total_tokens = None
         log("[Engine] max_total_tokens=<auto-profiled by available GPU memory>")
 
+    # flash-attn with PP on long contexts can OOM on first prefill even when KV
+    # cache allocation succeeds. Keep a small headroom unless user explicitly
+    # disables it via FLASH_ATTN_PP_SAFE_MARGIN_TOKENS=0.
+    if (
+        method in {"flashattn", "flash-attn"}
+        and int(args.pp_num) > 1
+        and os.environ.get("LITECACHE_ALLOW_FLASHATTN_PP", "0") == "1"
+    ):
+        safe_margin = int(os.environ.get("FLASH_ATTN_PP_SAFE_MARGIN_TOKENS", "32768"))
+        if safe_margin > 0:
+            safe_cap = max(1, int(args.context_length) - safe_margin)
+            if max_total_tokens is None:
+                max_total_tokens = safe_cap
+                log(
+                    "[Engine] auto-set max_total_tokens for flashattn+PP safety: "
+                    f"{max_total_tokens} (context_length={args.context_length}, margin={safe_margin})"
+                )
+            elif max_total_tokens > safe_cap:
+                log(
+                    "[Engine] lower max_total_tokens for flashattn+PP safety: "
+                    f"{max_total_tokens} -> {safe_cap} "
+                    f"(context_length={args.context_length}, margin={safe_margin})"
+                )
+                max_total_tokens = safe_cap
+
     # LiteCache cache tensors are sized by per-request context length.
-    # Keep it bounded by max_seq_len, and by max_total_tokens if the user explicitly sets it.
+    # Keep it bounded by max_seq_len, max_total_tokens, and engine context_length.
     if max_total_tokens is None:
         litecache_kvcache_max_tokens = int(args.max_seq_len)
     else:
         litecache_kvcache_max_tokens = min(int(args.max_seq_len), max_total_tokens)
+    litecache_kvcache_max_tokens = min(
+        litecache_kvcache_max_tokens, int(args.context_length)
+    )
+    if int(args.max_seq_len) > int(args.context_length):
+        log(
+            f"[WARN] max_seq_len={args.max_seq_len} > context_length={args.context_length}: "
+            "prompts longer than context_length will fail tokenizer validation; "
+            "lower MAX_SEQ_LEN or raise ENGINE_CONTEXT_LENGTH."
+        )
     if litecache_kvcache_max_tokens <= 0:
         raise ValueError(
             "litecache_kvcache_max_tokens must be positive. "
@@ -367,6 +544,7 @@ def build_engine(args):
                     "token_budget": float(cfg.get("topk", 0.2)),
                     "sink_budget": int(cfg.get("sink_budget", 4)),
                     "recent_budget": int(cfg.get("recent_budget", 128)),
+                    "selective_start_len": int(cfg.get("selective_start_len", 0)),
                 },
                 "offload_config": {
                     "attn_pattern_path": cfg.get("attn_pattern_path") or "",
@@ -387,6 +565,7 @@ def build_engine(args):
             f"variant={variant} "
             f"attn_pattern_path={model_override['custom_config']['offload_config']['attn_pattern_path']} "
             f"token_budget={model_override['custom_config']['sparse_attention_config']['token_budget']} "
+            f"selective_start_len={model_override['custom_config']['sparse_attention_config']['selective_start_len']} "
             f"kvcache_max_tokens={model_override['custom_config']['kvcache_manager_config']['max_tokens']} "
             f"profile_reserve_ratio={model_override['custom_config']['profile_reserve_ratio']}"
         )
@@ -397,18 +576,72 @@ def build_engine(args):
             f"Got batch_size={args.batch_size}."
         )
 
-    if args.mp_num != 1:
-        log(
-            f"[WARN] mp_num={args.mp_num} is ignored in sglang Engine mode; using single-process inference."
+    if args.mp_num <= 0 or args.pp_num <= 0:
+        raise ValueError(
+            f"mp_num and pp_num must be positive integers. "
+            f"Got mp_num={args.mp_num}, pp_num={args.pp_num}."
         )
+    effective_tp_size = int(args.mp_num)
+    effective_pp_size = int(args.pp_num)
+    allow_flashattn_pp = os.environ.get("LITECACHE_ALLOW_FLASHATTN_PP", "0") == "1"
+    if (
+        method in {"flashattn", "flash-attn"}
+        and effective_pp_size > 1
+        and not allow_flashattn_pp
+    ):
+        # Current LiteCache flash-attn path with PP can stall after the first prefill
+        # chunk. Prefer TP-only topology by default for stability.
+        log(
+            "[Engine] remap flashattn parallelism for stability: "
+            f"(mp={effective_tp_size}, pp={effective_pp_size}) -> "
+            f"(tp={effective_tp_size * effective_pp_size}, pp=1). "
+            "Set LITECACHE_ALLOW_FLASHATTN_PP=1 to force PP."
+        )
+        effective_tp_size = effective_tp_size * effective_pp_size
+        effective_pp_size = 1
+    # In LiteCache flashattn mode, multi-stage PP with the auto-selected backend
+    # can hang indefinitely on long-context first-sample prefill. Keep explicit
+    # user choice untouched; otherwise pick a conservative backend for PP.
+    attention_backend = args.attention_backend
+    if (
+        attention_backend is None
+        and method in {"flashattn", "flash-attn"}
+        and effective_pp_size > 1
+    ):
+        attention_backend = "triton"
+        log(
+            "[Engine] auto-set attention_backend=triton for "
+            "flashattn + pp_num>1 to avoid backend hang"
+        )
+
+    chunked_prefill_size = 4096
+    max_prefill_tokens = None
+    if method in {"flashattn", "flash-attn"} and effective_pp_size > 1:
+        # Keep PP prefill peak memory bounded for long-context flash-attn runs.
+        chunked_prefill_size = min(8192, int(args.context_length))
+        if max_total_tokens is None:
+            max_prefill_tokens = min(32768, int(args.context_length))
+        else:
+            max_prefill_tokens = min(32768, int(max_total_tokens))
+        log(
+            f"[Engine] auto-set prefill limits for flashattn+PP: "
+            f"chunked_prefill_size={chunked_prefill_size}, "
+            f"max_prefill_tokens={max_prefill_tokens}"
+        )
+
     engine_kwargs = {
         "model_path": args.model,
         "model_impl": "auto",
         "trust_remote_code": True,
         "log_level": "info",
         "device": args.device,
-        "attention_backend": args.attention_backend,
-        "chunked_prefill_size": 8192,
+        "tp_size": effective_tp_size,
+        "pp_size": effective_pp_size,
+        "attention_backend": attention_backend,
+        # SGLang tokenizer/scheduler limit (can exceed HF max_position_embeddings with
+        # SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN). Defaults to 64K; override with --context-length.
+        "context_length": int(args.context_length),
+        "chunked_prefill_size": chunked_prefill_size,
         "disable_radix_cache": True,
         "enable_mixed_chunk": False,
         "schedule_policy": "fcfs",
@@ -420,8 +653,24 @@ def build_engine(args):
         "disable_piecewise_cuda_graph": True,
         "decode_log_interval": args.decode_log_interval,
     }
+    if max_prefill_tokens is not None:
+        engine_kwargs["max_prefill_tokens"] = max_prefill_tokens
+    if args.quantization is not None:
+        engine_kwargs["quantization"] = args.quantization
+        log(f"[Engine] quantization={args.quantization}")
     if model_override is not None:
         engine_kwargs["json_model_override_args"] = json.dumps(model_override)
+
+    log(
+        f"[Engine] context_length={int(args.context_length)} "
+        f"(from --context-length; max_seq_len={int(args.max_seq_len)})"
+    )
+    log(
+        f"[Engine] parallelism tp_size={effective_tp_size} "
+        f"pp_size={effective_pp_size}"
+    )
+    # SGLang ModelConfig rejects context_length above HF-derived max (e.g. 32K) unless opted in.
+    os.environ.setdefault("SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN", "1")
 
     engine = Engine(**engine_kwargs)
 
@@ -438,15 +687,122 @@ def _heartbeat_loop(stop_event, dataset_name, sample_id, input_len, heartbeat_se
         )
 
 
+def get_resume_start_index(out_file: str) -> int:
+    if not os.path.exists(out_file):
+        return 0
+
+    completed = 0
+    invalid_lines = 0
+    with open(out_file, "r", encoding="utf-8") as f:
+        for line_no, raw_line in enumerate(f, start=1):
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                invalid_lines += 1
+                log(
+                    f"[RESUME] ignore invalid json line at {out_file}:{line_no}; "
+                    "will resume from the last valid sample"
+                )
+                continue
+
+            index = row.get("index")
+            if isinstance(index, int):
+                completed = max(completed, index + 1)
+            else:
+                completed += 1
+
+    log(
+        f"[RESUME] found {completed} completed samples in {out_file}"
+        + (f" ({invalid_lines} invalid trailing lines ignored)" if invalid_lines else "")
+    )
+    return completed
+
+
+def _encode_prompt_max_length(args, dataset_maxlen: int) -> int:
+    """
+    Cap tokenized prompt length so input_ids stay under SGLang's per-request limit.
+
+    When --max-total-tokens is set (e.g. test_accuracy.sh default 65536), the engine
+    rejects prompts with len(input_ids) >= max_req_input_len (~that budget). Dataset
+    code otherwise truncates only by max_seq_len, which can be 131072 while the
+    engine still caps at 64K — causing ValueError on LongBench-v2-length contexts.
+    """
+    budget = int(args.max_seq_len) - int(dataset_maxlen)
+    if budget <= 0:
+        raise ValueError(
+            f"max_seq_len={args.max_seq_len} must exceed dataset max_new_tokens={dataset_maxlen}."
+        )
+    if args.max_total_tokens is None:
+        return budget
+    # Reserve a few tokens inside the total budget for scheduler / rounding.
+    total_cap = int(args.max_total_tokens) - int(dataset_maxlen) - 16
+    if total_cap <= 0:
+        raise ValueError(
+            f"max_total_tokens={args.max_total_tokens} too small for max_new_tokens={dataset_maxlen}."
+        )
+    capped = min(budget, total_cap)
+    if capped < budget:
+        log(
+            f"[DATASET] capping prompt encode length {budget} -> {capped} "
+            f"to fit max_total_tokens={args.max_total_tokens} (max_new_tokens={dataset_maxlen})"
+        )
+    return capped
+
+
+def _request_total_token_cap(args) -> int:
+    caps = [int(args.context_length), int(args.max_seq_len)]
+    if args.max_total_tokens is not None:
+        caps.append(int(args.max_total_tokens))
+    return min(caps)
+
+
+def _strict_fit_input_ids(args, input_ids, sampling_params, dataset_name: str, sample_id: int):
+    """Hard-truncate input ids to guarantee input+output stays within configured cap."""
+    input_ids = list(input_ids)
+    max_new_tokens = int(sampling_params.get("max_new_tokens", 0))
+    total_cap = _request_total_token_cap(args)
+    # TokenizerManager validates with `input + max_new_tokens < max_req_len` (strictly
+    # less-than). Keep a small safety margin to avoid exact-boundary failures after
+    # chat-template/special-token handling.
+    safety_margin = 16
+    max_input_tokens = total_cap - max_new_tokens - safety_margin
+    if max_input_tokens <= 0:
+        raise ValueError(
+            f"Invalid request budget: total_cap={total_cap} <= max_new_tokens={max_new_tokens} + "
+            f"safety_margin={safety_margin} "
+            f"(dataset={dataset_name}, sample={sample_id})."
+        )
+
+    input_len = len(input_ids)
+    if input_len <= max_input_tokens:
+        return input_ids
+
+    # Preserve both prefix and suffix context like the dataset-level middle truncation path.
+    keep_head = max_input_tokens // 2
+    keep_tail = max_input_tokens - keep_head
+    truncated = input_ids[:keep_head] + input_ids[-keep_tail:]
+    log(
+        f"[TRUNCATE-HARD] dataset={dataset_name} sample={sample_id} "
+        f"input_tokens={input_len}->{len(truncated)} total_cap={total_cap} "
+        f"max_new_tokens={max_new_tokens} safety_margin={safety_margin}"
+    )
+    return truncated
+
+
 def run_dataset(args, dataset_manager, tokenizer, apply_chat_template, engine, dataset_name):
     raw_data = dataset_manager.get_data(dataset_name)
     if args.dataset_limit > 0:
         raw_data = raw_data.select(range(min(args.dataset_limit, len(raw_data))))
 
-    _, dataset_maxlen, _ = dataset_manager.get_dataset_info(dataset_name)
+    _, dataset_maxlen, dataset_category = dataset_manager.get_dataset_info(dataset_name)
+    encode_max_len = _encode_prompt_max_length(args, dataset_maxlen)
     log(
         f"[DATASET] {dataset_name} samples={len(raw_data)} "
-        f"max_new_tokens={dataset_maxlen} max_seq_len={args.max_seq_len}"
+        f"max_new_tokens={dataset_maxlen} max_seq_len={args.max_seq_len} "
+        f"encode_max_len={encode_max_len}"
     )
 
     process_fn = partial(
@@ -454,7 +810,7 @@ def run_dataset(args, dataset_manager, tokenizer, apply_chat_template, engine, d
         tokenizer=tokenizer,
         apply_chat_template=apply_chat_template,
         task=dataset_name,
-        max_length=args.max_seq_len - dataset_maxlen,
+        max_length=encode_max_len,
         truncate_from_middle=True,
     )
 
@@ -469,10 +825,15 @@ def run_dataset(args, dataset_manager, tokenizer, apply_chat_template, engine, d
             "domain",
             "sub_domain",
             "answer",
+            "choice_A",
+            "choice_B",
+            "choice_C",
+            "choice_D",
             "canonical_solution",
             "test",
             "entry_point",
             "answerKey",
+            "question_id",
         ]:
             remove_columns.append(key)
 
@@ -488,22 +849,65 @@ def run_dataset(args, dataset_manager, tokenizer, apply_chat_template, engine, d
     log(f"[DATASET] {dataset_name} tokenization done in {time.time() - map_t0:.1f}s")
 
     out_file = os.path.join(args.output_dir, f"{dataset_name}.jsonl")
-    if os.path.exists(out_file):
+    resume_start = 0
+    if args.resume:
+        resume_start = get_resume_start_index(out_file)
+    elif os.path.exists(out_file):
         os.remove(out_file)
 
-    sampling_params = {
-        "temperature": 0.0,
-        "top_p": 1.0,
-        "max_new_tokens": dataset_maxlen,
-    }
+    sampling_params = build_sampling_params(
+        tokenizer,
+        dataset_name,
+        dataset_maxlen,
+        dataset_category,
+        temperature=args.sampling_temperature,
+        top_p=args.sampling_top_p,
+    )
 
     task_name = dataset_name[:-2] if dataset_name.endswith("_e") else dataset_name
-    is_code_completion_task = task_name in {"lcc", "repobench-p"}
+    is_code_completion_task = task_name in {"lcc", "repobench-p", "livecodebench"}
 
     limit = args.dataset_limit if args.dataset_limit > 0 else len(encoded_data)
-    for i in tqdm(range(min(limit, len(encoded_data))), desc=f"Run {dataset_name}"):
+    total = min(limit, len(encoded_data))
+    run_start = resume_start
+    if args.start_index is not None:
+        run_start = max(run_start, int(args.start_index))
+    run_end = total
+    if args.end_index is not None:
+        run_end = min(run_end, int(args.end_index))
+
+    if run_start >= total:
+        log(
+            f"[RESUME] dataset={dataset_name} already complete: "
+            f"start={run_start} total={total}"
+        )
+        return
+    if run_start >= run_end:
+        log(
+            f"[RUN] dataset={dataset_name} empty shard: "
+            f"start={run_start} end={run_end} total={total}"
+        )
+        return
+
+    log(
+        f"[RUN] dataset={dataset_name} start_index={run_start} "
+        f"end_index={run_end} total_samples={total}"
+    )
+    for i in tqdm(
+        range(run_start, run_end),
+        desc=f"Run {dataset_name}",
+        initial=run_start,
+        total=run_end,
+    ):
         row = encoded_data[i]
         input_ids = row["input_ids"]
+        input_ids = _strict_fit_input_ids(
+            args,
+            input_ids,
+            sampling_params,
+            dataset_name=dataset_name,
+            sample_id=i,
+        )
         sample_id = i
         input_len = len(input_ids)
 
@@ -605,13 +1009,54 @@ def main():
     parser.add_argument("--pp_num", default=1, type=int)
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--max_seq_len", type=int, default=131072)
+    parser.add_argument(
+        "--context-length",
+        type=int,
+        default=65536,
+        dest="context_length",
+        help=(
+            "SGLang ServerArgs.context_length (tokenizer max input length). "
+            "Default 65536 (64K). Must be >= longest prompt; set >= --max_seq_len if you use very long prompts."
+        ),
+    )
     parser.add_argument("--topk", type=float, default=None)
+    parser.add_argument("--selective-start-len", type=int, default=None)
     parser.add_argument("--dataset_limit", type=int, default=0)
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from an existing output jsonl instead of restarting from sample 0.",
+    )
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        default=None,
+        help="Optional inclusive start index for data sharding.",
+    )
+    parser.add_argument(
+        "--end-index",
+        type=int,
+        default=None,
+        help="Optional exclusive end index for data sharding.",
+    )
+    parser.add_argument("--sampling-temperature", type=float, default=0.0)
+    parser.add_argument("--sampling-top-p", type=float, default=1.0)
+    parser.add_argument("--release-version", type=str, default="release_latest")
+    parser.add_argument("--start-date", type=str, default=None)
+    parser.add_argument("--end-date", type=str, default=None)
+    parser.add_argument("--not-fast", action="store_true")
+    parser.add_argument("--lcb-max-new-tokens", type=int, default=2000)
 
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--attention-backend", type=str, default=None)
     parser.add_argument("--mem-fraction-static", type=float, default=0.92)
     parser.add_argument("--max-total-tokens", type=int, default=None)
+    parser.add_argument(
+        "--quantization",
+        type=str,
+        default=None,
+        help="SGLang ServerArgs.quantization, e.g. 'awq' for plain AWQ (skip awq_marlin repack).",
+    )
     parser.add_argument("--max-running-requests", type=int, default=1)
     parser.add_argument("--page-size", type=int, default=1)
     parser.add_argument("--decode-log-interval", type=int, default=40)

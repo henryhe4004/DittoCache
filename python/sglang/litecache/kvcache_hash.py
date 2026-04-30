@@ -20,6 +20,94 @@ from sglang.jit_kernel.triton_kernels.hash.decode_encode import (
 import sgl_kernel.kvlib as KVLib
 
 
+def _compute_overlap_metrics(
+    real_topk_np: np.ndarray,
+    prefetch_topk_np: np.ndarray,
+) -> dict[str, Any]:
+    if real_topk_np.shape != prefetch_topk_np.shape:
+        raise ValueError(
+            f"Overlap topk shape mismatch: {real_topk_np.shape} vs {prefetch_topk_np.shape}"
+        )
+
+    if real_topk_np.size == 0:
+        return {
+            "active_heads": int(real_topk_np.shape[0]),
+            "prefetch_k": int(real_topk_np.shape[1]) if real_topk_np.ndim == 2 else 0,
+            "mean_recall": 0.0,
+            "mean_precision": 0.0,
+            "mean_jaccard": 0.0,
+            "union_recall": 0.0,
+            "union_precision": 0.0,
+            "union_jaccard": 0.0,
+            "mean_intersection": 0.0,
+            "union_intersection_count": 0,
+            "union_real_count": 0,
+            "union_prefetch_count": 0,
+            "sum_intersection_count": 0,
+            "sum_real_count": 0,
+            "sum_prefetch_count": 0,
+            "per_head_recall": [],
+            "per_head_precision": [],
+            "per_head_jaccard": [],
+            "per_head_intersection_count": [],
+            "per_head_real_count": [],
+            "per_head_prefetch_count": [],
+        }
+
+    per_head_recall = []
+    per_head_precision = []
+    per_head_jaccard = []
+    per_head_intersection = []
+    per_head_real_count = []
+    per_head_prefetch_count = []
+
+    for head_idx in range(real_topk_np.shape[0]):
+        real_set = np.unique(real_topk_np[head_idx])
+        prefetch_set = np.unique(prefetch_topk_np[head_idx])
+        intersection = np.intersect1d(real_set, prefetch_set, assume_unique=True)
+        union = np.union1d(real_set, prefetch_set)
+        per_head_intersection.append(int(intersection.size))
+        per_head_real_count.append(int(real_set.size))
+        per_head_prefetch_count.append(int(prefetch_set.size))
+        per_head_recall.append(float(intersection.size / max(real_set.size, 1)))
+        per_head_precision.append(float(intersection.size / max(prefetch_set.size, 1)))
+        per_head_jaccard.append(float(intersection.size / max(union.size, 1)))
+
+    union_real = np.unique(real_topk_np.reshape(-1))
+    union_prefetch = np.unique(prefetch_topk_np.reshape(-1))
+    union_intersection = np.intersect1d(union_real, union_prefetch, assume_unique=True)
+    union_all = np.union1d(union_real, union_prefetch)
+    sum_intersection = int(sum(per_head_intersection))
+    sum_real = int(sum(int(np.unique(real_topk_np[head_idx]).size) for head_idx in range(real_topk_np.shape[0])))
+    sum_prefetch = int(
+        sum(int(np.unique(prefetch_topk_np[head_idx]).size) for head_idx in range(prefetch_topk_np.shape[0]))
+    )
+
+    return {
+        "active_heads": int(real_topk_np.shape[0]),
+        "prefetch_k": int(real_topk_np.shape[1]),
+        "mean_recall": float(np.mean(per_head_recall)),
+        "mean_precision": float(np.mean(per_head_precision)),
+        "mean_jaccard": float(np.mean(per_head_jaccard)),
+        "union_recall": float(union_intersection.size / max(union_real.size, 1)),
+        "union_precision": float(union_intersection.size / max(union_prefetch.size, 1)),
+        "union_jaccard": float(union_intersection.size / max(union_all.size, 1)),
+        "mean_intersection": float(np.mean(per_head_intersection)),
+        "union_intersection_count": int(union_intersection.size),
+        "union_real_count": int(union_real.size),
+        "union_prefetch_count": int(union_prefetch.size),
+        "sum_intersection_count": int(sum_intersection),
+        "sum_real_count": int(sum_real),
+        "sum_prefetch_count": int(sum_prefetch),
+        "per_head_recall": [float(v) for v in per_head_recall],
+        "per_head_precision": [float(v) for v in per_head_precision],
+        "per_head_jaccard": [float(v) for v in per_head_jaccard],
+        "per_head_intersection_count": [int(v) for v in per_head_intersection],
+        "per_head_real_count": [int(v) for v in per_head_real_count],
+        "per_head_prefetch_count": [int(v) for v in per_head_prefetch_count],
+    }
+
+
 class HashOffloadingCache(OffloadingCache):
 
     def __init__(
@@ -79,9 +167,17 @@ class HashOffloadingCache(OffloadingCache):
                     dtype=self.dtype,
                     device=layer_device)
             else:
-                self.metadata_tensors['hash_weights'][l] = torch.load(os.path.join(aux_data_path,
-                                 f"hash_weight_layer_{l:02d}.pt"), weights_only=True).to(
-                    layer_device)
+                hash_weight = torch.load(os.path.join(aux_data_path,
+                                 f"hash_weight_layer_{l:02d}.pt"), weights_only=True)
+                hash_weight = self._slice_local_kv_head_tensor(
+                    hash_weight,
+                    tensor_name=f"hash_weight_layer_{l:02d}",
+                    head_dim=0,
+                )
+                self.metadata_tensors['hash_weights'][l] = hash_weight.to(
+                    device=layer_device,
+                    dtype=self.dtype,
+                )
 
         for device_idx in self.unique_devices:
             self.metadata_tensors[f'curr_query_code_{device_idx}'] = torch.zeros(
@@ -207,7 +303,14 @@ class HashOffloadingCache(OffloadingCache):
         torch.cuda.nvtx.range_push("append hash")
 
         next_layer_idx = (layer_idx + 1) % self.num_layers
-        encode_current_query = self.layers_gpu_head_ids[layer_idx].numel() > 0
+        need_overlap_current_query = (
+            self.record_overlap_stats
+            and self._pending_overlap_head_mask[layer_idx] is not None
+        )
+        encode_current_query = (
+            self.layers_gpu_head_ids[layer_idx].numel() > 0
+            or need_overlap_current_query
+        )
         encode_prefetch_query = not self.layers_full_gpu_mask[next_layer_idx]
 
         if encode_current_query and encode_prefetch_query:
@@ -235,6 +338,129 @@ class HashOffloadingCache(OffloadingCache):
         torch.cuda.nvtx.range_pop()
 
         return prefetch_query_code, current_query_code
+
+    def _record_prefetch_overlap_candidate(
+        self,
+        layer_idx: int,
+        prefetch_topk_indices: torch.Tensor,
+        gather_mask: torch.Tensor,
+    ) -> None:
+        k = int(self.topk_prefetch_k_host)
+        total_heads = self.curr_batch_size * self.num_key_value_heads
+        mask_cpu = (
+            gather_mask[:total_heads]
+            .detach()
+            .to(dtype=torch.bool)
+            .cpu()
+            .clone()
+        )
+        if k <= 0 or not bool(mask_cpu.any().item()):
+            self._pending_overlap_prefetch[layer_idx] = None
+            self._pending_overlap_head_mask[layer_idx] = None
+            return
+
+        indices_cpu = (
+            prefetch_topk_indices[:, :, :k]
+            .reshape(total_heads, k)
+            .detach()
+            .to(dtype=torch.int32)
+            .cpu()
+            .clone()
+        )
+        self._pending_overlap_prefetch[layer_idx] = indices_cpu
+        self._pending_overlap_head_mask[layer_idx] = mask_cpu
+
+    def _compute_real_sparse_topk_for_overlap(
+        self,
+        query: torch.Tensor,
+        layer_idx: int,
+        head_mask: torch.Tensor,
+    ) -> torch.Tensor:
+        device_idx = query.device.index
+        seq_len = int(self.cache_tensors["topk_code_length"][layer_idx].item()) - 1
+        k = int(self.topk_prefetch_k_host)
+        if seq_len <= 0 or k <= 0:
+            return torch.empty(
+                (self.curr_batch_size * self.num_key_value_heads, 0),
+                dtype=torch.int32,
+                device="cpu",
+            )
+
+        seq_len_tensor = torch.tensor([seq_len], dtype=torch.int32, device=query.device)
+        k_tensor = torch.tensor([min(k, seq_len)], dtype=torch.int32, device=query.device)
+        KVLib.static_hamming_score_mask(
+            self.topk_codes[layer_idx],
+            query,
+            head_mask,
+            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            seq_len_tensor,
+            self.rbits,
+            torch.finfo(torch.float16).max,
+            0.0,
+            0,
+            0,
+            self.config.sparse_attention_config.sink_budget,
+            self.config.sparse_attention_config.recent_budget,
+        )
+        KVLib.batch_topk_masked(
+            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            head_mask,
+            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"],
+            self.metadata_tensors[f"gpu_topk_values_{device_idx}"],
+            seq_len_tensor,
+            k_tensor,
+            False,
+        )
+        return (
+            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"][:, :, : k_tensor[0].item()]
+            .reshape(self.curr_batch_size * self.num_key_value_heads, -1)
+            .detach()
+            .to(dtype=torch.int32)
+            .cpu()
+            .clone()
+        )
+
+    def _record_real_overlap_for_current_layer(
+        self,
+        layer_idx: int,
+        current_query,
+    ) -> None:
+        prefetch_topk = self._pending_overlap_prefetch[layer_idx]
+        head_mask = self._pending_overlap_head_mask[layer_idx]
+        self._pending_overlap_prefetch[layer_idx] = None
+        self._pending_overlap_head_mask[layer_idx] = None
+        if prefetch_topk is None or head_mask is None or current_query is None:
+            return
+
+        active_rows = head_mask.numpy().astype(bool)
+        if not active_rows.any():
+            return
+
+        real_topk = self._compute_real_sparse_topk_for_overlap(
+            current_query,
+            layer_idx,
+            head_mask.to(current_query.device, non_blocking=True),
+        )
+        if real_topk.numel() == 0:
+            return
+
+        real_topk_np = real_topk.numpy()[active_rows]
+        prefetch_topk_np = prefetch_topk.numpy()[active_rows]
+        active_bh_indices = np.flatnonzero(active_rows).astype(np.int32)
+        common_k = min(real_topk_np.shape[1], prefetch_topk_np.shape[1])
+        if common_k <= 0:
+            return
+        real_topk_np = real_topk_np[:, :common_k]
+        prefetch_topk_np = prefetch_topk_np[:, :common_k]
+        if real_topk_np.shape[0] == 0:
+            return
+
+        metrics = _compute_overlap_metrics(
+            real_topk_np,
+            prefetch_topk_np,
+        )
+        metrics["active_bh_indices"] = [int(v) for v in active_bh_indices.tolist()]
+        self._decode_overlap_metrics[layer_idx] = metrics
 
     def compute_topk(self, query, layer_idx, mask, is_prefetch=False):
         device_idx = query.device.index

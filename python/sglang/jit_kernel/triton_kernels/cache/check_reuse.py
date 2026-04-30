@@ -11,7 +11,9 @@ def _check_reuse_with_importance(
     out_mask,
     threshold,
     importance,
+    reuse_count,
     query_cache_valid,
+    max_reuse_count,
     query_b_stride,
     query_h_stride,
     NUM_HEAD: tl.constexpr,
@@ -79,6 +81,15 @@ def _check_reuse_with_importance(
             order=(1, 0),
         )
 
+        reuse_count_ptr = tl.make_block_ptr(
+            base=reuse_count + batch_id * NUM_KV_HEAD + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+
         curr_q_data = tl.load(curr_query_ptr,
                             boundary_check=(1, 0),
                             padding_option="nan")
@@ -112,7 +123,18 @@ def _check_reuse_with_importance(
         gpu_head_mask_val = tl.load(gpu_head_mask_ptr,
                                     boundary_check=(1, 0),
                                     padding_option="zero")
-        gather_flag = (cos < threshold_val) & (gpu_head_mask_val == 0)
+        reuse_count_val = tl.load(reuse_count_ptr,
+                                  boundary_check=(1, 0),
+                                  padding_option="zero")
+        use_max_reuse_count = max_reuse_count > 0
+        force_gather_by_reuse = use_max_reuse_count & (reuse_count_val >= max_reuse_count)
+        gather_flag = force_gather_by_reuse | ((cos < threshold_val) & (gpu_head_mask_val == 0))
+
+        # Reuse count only increases when we skip gather on this head.
+        # If max_reuse_count is disabled (<=0), never force-reset by reuse count.
+        reuse_count_val = tl.where(force_gather_by_reuse, 0, reuse_count_val)
+        reuse_count_val = tl.where(gather_flag, reuse_count_val, reuse_count_val + 1)
+        tl.store(reuse_count_ptr, reuse_count_val, boundary_check=(1, 0))
         tl.store(out_mask_ptr,
                 tl.cast(gather_flag, tl.int8),
                 boundary_check=(1, 0))
@@ -130,15 +152,26 @@ def _check_reuse_with_importance(
         curr_q_data = tl.load(curr_query_ptr,
                             boundary_check=(1, 0))
         tl.store(prev_query_ptr, curr_q_data, boundary_check=(1, 0))
+        reuse_count_ptr = tl.make_block_ptr(
+            base=reuse_count + batch_id * NUM_KV_HEAD + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+        tl.store(reuse_count_ptr, tl.zeros((1, 1), dtype=tl.int32), boundary_check=(1, 0))
 
 
 def check_reuse_with_importance(curr_query: torch.Tensor,
                                 prev_query: torch.Tensor,
                                 gpu_head_mask: torch.Tensor,
                                 q_head_importance: torch.Tensor,
+                                reuse_count: torch.Tensor,
                                 out_mask: torch.Tensor,
                                 threshold: torch.Tensor,
-                                query_cache_valid: torch.Tensor):
+                                query_cache_valid: torch.Tensor,
+                                max_reuse_count: int):
     B, _, H, D = curr_query.shape
     _, HKV = out_mask.shape
     G = H // HKV
@@ -156,7 +189,9 @@ def check_reuse_with_importance(curr_query: torch.Tensor,
         out_mask,
         threshold,
         q_head_importance,
+        reuse_count,
         query_cache_valid,
+        max_reuse_count,
         curr_query.stride(0),
         curr_query.stride(2),
         H,
@@ -172,9 +207,11 @@ def _check_reuse_and_update_query_head_threshold_with_gpu_head(
     curr_query,
     prev_query,
     gpu_head_mask,
+    reuse_count,
     out_mask,
     threshold,
     query_cache_valid,
+    max_reuse_count,
     query_b_stride,
     query_h_stride,
     NUM_HEAD: tl.constexpr,
@@ -232,6 +269,15 @@ def _check_reuse_and_update_query_head_threshold_with_gpu_head(
             order=(1, 0),
         )
 
+        reuse_count_ptr = tl.make_block_ptr(
+            base=reuse_count + batch_id * NUM_KV_HEAD + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+
         curr_q_data = tl.load(curr_query_ptr,
                             boundary_check=(1, 0),
                             padding_option="nan")
@@ -259,7 +305,18 @@ def _check_reuse_and_update_query_head_threshold_with_gpu_head(
         gpu_head_mask_val = tl.load(gpu_head_mask_ptr,
                                     boundary_check=(1, 0),
                                     padding_option="zero")
-        gather_flag = (cos < threshold_val) & (gpu_head_mask_val == 0)
+        reuse_count_val = tl.load(reuse_count_ptr,
+                                  boundary_check=(1, 0),
+                                  padding_option="zero")
+        use_max_reuse_count = max_reuse_count > 0
+        force_gather_by_reuse = use_max_reuse_count & (reuse_count_val >= max_reuse_count)
+        gather_flag = force_gather_by_reuse | ((cos < threshold_val) & (gpu_head_mask_val == 0))
+
+        # Reuse count only increases when we skip gather on this head.
+        # If max_reuse_count is disabled (<=0), never force-reset by reuse count.
+        reuse_count_val = tl.where(force_gather_by_reuse, 0, reuse_count_val)
+        reuse_count_val = tl.where(gather_flag, reuse_count_val, reuse_count_val + 1)
+        tl.store(reuse_count_ptr, reuse_count_val, boundary_check=(1, 0))
         tl.store(out_mask_ptr,
                 tl.cast(gather_flag, tl.int8),
                 boundary_check=(1, 0))
@@ -277,14 +334,25 @@ def _check_reuse_and_update_query_head_threshold_with_gpu_head(
         curr_q_data = tl.load(curr_query_ptr,
                             boundary_check=(1, 0))
         tl.store(prev_query_ptr, curr_q_data, boundary_check=(1, 0))
+        reuse_count_ptr = tl.make_block_ptr(
+            base=reuse_count + batch_id * NUM_KV_HEAD + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+        tl.store(reuse_count_ptr, tl.zeros((1, 1), dtype=tl.int32), boundary_check=(1, 0))
 
 
 def check_reuse_head_threshold_with_gpu_head(curr_query: torch.Tensor,
                                              prev_query: torch.Tensor,
                                              gpu_head_mask: torch.Tensor,
+                                             reuse_count: torch.Tensor,
                                              out_mask: torch.Tensor,
                                              threshold: torch.Tensor,
-                                             query_cache_valid: torch.Tensor):
+                                             query_cache_valid: torch.Tensor,
+                                             max_reuse_count: int):
     B, _, H, D = curr_query.shape
     _, HKV = out_mask.shape
     G = H // HKV
@@ -299,9 +367,11 @@ def check_reuse_head_threshold_with_gpu_head(curr_query: torch.Tensor,
         curr_query,
         prev_query,
         gpu_head_mask,
+        reuse_count,
         out_mask,
         threshold,
         query_cache_valid,
+        max_reuse_count,
         curr_query.stride(0),
         curr_query.stride(2),
         H,

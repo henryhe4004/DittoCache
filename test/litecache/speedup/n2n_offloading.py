@@ -34,8 +34,6 @@ def iter_asset_roots() -> list[Path]:
     for raw_root in (
         os.environ.get("LITECACHE_ROOT"),
         str(THIS_DIR.parent),
-        os.environ.get("MYTRANSFORMER_ROOT"),
-        "/jhe/myTransformer",
     ):
         if not raw_root:
             continue
@@ -89,8 +87,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--cuda-visible-devices",
         type=str,
-        default="5",
-        help="Physical GPU id(s) for CUDA_VISIBLE_DEVICES. Default is card 5.",
+        default=None,
+        help=(
+            "Physical GPU id(s) for CUDA_VISIBLE_DEVICES. "
+            "If omitted, keep current environment value."
+        ),
     )
     parser.add_argument("--attention-backend", type=str, default=None)
     parser.add_argument(
@@ -144,6 +145,7 @@ def parse_args() -> argparse.Namespace:
         dest="litecache_enable_cuda_graph",
         action="store_false",
     )
+    parser.add_argument("--record-transfer-stats", action="store_true")
 
     parser.add_argument("--gpu-memory-budget", type=float, default=16.0)
     parser.add_argument("--token-budget", type=float, default=0.2)
@@ -607,12 +609,43 @@ def _extract_internal_forward_timing(
     )
 
 
+def extract_transfer_stats_from_meta(outputs_for_meta: list[dict[str, Any]]) -> dict[str, Any] | None:
+    best_stats = None
+    best_steps = -1
+    for item in outputs_for_meta:
+        meta = item.get("meta_info") if isinstance(item, dict) else None
+        if not isinstance(meta, dict):
+            continue
+        transfer_stats = meta.get("litecache_decode_transfer_stats")
+        if not isinstance(transfer_stats, dict):
+            continue
+        steps = int(transfer_stats.get("decode_steps", -1))
+        if steps >= best_steps:
+            best_stats = transfer_stats
+            best_steps = steps
+    return best_stats
+
+
+def load_transfer_stats_file(path_value: str | None) -> dict[str, Any] | None:
+    if not path_value:
+        return None
+    path = Path(path_value)
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def generate_with_internal_forward_timing(
     engine: Engine,
     prompt: str | list[str],
     sampling_params: dict[str, Any],
     batch_size: int,
-) -> tuple[Any, float, int, float, float, float]:
+    transfer_stats_path: str | None = None,
+) -> tuple[Any, float, int, float, float, float, dict | None]:
     outputs_for_meta: list[dict[str, Any]] = []
     last_chunk: Any = None
     t0 = time.perf_counter()
@@ -716,6 +749,9 @@ def generate_with_internal_forward_timing(
         )
 
     internal_elapsed = max(prefill_latency + decode_forward_latency_sum, 0.0)
+    transfer_stats = load_transfer_stats_file(transfer_stats_path)
+    if transfer_stats is None:
+        transfer_stats = extract_transfer_stats_from_meta(outputs_for_meta)
     return (
         last_chunk,
         internal_elapsed,
@@ -723,6 +759,7 @@ def generate_with_internal_forward_timing(
         prefill_latency,
         decode_latency_ms_per_step,
         decode_throughput,
+        transfer_stats,
     )
 
 
@@ -883,6 +920,7 @@ def build_engine_for_bench(
         "max_total_tokens": max_total_tokens,
         "sglang_cuda_graph_enabled": not bool(args.disable_cuda_graph),
         "litecache_cuda_graph_enabled": litecache_enable_cuda_graph_value,
+        "transfer_stats_enabled": bool(args.record_transfer_stats),
     }
     return engine, runtime_meta
 
@@ -951,6 +989,17 @@ def main() -> int:
         f"[RUN] method={args.method} warmup={args.warmup} epoch={args.epoch} "
         f"batch_size={args.batch_size} config_file={args.config_file}"
     )
+    transfer_stats_path = None
+    if args.record_transfer_stats:
+        transfer_stats_path = os.environ.get("LITECACHE_TRANSFER_STATS_FILE")
+        if not transfer_stats_path:
+            transfer_stats_path = f"/tmp/litecache_transfer_stats_{os.getpid()}.json"
+        Path(transfer_stats_path).unlink(missing_ok=True)
+    os.environ["LITECACHE_RECORD_TRANSFER_STATS"] = "1" if args.record_transfer_stats else "0"
+    if transfer_stats_path is not None:
+        os.environ["LITECACHE_TRANSFER_STATS_FILE"] = transfer_stats_path
+    else:
+        os.environ.pop("LITECACHE_TRANSFER_STATS_FILE", None)
     engine = None
     runtime_meta: dict[str, Any] = {}
     epoch_latencies: list[float] = []
@@ -959,6 +1008,7 @@ def main() -> int:
     epoch_prefill_latencies: list[float] = []
     epoch_decode_latencies_ms: list[float] = []
     epoch_decode_tps: list[float] = []
+    epoch_transfer_stats: list[dict] = []
     sampling_params = {
         "temperature": 0.0,
         "top_p": 1.0,
@@ -980,11 +1030,13 @@ def main() -> int:
                 prefill_latency,
                 decode_latency_ms_per_step,
                 decode_throughput,
+                transfer_stats,
             ) = generate_with_internal_forward_timing(
                 engine=engine,
                 prompt=prompt_batch,
                 sampling_params=sampling_params,
                 batch_size=args.batch_size,
+                transfer_stats_path=transfer_stats_path,
             )
             expected_completion_tokens = (args.num_decode_steps + 1) * args.batch_size
             completion_tokens = (
@@ -1003,6 +1055,20 @@ def main() -> int:
                 f"[BENCH] phase={phase} iter={phase_idx}/{phase_total} "
                 f"elapsed_s={elapsed:.4f} completion_tokens={completion_tokens} tok_per_s={tps:.2f}"
             )
+            if args.record_transfer_stats and transfer_stats is not None:
+                transfer_log = (
+                    f"[TRANSFER] phase={phase} iter={phase_idx}/{phase_total} "
+                    f"decode_steps={transfer_stats['decode_steps']} "
+                    f"total_bytes={transfer_stats['total_bytes']} "
+                    f"avg_bytes_per_step={transfer_stats['avg_bytes_per_step']:.1f}"
+                )
+                if "overall_hit_rate" in transfer_stats:
+                    transfer_log += (
+                        f" selected_tokens={int(transfer_stats.get('total_selected_tokens', 0))} "
+                        f"recalled_tokens={int(transfer_stats.get('total_recalled_tokens', 0))} "
+                        f"hit_rate={float(transfer_stats.get('overall_hit_rate', 0.0)):.4f}"
+                    )
+                log(transfer_log)
             if phase == "warmup":
                 print("Warmup end", flush=True)
             if args.print_output:
@@ -1014,6 +1080,8 @@ def main() -> int:
                 epoch_prefill_latencies.append(prefill_latency)
                 epoch_decode_latencies_ms.append(decode_latency_ms_per_step)
                 epoch_decode_tps.append(decode_throughput)
+                if transfer_stats is not None:
+                    epoch_transfer_stats.append(transfer_stats)
     finally:
         if engine is not None:
             engine.shutdown()
@@ -1055,6 +1123,29 @@ def main() -> int:
         "epoch_decode_tokens_per_s": epoch_decode_tps,
         "runtime_meta": runtime_meta,
     }
+    if args.record_transfer_stats:
+        result["epoch_decode_transfer_stats"] = epoch_transfer_stats
+        if epoch_transfer_stats:
+            total_selected_tokens = int(
+                sum(int(ts.get("total_selected_tokens", 0)) for ts in epoch_transfer_stats)
+            )
+            total_recalled_tokens = int(
+                sum(int(ts.get("total_recalled_tokens", 0)) for ts in epoch_transfer_stats)
+            )
+            total_hit_tokens = int(
+                sum(int(ts.get("total_hit_tokens", 0)) for ts in epoch_transfer_stats)
+            )
+            result["transfer_stats_summary"] = {
+                "epochs": int(len(epoch_transfer_stats)),
+                "total_selected_tokens": total_selected_tokens,
+                "total_recalled_tokens": total_recalled_tokens,
+                "total_hit_tokens": total_hit_tokens,
+                "overall_hit_rate": float(
+                    (total_hit_tokens / total_selected_tokens)
+                    if total_selected_tokens > 0
+                    else 0.0
+                ),
+            }
 
     log(
         f"[SUMMARY] method={args.method} batch_size={args.batch_size} seq={args.max_seq_len} "

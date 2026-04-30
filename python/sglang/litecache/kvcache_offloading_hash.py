@@ -65,10 +65,16 @@ class HashOffloadingCache(OffloadingCache):
                     device=self.layer_devices[layer],
                 )
             else:
-                self.layers_hash_weight[layer] = torch.load(
+                hash_weight = torch.load(
                     os.path.join(self.aux_data_path, f"hash_weight_layer_{layer:02d}.pt"),
                     weights_only=True,
-                ).to(self.layer_devices[layer]).to(self.dtype)
+                )
+                hash_weight = self._slice_local_kv_head_tensor(
+                    hash_weight,
+                    tensor_name=f"hash_weight_layer_{layer:02d}",
+                    head_dim=0,
+                )
+                self.layers_hash_weight[layer] = hash_weight.to(self.layer_devices[layer]).to(self.dtype)
 
         self.hash_packbit_aux_tensors = {}
         for device in self.unique_devices:
@@ -295,4 +301,3 @@ def prepare_cache_for_generation(
     self._cache.reset(batch_size)
     model_kwargs["past_key_values"] = self._cache
     return True
-

@@ -13,6 +13,11 @@ from collections import Counter
 from rouge import Rouge
 import random
 
+from math_grader import grade_answer
+
+
+ANSWER_PATTERN = r"(?i)Answer\s*:\s*([^\n]+)"
+
 
 def normalize_answer(s):
     """Lower text and remove punctuation, articles and extra whitespace."""
@@ -48,6 +53,87 @@ def normalize_zh_answer(s):
         return text.lower()
 
     return white_space_fix(remove_punc(lower(s)))
+
+
+def extract_boxed_answer(text):
+    marker = text.rfind("\\boxed")
+    if marker == -1:
+        return None
+
+    brace_start = text.find("{", marker)
+    if brace_start == -1:
+        return None
+
+    depth = 0
+    for idx in range(brace_start, len(text)):
+        if text[idx] == "{":
+            depth += 1
+        elif text[idx] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[brace_start + 1:idx].strip()
+    return None
+
+
+def extract_answer_text(text):
+    match = re.search(ANSWER_PATTERN, text or "")
+    if match:
+        return match.group(1).strip()
+
+    boxed = extract_boxed_answer(text or "")
+    if boxed:
+        return boxed
+
+    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
+    if not lines:
+        return None
+    return lines[-1]
+
+
+def extract_multichoice_answer(text, choices="ABCD"):
+    allowed = set(choices)
+    patterns = [
+        r"(?i)answer is \(?([A-J])\)?",
+        r"(?i)answer:\s*([A-J])",
+        r"\b([A-J])\b(?!.*\b[A-J]\b)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text or "")
+        if match:
+            candidate = match.group(1).upper()
+            if candidate in allowed:
+                return candidate
+    return None
+
+
+def normalize_aime_answer(answer):
+    if answer is None:
+        return None
+
+    answer = str(answer).strip()
+    boxed = extract_boxed_answer(answer)
+    if boxed:
+        answer = boxed
+
+    answer = answer.replace("$", "").strip()
+    # Handle outputs like "0 25" where model prepends a standalone zero
+    # before the real AIME answer.
+    spaced_leading_zero = re.match(r"^\s*0+\s+(-?\d+(?:\.\d+)?)\b", answer)
+    if spaced_leading_zero is not None:
+        answer = spaced_leading_zero.group(1)
+
+    match = re.search(r"-?\d+(?:\.\d+)?", answer)
+    if match is None:
+        return answer
+
+    try:
+        value = int(float(match.group(0)))
+    except (TypeError, ValueError):
+        return answer
+
+    if 0 <= value <= 999:
+        return str(value)
+    return str(value)
 
 
 def first_int_match(prediction):
@@ -229,8 +315,18 @@ def code_debug_score(pred, label, **kwargs) -> bool:
     """
     Returns the score of one example in Code.Debug.
     """
-    label_c = label[1]
-    fn_name = label[0]
+    if isinstance(label, (list, tuple)):
+        fn_name = str(label[0]).strip() if len(label) >= 1 else ""
+        label_c = str(label[1]).strip().upper() if len(label) >= 2 else ""
+    else:
+        fn_name = str(label).strip()
+        label_c = ""
+
+    pred_norm = normalize_answer(pred)
+    fn_norm = normalize_answer(fn_name)
+    if fn_norm and fn_norm in pred_norm:
+        return True
+
     if pred[:2] in [f"{label_c}.", f"{label_c}:"]:
         return True
 
@@ -261,7 +357,7 @@ def code_debug_score(pred, label, **kwargs) -> bool:
             ret = False
             break
         pred = pred[idx + len(prefix) + 1:]
-        for s in [label_c, fn_name]:
+        for s in [x for x in [label_c, fn_name] if x]:
             if pred.startswith(s):
                 ret = True
                 break
@@ -282,7 +378,7 @@ def code_debug_score(pred, label, **kwargs) -> bool:
             ret = False
             break
         pred = pred[idx + len(prefix2) + 1:]
-        for s in [label_c, fn_name]:
+        for s in [x for x in [label_c, fn_name] if x]:
             if pred.startswith(s):
                 ret = True
                 break
@@ -293,6 +389,8 @@ def code_debug_score(pred, label, **kwargs) -> bool:
 
     ret2 = ret
     if ret1 is None and ret2 is None:
+        if not label_c:
+            return False
         random.seed(fn_name)
         ans = random.choice(["A", "B", "C", "D"])
         # print(ans, label_c)
@@ -398,6 +496,70 @@ def math_calc_score(pred, label, **kwargs) -> float:
     return cnt / len(label)
 
 
+def aime25_score(prediction, ground_truth, **kwargs):
+    extracted = extract_answer_text(prediction)
+    return float(normalize_aime_answer(extracted) == normalize_aime_answer(ground_truth))
+
+
+def gpqa_score(prediction, ground_truth, **kwargs):
+    extracted = extract_multichoice_answer(prediction, choices="ABCD")
+    return float(extracted == str(ground_truth).strip().upper())
+
+
+def _normalize_mcq_label(value):
+    if value is None:
+        return None
+    text = str(value).strip().upper()
+    extracted = extract_multichoice_answer(text, choices="ABCD")
+    if extracted is not None:
+        return extracted
+    if text in {"A", "B", "C", "D"}:
+        return text
+    return None
+
+
+def longbench_v2_score(prediction, ground_truth, **kwargs):
+    # First try strict A/B/C/D extraction.
+    pred_label = extract_multichoice_answer(prediction, choices="ABCD")
+    gt_label = _normalize_mcq_label(ground_truth)
+    if pred_label is not None and gt_label is not None:
+        return float(pred_label == gt_label)
+
+    # Fallback: if model does not output label, match option text.
+    choice_a = kwargs.get("choice_A")
+    choice_b = kwargs.get("choice_B")
+    choice_c = kwargs.get("choice_C")
+    choice_d = kwargs.get("choice_D")
+    options = {
+        "A": choice_a,
+        "B": choice_b,
+        "C": choice_c,
+        "D": choice_d,
+    }
+    pred_norm = normalize_answer(str(prediction))
+    if gt_label is None or not pred_norm:
+        return 0.0
+    target_option = options.get(gt_label)
+    if target_option is None:
+        return 0.0
+    target_norm = normalize_answer(str(target_option))
+    if not target_norm:
+        return 0.0
+    return float((target_norm in pred_norm) or (pred_norm in target_norm))
+
+
+def mmlu_pro_score(prediction, ground_truth, **kwargs):
+    extracted = extract_multichoice_answer(prediction, choices="ABCDEFGHIJ")
+    return float(extracted == str(ground_truth).strip().upper())
+
+
+def math500_score(prediction, ground_truth, **kwargs):
+    extracted = extract_answer_text(prediction)
+    if extracted is None:
+        return 0.0
+    return float(grade_answer(extracted, ground_truth))
+
+
 dataset2metric = {
     # longbench
     "narrativeqa": qa_f1_score,
@@ -441,7 +603,23 @@ dataset2metric = {
     # Math
     "math_find": math_score,
     "math_calc": math_calc_score,
+    # local reasoning benchmarks
+    "aime24": aime25_score,
+    "aime25": aime25_score,
+    "gpqa": gpqa_score,
+    # longbench-v2 is a 4-way MCQ benchmark (A/B/C/D).
+    "longbench-v2": longbench_v2_score,
+    "math500": math500_score,
+    "mmlu_pro": mmlu_pro_score,
 }
+
+
+def normalize_dataset_alias(name):
+    alias_map = {
+        "multinews": "multi_news",
+        "mulitinews": "multi_news",
+    }
+    return alias_map.get(name, name)
 
 
 def parse_args(args=None):
@@ -453,18 +631,32 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-def scorer_e(dataset, predictions, answers, lengths, all_classes):
+def normalize_ground_truths(target):
+    if isinstance(target, list):
+        return target
+    return [target]
+
+
+def scorer_e(dataset, predictions, answers, lengths, all_classes, extras=None):
     scores = {"0-4k": [], "4-8k": [], "8k+": []}
-    for (prediction, ground_truths, length) in zip(predictions, answers,
-                                                   lengths):
+    for i, (prediction, target, length) in enumerate(zip(predictions, answers, lengths)):
+        extra_kwargs = extras[i] if extras is not None else {}
+        ground_truths = normalize_ground_truths(target)
         score = 0.
         if dataset in ["trec", "triviaqa", "samsum", "lsht"]:
             prediction = prediction.lstrip('\n').split('\n')[0]
-        for ground_truth in ground_truths:
-            score = max(
-                score, dataset2metric[dataset](prediction,
-                                               ground_truth,
-                                               all_classes=all_classes))
+        if dataset in ["code_debug", "math_calc"]:
+            score = dataset2metric[dataset](prediction,
+                                            ground_truths,
+                                            all_classes=all_classes,
+                                            **extra_kwargs)
+        else:
+            for ground_truth in ground_truths:
+                score = max(
+                    score, dataset2metric[dataset](prediction,
+                                                   ground_truth,
+                                                   all_classes=all_classes,
+                                                   **extra_kwargs))
         if length < 4000:
             scores["0-4k"].append(score)
         elif length < 8000:
@@ -476,23 +668,27 @@ def scorer_e(dataset, predictions, answers, lengths, all_classes):
     return scores
 
 
-def scorer(dataset, predictions, answers, all_classes):
+def scorer(dataset, predictions, answers, all_classes, extras=None):
     total_score = 0.
-    for (prediction, ground_truths) in zip(predictions, answers):
+    for i, (prediction, target) in enumerate(zip(predictions, answers)):
+        extra_kwargs = extras[i] if extras is not None else {}
+        ground_truths = normalize_ground_truths(target)
         score = 0.
         if dataset in ["trec", "triviaqa", "samsum", "lsht"]:
             prediction = prediction.lstrip('\n').split('\n')[0]
 
-        if dataset in ["code_debug"]:
+        if dataset in ["code_debug", "math_calc"]:
             score = dataset2metric[dataset](prediction,
                                             ground_truths,
-                                            all_classes=all_classes)
+                                            all_classes=all_classes,
+                                            **extra_kwargs)
         else:
             for ground_truth in ground_truths:
                 score = max(
                     score, dataset2metric[dataset](prediction,
                                                    ground_truth,
-                                                   all_classes=all_classes))
+                                                   all_classes=all_classes,
+                                                   **extra_kwargs))
         total_score += score
     return round(100 * total_score / len(predictions), 2)
 
@@ -500,6 +696,7 @@ def scorer(dataset, predictions, answers, all_classes):
 if __name__ == '__main__':
     args = parse_args()
     scores = dict()
+    scores_by_range = dict()
 
     path = args.model
     all_files = os.listdir(path)
@@ -508,27 +705,53 @@ if __name__ == '__main__':
         if not filename.endswith("jsonl"):
             continue
         predictions, answers, lengths = [], [], []
+        extras = []
         dataset = filename.split('.')[0]
         if "_e" in dataset[-2:]:
             dataset = dataset[:-2]
+        dataset = normalize_dataset_alias(dataset)
         with open(os.path.join(path, filename), "r", encoding="utf-8") as f:
             for line in f:
                 data = json.loads(line)
                 predictions.append(data["pred"])
-                answers.append(data["answers"])
-                all_classes = data["all_classes"]
+                if "answers" in data:
+                    answers.append(data["answers"])
+                elif "answer" in data:
+                    answers.append(data["answer"])
+                else:
+                    raise KeyError(
+                        f"missing answer field in {filename}: expected 'answers' or 'answer'"
+                    )
+                # LongBench-v2 (and some other jsonl exports) omit this; metrics that need it
+                # should read from kwargs / handle None.
+                all_classes = data.get("all_classes")
                 if "length" in data:
                     lengths.append(data["length"])
+                extras.append({
+                    "choice_A": data.get("choice_A"),
+                    "choice_B": data.get("choice_B"),
+                    "choice_C": data.get("choice_C"),
+                    "choice_D": data.get("choice_D"),
+                })
         if args.e:
-            score = scorer_e(dataset, predictions, answers, lengths,
-                             all_classes)
+            score_by_range = scorer_e(dataset, predictions, answers, lengths,
+                                      all_classes, extras=extras)
+            score = scorer(dataset, predictions, answers, all_classes, extras=extras)
+            scores_by_range[dataset] = score_by_range
         else:
-            score = scorer(dataset, predictions, answers, all_classes)
+            score = scorer(dataset, predictions, answers, all_classes, extras=extras)
         scores[dataset] = score
 
         print(f"{dataset}: {score}")
+        if args.e:
+            print(f"{dataset}_by_range: {scores_by_range[dataset]}")
 
     out_path = os.path.join(path, "result.json")
 
     with open(out_path, "w") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)
+
+    if args.e:
+        detail_out_path = os.path.join(path, "result_by_range.json")
+        with open(detail_out_path, "w") as f:
+            json.dump(scores_by_range, f, ensure_ascii=False, indent=4)

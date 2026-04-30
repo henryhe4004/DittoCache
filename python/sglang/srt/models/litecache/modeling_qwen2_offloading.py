@@ -40,6 +40,7 @@ from sglang.srt.models.litecache.qwen2_utils import (
     CustomerQwen2MLP,
     CustomQwen2RMSNorm,
     CustomQwen2RotaryEmbedding,
+    apply_litecache_tp_attention_layout,
 )
 
 logger = logging.get_logger(__name__)
@@ -63,12 +64,7 @@ def _replace_backbone_model(parent: nn.Module, model_cls, config) -> None:
 class CustomQwen2Attention(_Qwen2FlashAttention2):
     def __init__(self, config, layer_idx):
         super().__init__(config, layer_idx)
-        self.num_heads = getattr(self, "num_heads", config.num_attention_heads)
-        self.num_key_value_heads = getattr(
-            self,
-            "num_key_value_heads",
-            config.num_key_value_heads,
-        )
+        apply_litecache_tp_attention_layout(self, config)
         self.rotary_emb = CustomQwen2RotaryEmbedding(config)
 
         self._graph_metadata = {}

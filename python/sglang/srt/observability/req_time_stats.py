@@ -36,6 +36,17 @@ from sglang.srt.observability.trace import (
 )
 from sglang.srt.utils import get_bool_env_var
 
+try:
+    from sglang.litecache.transfer_stats import (
+        get_transfer_stats_snapshot,
+        summarize_transfer_stats,
+        transfer_stats_enabled,
+    )
+except Exception:  # pragma: no cover - optional runtime dependency
+    get_transfer_stats_snapshot = None
+    summarize_transfer_stats = None
+    transfer_stats_enabled = None
+
 if TYPE_CHECKING:
     from sglang.srt.managers.schedule_batch import ScheduleBatch
 
@@ -1118,6 +1129,17 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
                 "decode_forward_latency_ms_per_step_drop_first_10": self.get_decode_forward_latency_ms_per_step_drop_first_10(),
             }
         )
+        if (
+            transfer_stats_enabled is not None
+            and summarize_transfer_stats is not None
+            and get_transfer_stats_snapshot is not None
+            and transfer_stats_enabled()
+        ):
+            transfer_steps = get_transfer_stats_snapshot()
+            if transfer_steps:
+                meta_data["litecache_decode_transfer_stats"] = (
+                    summarize_transfer_stats(transfer_steps)
+                )
         return meta_data
 
     def format_duration(self, duration: float) -> str:

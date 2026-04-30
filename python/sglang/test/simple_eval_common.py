@@ -2,6 +2,7 @@
 
 import os
 import resource
+import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -166,6 +167,224 @@ class ChatCompletionSampler(SamplerBase):
                 trial += 1
         # If all retries are exhausted, return empty string instead of None
         print(f"All retry attempts exhausted for request. Returning empty response.")
+        return ""
+
+
+class LocalEngineSampler(SamplerBase):
+    """
+    Sample from a local SGLang Engine without launching an HTTP server.
+    """
+
+    def __init__(
+        self,
+        engine,
+        model: str,
+        prompt_formatter: Any,
+        system_message: Optional[str] = None,
+        temperature: float = 0.0,
+        top_p: float = 1.0,
+        reasoning_effort: Optional[str] = None,
+        max_tokens: int = 2048,
+        extra_body: Optional[Dict[str, Any]] = None,
+        serialize_calls: bool = True,
+    ):
+        self.engine = engine
+        self.model = model
+        self.prompt_formatter = prompt_formatter
+        self.system_message = system_message
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.reasoning_effort = reasoning_effort
+        self.extra_body = extra_body or {}
+        self.serialize_calls = serialize_calls
+        self._lock = threading.Lock()
+
+    @staticmethod
+    def load_prompt_formatter(
+        model_path: str,
+        trust_remote_code: bool = True,
+        prefer_multimodal: bool = False,
+    ):
+        from transformers import AutoProcessor, AutoTokenizer
+
+        if prefer_multimodal:
+            try:
+                return AutoProcessor.from_pretrained(
+                    model_path,
+                    trust_remote_code=trust_remote_code,
+                )
+            except Exception as exc:
+                print(
+                    f"[LocalEngineSampler] AutoProcessor load failed for {model_path}: {exc}. "
+                    "Falling back to AutoTokenizer."
+                )
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            trust_remote_code=trust_remote_code,
+            use_fast=True,
+        )
+        if tokenizer.pad_token is None and tokenizer.eos_token is not None:
+            tokenizer.pad_token = tokenizer.eos_token
+            tokenizer.pad_token_id = tokenizer.eos_token_id
+        return tokenizer
+
+    def _handle_image(
+        self,
+        image: str,
+        encoding: str = "base64",
+        format: str = "png",
+        fovea: int = 768,
+    ):
+        return {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/{format};{encoding},{image}",
+            },
+        }
+
+    def _handle_text(self, text: str):
+        return {"type": "text", "text": text}
+
+    def _pack_message(self, role: str, content: Any):
+        return {"role": str(role), "content": content}
+
+    def _normalize_messages(self, message_list: MessageList) -> tuple[MessageList, list[str]]:
+        if self.system_message:
+            message_list = [self._pack_message("system", self.system_message)] + list(
+                message_list
+            )
+
+        normalized = []
+        image_urls: list[str] = []
+        for message in message_list:
+            content = message["content"]
+            if isinstance(content, list):
+                new_content = []
+                for item in content:
+                    if not isinstance(item, dict):
+                        new_content.append(item)
+                        continue
+                    if item.get("type") == "image_url":
+                        image_url = item.get("image_url")
+                        if isinstance(image_url, dict):
+                            image_url = image_url.get("url")
+                        if image_url:
+                            image_urls.append(str(image_url))
+                        new_content.append(item)
+                    elif item.get("type") == "text":
+                        new_content.append(
+                            {"type": "text", "text": str(item.get("text", ""))}
+                        )
+                    else:
+                        new_content.append(item)
+                normalized.append({"role": message["role"], "content": new_content})
+            else:
+                normalized.append(
+                    {"role": message["role"], "content": "" if content is None else str(content)}
+                )
+        return normalized, image_urls
+
+    def _fallback_content_to_text(self, content: Any, image_token: str) -> str:
+        if isinstance(content, str):
+            return content
+        if not isinstance(content, list):
+            return str(content)
+
+        parts: list[str] = []
+        for item in content:
+            if not isinstance(item, dict):
+                parts.append(str(item))
+                continue
+            item_type = item.get("type")
+            if item_type == "text":
+                parts.append(str(item.get("text", "")))
+            elif item_type == "image_url":
+                parts.append(image_token)
+        return "".join(parts)
+
+    def _build_prompt(self, message_list: MessageList) -> tuple[str, Optional[Any]]:
+        normalized, image_urls = self._normalize_messages(message_list)
+
+        prompt = None
+        apply_chat_template = getattr(self.prompt_formatter, "apply_chat_template", None)
+        if callable(apply_chat_template):
+            try:
+                prompt = apply_chat_template(
+                    normalized,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                )
+            except Exception as exc:
+                print(
+                    "[LocalEngineSampler] apply_chat_template failed, using plain-text fallback: "
+                    f"{exc}"
+                )
+
+        if prompt is None:
+            from sglang.lang.chat_template import get_chat_template_by_model_path
+
+            image_token = get_chat_template_by_model_path(self.model).image_token
+            prompt_lines = []
+            for message in normalized:
+                role = str(message["role"]).strip().lower()
+                content = self._fallback_content_to_text(message["content"], image_token)
+                prompt_lines.append(f"{role}: {content}")
+            prompt_lines.append("assistant:")
+            prompt = "\n\n".join(prompt_lines)
+
+        if not image_urls:
+            return prompt, None
+        if len(image_urls) == 1:
+            return prompt, image_urls[0]
+        return prompt, image_urls
+
+    def __call__(self, message_list: MessageList) -> str:
+        prompt, image_data = self._build_prompt(message_list)
+        sampling_params = {
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "max_new_tokens": self.max_tokens,
+        }
+        top_k = self.extra_body.get("top_k")
+        if top_k is not None:
+            sampling_params["top_k"] = top_k
+
+        trial = 0
+        while trial < 3:
+            try:
+                if self.serialize_calls:
+                    with self._lock:
+                        response = self.engine.generate(
+                            prompt=prompt,
+                            image_data=image_data,
+                            sampling_params=sampling_params,
+                        )
+                else:
+                    response = self.engine.generate(
+                        prompt=prompt,
+                        image_data=image_data,
+                        sampling_params=sampling_params,
+                    )
+
+                if isinstance(response, list):
+                    if not response:
+                        return ""
+                    response = response[0]
+                if isinstance(response, dict):
+                    return response.get("text", "") or ""
+                return "" if response is None else str(response)
+            except Exception as exc:
+                backoff = 2**trial
+                print(
+                    "[LocalEngineSampler] generation failed, retrying "
+                    f"trial={trial} backoff={backoff}s error={exc}"
+                )
+                time.sleep(backoff)
+                trial += 1
+
+        print("[LocalEngineSampler] All retry attempts exhausted. Returning empty response.")
         return ""
 
 

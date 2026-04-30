@@ -1,0 +1,24 @@
+kvcache_manager:
+  max_tokens: 65536
+  max_batch_size: 64
+  gpu_memory_budget: 40.0
+sparse_attention:
+  token_budget: 0.1
+  sink_budget: 4
+  recent_budget: 64
+  method: HashAttnConfig
+  method_config:
+    aux_data_path: ../auxiliary/hash_weights/Qwen2.5-14B-Instruct-1M-256
+    rbit: 256
+offload:
+  reuse_threshold_lower: 0.0
+  reuse_threshold_upper: 0.8
+  decay_p: 3
+  cosine_padding: 0.05
+  num_omp_threads: 16
+  num_overlapped_heads: 7
+  num_skip_layers: 1
+  attn_pattern_path: ../auxiliary/attn_pattern/Qwen2.5-14B-Instruct-1M
+  max_reuse_count: 10
+enable_cuda_graph: true
+chunk_prefill_size: 4096

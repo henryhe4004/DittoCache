@@ -15,6 +15,7 @@ from sglang.jit_kernel.triton_kernels.attention import (
     decode_mixed_split_attention_fwd_grouped,
 )
 from sglang.litecache.kvcache_offloading import OffloadingCache
+from sglang.srt.models.litecache.awq_linear import litecache_linear_forward
 
 try:
     import flash_attn as _flash_attn
@@ -26,11 +27,11 @@ LITECACHE_CUDA_GRAPH_DEBUG = os.getenv("LITECACHE_CUDA_GRAPH_DEBUG", "0") == "1"
 
 
 def custom_linear_forward_wrapper(x, linear, out):
-    weight = linear.weight.T
-    bias = linear.bias
-    torch.matmul(x, weight, out=out)
-    if bias is not None:
-        out.add_(bias.unsqueeze(0))
+    return litecache_linear_forward(x, linear, out=out)
+
+
+def _local_attn_hidden_size(self) -> int:
+    return int(getattr(self, "local_attn_hidden_size", self.num_heads * self.head_dim))
 
 
 def _flash_attn_with_kvcache(
@@ -182,6 +183,11 @@ def attention_prepare_cuda_graph_metadata(
             dtype=dtype,
             device=device,
         ),
+        "output_hidden_states": torch.zeros(
+            (bsz, self.hidden_size),
+            dtype=dtype,
+            device=device,
+        ),
     }
     if self._graph_metadata[bsz]["split_num"] > 1:
         self._graph_buffers[bsz]["split_num"] = torch.full(
@@ -261,6 +267,7 @@ def attention_sparse_offloading_prefill_forward(
     chunk_size = 8192
     batch_size = past_key_value.get_cur_batch_size()
     token_num, hidden_size = hidden_states.shape
+    local_attn_hidden_size = _local_attn_hidden_size(self)
     seq_len = token_num // batch_size
 
     past_key_value.sync_offload_prefill()
@@ -268,16 +275,39 @@ def attention_sparse_offloading_prefill_forward(
     key_states = self.k_proj(hidden_states)
     value_states = self.v_proj(hidden_states)
 
+    reuse_hidden_query_buffer = local_attn_hidden_size == hidden_size
+    if reuse_hidden_query_buffer:
+        query_states_2d = hidden_states
+    else:
+        query_states_2d = torch.empty(
+            (token_num, local_attn_hidden_size),
+            dtype=hidden_states.dtype,
+            device=hidden_states.device,
+        )
+
     num_chunks = (token_num + chunk_size - 1) // chunk_size
     if num_chunks > 1:
         for i in range(num_chunks):
             start = i * chunk_size
             end = min(start + chunk_size, token_num)
-            hidden_states[start:end] = self.q_proj(hidden_states[start:end])
-        query_states = hidden_states
+            if reuse_hidden_query_buffer:
+                query_states_2d[start:end] = self.q_proj(hidden_states[start:end])
+            else:
+                custom_linear_forward_wrapper(
+                    hidden_states[start:end],
+                    self.q_proj,
+                    out=query_states_2d[start:end],
+                )
     else:
-        hidden_states[:] = self.q_proj(hidden_states)
-        query_states = hidden_states
+        if reuse_hidden_query_buffer:
+            hidden_states[:] = self.q_proj(hidden_states)
+        else:
+            custom_linear_forward_wrapper(
+                hidden_states,
+                self.q_proj,
+                out=query_states_2d,
+            )
+    query_states = query_states_2d
 
     query_states = query_states.view(-1, self.num_heads, self.head_dim)
     key_states = key_states.view(-1, self.num_key_value_heads, self.head_dim)
@@ -323,15 +353,24 @@ def attention_sparse_offloading_prefill_forward(
                 q_start_idx=start,
             )
             query_states[:, start:end, ...] = chunk_attn_out
-    attn_output = query_states.view(-1, hidden_size)
+    attn_output = query_states.view(-1, local_attn_hidden_size)
 
     if num_chunks > 1:
+        output_hidden_states = hidden_states.view(-1, hidden_size)
         for i in range(num_chunks):
             start = i * chunk_size
             end = min(start + chunk_size, token_num)
-            attn_output[start:end] = self.o_proj(attn_output[start:end])
+            if reuse_hidden_query_buffer:
+                output_hidden_states[start:end] = self.o_proj(attn_output[start:end])
+            else:
+                custom_linear_forward_wrapper(
+                    attn_output[start:end],
+                    self.o_proj,
+                    out=output_hidden_states[start:end],
+                )
+        attn_output = output_hidden_states
     else:
-        attn_output[:] = self.o_proj(attn_output)
+        attn_output = self.o_proj(attn_output)
 
     return attn_output
 
@@ -342,11 +381,15 @@ def _compute_prefetch_query(
     past_key_value: OffloadingCache,
 ):
     bsz, hidden_size = hidden_input_buffer.shape
+    local_attn_hidden_size = _local_attn_hidden_size(self)
     hidden_normed = self.next_input_layernorm(hidden_input_buffer, is_prefill=False)
     custom_linear_forward_wrapper(
         hidden_normed,
         self.next_q_proj,
-        out=self._graph_buffers[bsz]["prefetch_query_states"].view(-1, hidden_size),
+        out=self._graph_buffers[bsz]["prefetch_query_states"].view(
+            -1,
+            local_attn_hidden_size,
+        ),
     )
     query_states = self._graph_buffers[bsz]["prefetch_query_states"].view(
         -1,
@@ -366,13 +409,17 @@ def attention_sparse_offloading_decode_forward(
     past_key_value: Optional[OffloadingCache] = None,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
     bsz, hidden_size = hidden_input_buffer.shape
+    local_attn_hidden_size = _local_attn_hidden_size(self)
     assert bsz == past_key_value.get_cur_batch_size()
 
     torch.cuda.nvtx.range_push("qkv")
     custom_linear_forward_wrapper(
         hidden_input_buffer,
         self.q_proj,
-        out=self._graph_buffers[bsz]["query_states"].view(-1, hidden_size),
+        out=self._graph_buffers[bsz]["query_states"].view(
+            -1,
+            local_attn_hidden_size,
+        ),
     )
     custom_linear_forward_wrapper(
         hidden_input_buffer,
@@ -462,8 +509,11 @@ def attention_sparse_offloading_decode_forward(
         )
     torch.cuda.nvtx.range_pop()
 
-    attn_output = self._graph_buffers[bsz]["attn_output"].view(-1, hidden_size)
-    output_buffer = self._graph_buffers[bsz]["query_states"].view(-1, hidden_size)
+    attn_output = self._graph_buffers[bsz]["attn_output"].view(
+        -1,
+        local_attn_hidden_size,
+    )
+    output_buffer = self._graph_buffers[bsz]["output_hidden_states"]
     torch.cuda.nvtx.range_push("o_proj")
     custom_linear_forward_wrapper(
         attn_output,
@@ -687,6 +737,8 @@ def llm_sparse_offloading_decode_forward(
             bool(in_outer_cuda_graph_capture),
             int(bsz),
         )
+
+    past_key_values.record_decode_transfer_step()
 
     hidden_states = hidden_states.view(bsz, 1, -1)
 

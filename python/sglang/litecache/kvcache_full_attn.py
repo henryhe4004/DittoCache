@@ -1,10 +1,51 @@
 from typing import Dict, Optional, Union, Any
 
+import json
+import os
+import time
 import torch
 from transformers.cache_utils import Cache
 from transformers.configuration_utils import PretrainedConfig
 from transformers.generation.configuration_utils import GenerationConfig
 import sgl_kernel.kvlib as KVLib
+
+DEBUG_LOG_PATH = "/jhe/.cursor/debug-9e2373.log"
+DEBUG_SESSION_ID = "9e2373"
+
+
+def _detect_attention_tp_info() -> tuple[int, int]:
+    """Best-effort detection of attention TP rank/size."""
+    try:
+        from sglang.srt.layers.dp_attention import (  # pylint: disable=import-outside-toplevel
+            get_attention_tp_rank,
+            get_attention_tp_size,
+        )
+
+        tp_size = int(get_attention_tp_size())
+        tp_rank = int(get_attention_tp_rank())
+        if tp_size > 0 and tp_rank >= 0:
+            return tp_rank, tp_size
+    except Exception:
+        pass
+    return 0, 1
+
+
+def _debug_log(run_id: str, hypothesis_id: str, location: str, message: str, data: dict):
+    payload = {
+        "sessionId": DEBUG_SESSION_ID,
+        "runId": run_id,
+        "hypothesisId": hypothesis_id,
+        "location": location,
+        "message": message,
+        "data": data,
+        "timestamp": int(time.time() * 1000),
+    }
+    try:
+        os.makedirs(os.path.dirname(DEBUG_LOG_PATH), exist_ok=True)
+        with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=True) + "\n")
+    except Exception:
+        pass
 
 
 class CustomStaticCache(Cache):
@@ -33,13 +74,45 @@ class CustomStaticCache(Cache):
             self.head_dim = self.model_config.hidden_size // self.model_config.num_attention_heads
 
         if hasattr(config, "num_key_value_heads"):
-            self.num_key_value_heads = self.model_config.num_key_value_heads
+            total_num_kv_heads = int(self.model_config.num_key_value_heads)
         elif hasattr(config, "multi_query_group_num"):
-            self.num_key_value_heads = self.model_config.multi_query_group_num
+            total_num_kv_heads = int(self.model_config.multi_query_group_num)
         else:
-            self.num_key_value_heads = self.model_config.num_attention_heads
+            total_num_kv_heads = int(self.model_config.num_attention_heads)
 
-        self.num_heads = self.model_config.num_attention_heads
+        total_num_heads = int(self.model_config.num_attention_heads)
+        attn_tp_rank, attn_tp_size = _detect_attention_tp_info()
+
+        self.total_num_heads = total_num_heads
+        self.total_num_key_value_heads = total_num_kv_heads
+        self.attn_tp_rank = attn_tp_rank
+        self.attn_tp_size = attn_tp_size
+
+        if attn_tp_size > 1 and total_num_heads % attn_tp_size == 0:
+            self.num_heads = total_num_heads // attn_tp_size
+        else:
+            self.num_heads = total_num_heads
+
+        if attn_tp_size <= 1:
+            self.num_key_value_heads = total_num_kv_heads
+            self.kv_head_start = 0
+        elif total_num_kv_heads >= attn_tp_size:
+            # Partition KV heads across TP ranks.
+            if total_num_kv_heads % attn_tp_size != 0:
+                raise ValueError(
+                    f"num_key_value_heads={total_num_kv_heads} is not divisible by attn_tp_size={attn_tp_size}"
+                )
+            self.num_key_value_heads = total_num_kv_heads // attn_tp_size
+            self.kv_head_start = attn_tp_rank * self.num_key_value_heads
+        else:
+            # Replicate KV heads when tp_size > kv_heads.
+            if attn_tp_size % total_num_kv_heads != 0:
+                raise ValueError(
+                    f"attn_tp_size={attn_tp_size} is not divisible by num_key_value_heads={total_num_kv_heads}"
+                )
+            self.num_key_value_heads = 1
+            replicate = attn_tp_size // total_num_kv_heads
+            self.kv_head_start = attn_tp_rank // replicate
 
         # ==================== set layer devices ====================
         self.layer_devices = []
@@ -65,6 +138,41 @@ class CustomStaticCache(Cache):
         self.mem_budget = int(
             self.config.kvcache_manager_config.gpu_memory_budget * 1024 * 1024 * 1024
         )
+
+    def _slice_local_kv_head_tensor(
+        self,
+        tensor: torch.Tensor,
+        *,
+        tensor_name: str = "tensor",
+        head_dim: int = 0,
+    ) -> torch.Tensor:
+        """Slice a head-major tensor from global KV-head layout to this TP rank's local heads."""
+        if tensor is None or self.attn_tp_size <= 1:
+            return tensor
+        if tensor.ndim <= head_dim:
+            raise ValueError(
+                f"{tensor_name} ndim={tensor.ndim} does not contain head_dim={head_dim}"
+            )
+
+        head_count = int(tensor.shape[head_dim])
+        if head_count == self.num_key_value_heads:
+            return tensor
+        if head_count != self.total_num_key_value_heads:
+            raise ValueError(
+                f"{tensor_name} head dimension={head_count} mismatch local/global kv heads "
+                f"({self.num_key_value_heads}/{self.total_num_key_value_heads})"
+            )
+
+        start = int(self.kv_head_start)
+        end = start + int(self.num_key_value_heads)
+        slices = [slice(None)] * tensor.ndim
+        slices[head_dim] = slice(start, end)
+        return tensor[tuple(slices)].contiguous()
+
+    def _local_kv_head_ids_to_global(self, head_ids: torch.Tensor) -> torch.Tensor:
+        if head_ids is None:
+            return head_ids
+        return head_ids + int(self.kv_head_start)
 
     def build_cache(self):
         self._create_metadata_tensors()
@@ -96,7 +204,37 @@ class CustomStaticCache(Cache):
         )
         mem_one_layer = numel_one_layer * self.dtype.itemsize
         mem_total = mem_one_layer * self.num_layers
+        # region agent log
+        _debug_log(
+            run_id="pre-fix",
+            hypothesis_id="H1",
+            location="kvcache_full_attn.py:_create_cache_tensors",
+            message="Computed KV cache memory requirement",
+            data={
+                "max_tokens": int(self.config.kvcache_manager_config.max_tokens),
+                "gpu_memory_budget_gb": float(self.config.kvcache_manager_config.gpu_memory_budget),
+                "dtype": str(self.dtype),
+                "dtype_itemsize": int(self.dtype.itemsize),
+                "num_layers": int(self.num_layers),
+                "num_kv_heads": int(self.num_key_value_heads),
+                "head_dim": int(self.head_dim),
+                "mem_total_gb": float(mem_total / 1024 / 1024 / 1024),
+            },
+        )
+        # endregion
         if mem_total > self.mem_budget:
+            # region agent log
+            _debug_log(
+                run_id="pre-fix",
+                hypothesis_id="H2",
+                location="kvcache_full_attn.py:_create_cache_tensors",
+                message="KV cache memory budget check failed",
+                data={
+                    "mem_total_gb": float(mem_total / 1024 / 1024 / 1024),
+                    "mem_budget_gb": float(self.mem_budget / 1024 / 1024 / 1024),
+                },
+            )
+            # endregion
             raise ValueError(
                 f"GPU mem budget {self.config.kvcache_manager_config.gpu_memory_budget} GB "
                 f"is not enough for {self.config.kvcache_manager_config.max_tokens} "
@@ -313,4 +451,3 @@ def prepare_cache_for_generation(  # HF-style helper, kept for compatibility
     cache_name = "past_key_values"
     model_kwargs[cache_name] = self._cache
     return True
-

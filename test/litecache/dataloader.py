@@ -1,9 +1,12 @@
-import os
+import csv
 import json
+import os
+import random
+import re
 from functools import partial
 
 import torch
-from datasets import load_dataset, Dataset
+from datasets import Dataset, load_dataset, load_from_disk
 
 from utils import DefaultDataCollator
 
@@ -80,7 +83,7 @@ datasets_prompt = {
     "math_calc":
     "Compute the intermediate values in the following long expression.\n\n{context}",
     "code_run":
-    "Following is a set of Python functions. There is a function called named {func}.\n\n{context}\n\nPlease give me the exact number of the return value of {func_call}. Be concise. Your response must end with the final returned value.",
+    "Following is a set of Python functions. There is a function called {func}.\n\n{context}\n\nCompute the return value of {func_call}. Output only the final integer value, with no explanation or extra words.",
     "code_debug":
     "There is ONLY ONE function in the large project that is deliberately made to include an obvious error. Please find the function that contains the most obvious errors. I will give you four options to narrow your scope. You can inspect the options and think. Eventually, tell me the answer using one single letter (A, B, C, or D).\n\n{context}\n\nWhich funtion has deliberate error?\nA. {OPTION_A}\nB. {OPTION_B}\nC. {OPTION_C}\nD. {OPTION_D}\n\nGive me your answer for the function that has the deliberate and obvious error in A, B, C, or D. Your answer MUST be chosen from one of the four options without any explanation. If you cannot determine answers accurately, you also MUST provide the answer you think is most likely. Absolutely do not say you do not know or you need more information.",
     "longdialogue_qa_eng":
@@ -103,6 +106,24 @@ datasets_prompt = {
     "Answer the following multiple choice question. The last line of your response should be of the following format: 'Answer: $LETTER' (without quotes) where LETTER is one of ABCD. Think step by step before answering.\n\n{question}\n",
     "arc-challenge":
     "Answer the following multiple choice question. The last line of your response should be of the following format: 'Answer: $LETTER' (without quotes) where LETTER is one of ABCD. Think step by step before answering.\n\n{question}\n",
+
+    # AIME 2025
+    "aime24":
+    "Solve the following AIME (American Invitational Mathematics Examination) problem step by step. The last line of your response should be of the form Answer: $ANSWER (without quotes) where $ANSWER is the answer to the problem.\n\nNote: AIME answers are always integers from 000 to 999 (inclusive). If you get a non-integer answer, you likely made a computational error.\n\n{question}\n\nRemember to put your answer on its own line after \"Answer:\", and express your answer as an integer from 000 to 999.",
+    "aime25":
+    "Solve the following AIME (American Invitational Mathematics Examination) problem step by step. The last line of your response should be of the form Answer: $ANSWER (without quotes) where $ANSWER is the answer to the problem.\n\nNote: AIME answers are always integers from 000 to 999 (inclusive). If you get a non-integer answer, you likely made a computational error.\n\n{question}\n\nRemember to put your answer on its own line after \"Answer:\", and express your answer as an integer from 000 to 999.",
+
+    # GPQA
+    "gpqa":
+    "Answer the following multiple choice question. The last line of your response should be of the following format: 'Answer: $LETTER' (without quotes) where LETTER is one of ABCD. Think step by step before answering.\n\n{question}\n\nA) {A}\nB) {B}\nC) {C}\nD) {D}\n",
+
+    # Math-500
+    "math500":
+    "Solve the following math problem step by step. The last line of your response should be of the form Answer: $ANSWER (without quotes) where $ANSWER is the answer to the problem.\n\n{question}\n\nRemember to put your answer on its own line after \"Answer:\", and you do not need to use a \\boxed command.",
+
+    # MMLU-Pro
+    "mmlu_pro":
+    "The following are multiple choice questions (with answers) about {category}. Think step by step and then output the answer in the format of \"The answer is (X)\" at the end.\n\n{examples}Question: {question}\nOptions:\n{options}\nAnswer:",
 }
 
 datasets_maxlen = {
@@ -134,7 +155,7 @@ datasets_maxlen = {
     # InfiniteBench
     "passkey": 12,
     "number_string": 32,
-    "kv_retrieval": 50,
+    "kv_retrieval": 128,
     "longbook_sum_eng": 1200,
     "longbook_choice_eng": 40,
     "longbook_qa_eng": 40,
@@ -142,7 +163,7 @@ datasets_maxlen = {
     "longdialogue_qa_eng": 40,
     "math_find": 32,
     "math_calc": 30000,
-    "code_run": 32,
+    "code_run": 64,
     "code_debug": 32,
 
     # RULER
@@ -168,6 +189,11 @@ datasets_maxlen = {
     "humaneval": 1024,
     "arc-easy": 4096,
     "arc-challenge": 4096,
+    "aime24": 8192,
+    "aime25": 8192,
+    "gpqa": 4096,
+    "math500": 8192,
+    "mmlu_pro": 4096,
 }
 
 datasets_category = {
@@ -209,6 +235,11 @@ datasets_category = {
     "longbook_qa_eng": None,
     "longbook_qa_chn": None,
     "longdialogue_qa_eng": None,
+    "aime24": None,
+    "aime25": None,
+    "gpqa": None,
+    "math500": None,
+    "mmlu_pro": None,
 }
 
 
@@ -239,9 +270,91 @@ def load_processed_infinitebench_dataset(path, data_name):
     lines = fin.readlines()
     fin.close()
     ret = []
+
+    def first_answer(answer_obj):
+        if isinstance(answer_obj, list):
+            return answer_obj[0] if answer_obj else ""
+        return answer_obj
+
+    def normalize_options(options_obj):
+        if not isinstance(options_obj, list):
+            return []
+        return [str(x) for x in options_obj]
+
     for line in lines:
         eg = json.loads(line)
-        ret.append(eg)
+        item = dict(eg)
+        input_text = str(item.get("input", ""))
+        options = normalize_options(item.get("options"))
+
+        # Keep answer/answers compatible across different exports.
+        if "answer" not in item and "answers" in item:
+            item["answer"] = item["answers"]
+        if "answers" not in item and "answer" in item:
+            item["answers"] = item["answer"]
+
+        item.setdefault("all_classes", None)
+        item.setdefault("length", 0)
+
+        if data_name in {"longbook_choice_eng", "code_debug"}:
+            padded = options[:4]
+            while len(padded) < 4:
+                padded.append("")
+            item["OPTION_A"] = padded[0]
+            item["OPTION_B"] = padded[1]
+            item["OPTION_C"] = padded[2]
+            item["OPTION_D"] = padded[3]
+
+        if data_name == "kv_retrieval" and not item.get("key"):
+            match = re.search(r'Key:\s*["\']?([^"\n\']+)', input_text, re.IGNORECASE)
+            item["key"] = match.group(1).strip() if match is not None else ""
+
+        if data_name == "math_find" and "prefix" not in item:
+            item["prefix"] = ""
+
+        if data_name == "code_run":
+            if not item.get("func_call"):
+                match = re.search(
+                    r"return value of\s+([A-Za-z_][A-Za-z0-9_]*\([^)]*\))",
+                    input_text,
+                    re.IGNORECASE,
+                )
+                if match is None:
+                    match = re.search(r"([A-Za-z_][A-Za-z0-9_]*\([^)]*\))", input_text)
+                item["func_call"] = match.group(1).strip() if match is not None else ""
+            if not item.get("func"):
+                match = re.match(r"([A-Za-z_][A-Za-z0-9_]*)\(", str(item["func_call"]))
+                item["func"] = match.group(1) if match is not None else ""
+
+        # Normalize labels to match current evaluators.
+        if data_name == "longbook_choice_eng":
+            answer_text = str(first_answer(item.get("answer", ""))).strip()
+            if answer_text:
+                mapped_letter = None
+                upper_answer = answer_text.upper()
+                if upper_answer in {"A", "B", "C", "D"}:
+                    mapped_letter = upper_answer
+                else:
+                    for idx, option in enumerate(options[:4]):
+                        if str(option).strip() == answer_text:
+                            mapped_letter = "ABCD"[idx]
+                            break
+                if mapped_letter is not None:
+                    item["answer"] = mapped_letter
+                    item["answers"] = mapped_letter
+
+        if data_name == "code_debug":
+            fn_name = str(first_answer(item.get("answer", ""))).strip()
+            label_letter = ""
+            for idx, option in enumerate(options[:4]):
+                if str(option).strip() == fn_name:
+                    label_letter = "ABCD"[idx]
+                    break
+            normalized_answer = [fn_name, label_letter]
+            item["answer"] = normalized_answer
+            item["answers"] = normalized_answer
+
+        ret.append(item)
 
     return Dataset.from_list(ret)
 
@@ -279,6 +392,194 @@ def load_ruler_dataset(path, data_name):
         ret.append(instance)
 
     return Dataset.from_list(ret)
+
+
+def load_jsonl_rows(file_path):
+    rows = []
+    with open(file_path, "r", encoding="utf-8") as fin:
+        for line in fin:
+            line = line.strip()
+            if not line:
+                continue
+            rows.append(json.loads(line))
+    return rows
+
+
+def load_aime25_dataset(path):
+    candidates = []
+    if os.path.isdir(path):
+        combined_path = os.path.join(path, "combined.jsonl")
+        if os.path.isfile(combined_path):
+            candidates.append(combined_path)
+        else:
+            for name in [
+                    "AIME2025-I.jsonl",
+                    "AIME2025-II.jsonl",
+                    "aime2025_i.jsonl",
+                    "aime2025_ii.jsonl",
+            ]:
+                candidate = os.path.join(path, name)
+                if os.path.isfile(candidate):
+                    candidates.append(candidate)
+    elif os.path.isfile(path):
+        candidates.append(path)
+
+    if not candidates:
+        raise FileNotFoundError(f"Cannot find AIME25 dataset under: {path}")
+
+    ret = []
+    for candidate in candidates:
+        for row in load_jsonl_rows(candidate):
+            answer = str(row["answer"]).strip()
+            ret.append({
+                "question": row["question"],
+                "answer": answer,
+                "answers": [answer],
+                "all_classes": None,
+                "length": 0,
+            })
+
+    return Dataset.from_list(ret)
+
+
+def load_gpqa_dataset(path, seed=0):
+    csv_path = path if os.path.isfile(path) else os.path.join(path, "gpqa_diamond.csv")
+    if not os.path.isfile(csv_path):
+        raise FileNotFoundError(f"Cannot find GPQA dataset file: {csv_path}")
+
+    rng = random.Random(seed)
+    ret = []
+    with open(csv_path, "r", newline="", encoding="utf-8") as fin:
+        reader = csv.DictReader(fin)
+        for idx, row in enumerate(reader):
+            choices = [
+                str(row["Correct Answer"]).strip(),
+                str(row["Incorrect Answer 1"]).strip(),
+                str(row["Incorrect Answer 2"]).strip(),
+                str(row["Incorrect Answer 3"]).strip(),
+            ]
+            permutation = list(range(4))
+            rng.shuffle(permutation)
+            shuffled = [choices[i] for i in permutation]
+            correct_index = permutation.index(0)
+            answer = "ABCD"[correct_index]
+            ret.append({
+                "question": str(row["Question"]).strip(),
+                "option_a": shuffled[0],
+                "option_b": shuffled[1],
+                "option_c": shuffled[2],
+                "option_d": shuffled[3],
+                "answer": answer,
+                "answers": [answer],
+                "all_classes": list("ABCD"),
+                "length": 0,
+                "record_id": row.get("Record ID", idx),
+            })
+
+    return Dataset.from_list(ret)
+
+
+def load_math500_dataset(path):
+    csv_path = path if os.path.isfile(path) else os.path.join(path, "math500_test.csv")
+    if not os.path.isfile(csv_path):
+        raise FileNotFoundError(f"Cannot find Math500 dataset file: {csv_path}")
+
+    ret = []
+    with open(csv_path, "r", newline="", encoding="utf-8") as fin:
+        reader = csv.DictReader(fin)
+        for row in reader:
+            answer = str(row["Answer"]).strip()
+            ret.append({
+                "question": row["Question"],
+                "answer": answer,
+                "answers": [answer],
+                "all_classes": None,
+                "length": 0,
+                "subject": row.get("subject"),
+                "level": row.get("level"),
+                "unique_id": row.get("unique_id"),
+            })
+
+    return Dataset.from_list(ret)
+
+
+def _normalize_mmlu_pro_row(row):
+    choice_map = "ABCDEFGHIJ"
+    non_na_options = []
+    for orig_idx, option in enumerate(row["options"]):
+        option = str(option).strip()
+        if option == "N/A":
+            continue
+        non_na_options.append((orig_idx, option))
+
+    filtered_answer_index = None
+    answer_index = int(row["answer_index"])
+    for new_idx, (orig_idx, _) in enumerate(non_na_options):
+        if orig_idx == answer_index:
+            filtered_answer_index = new_idx
+            break
+
+    if filtered_answer_index is None:
+        raise ValueError(
+            f"Cannot map MMLU-Pro answer index {answer_index} for row {row.get('question_id')}"
+        )
+
+    return {
+        "question_id": row.get("question_id"),
+        "question": row["question"],
+        "options": [option for _, option in non_na_options],
+        "answer": choice_map[filtered_answer_index],
+        "answers": [choice_map[filtered_answer_index]],
+        "all_classes": list(choice_map[:len(non_na_options)]),
+        "length": 0,
+        "category": row["category"],
+        "cot_content": row.get("cot_content", ""),
+        "src": row.get("src"),
+    }
+
+
+def load_mmlu_pro_split(path, split):
+    split_path = path
+    if os.path.isdir(path):
+        candidate = os.path.join(path, split)
+        if os.path.isdir(candidate):
+            split_path = candidate
+
+    if not os.path.isdir(split_path):
+        raise FileNotFoundError(
+            f"Cannot find MMLU-Pro split '{split}' under: {path}"
+        )
+
+    rows = load_from_disk(split_path)
+    return [_normalize_mmlu_pro_row(row) for row in rows]
+
+
+def load_livecodebench_code_generation_dataset(
+    release_version="release_latest",
+    not_fast=False,
+    start_date=None,
+    end_date=None,
+):
+    try:
+        from lcb_runner.benchmarks.code_generation import (
+            load_code_generation_dataset,
+            load_code_generation_dataset_not_fast,
+        )
+    except ImportError as exc:
+        raise ImportError(
+            "LiveCodeBench support requires the LiveCodeBench package to be "
+            "installed in the Python environment."
+        ) from exc
+
+    if not_fast:
+        problems = load_code_generation_dataset_not_fast(release_version)
+    else:
+        problems = load_code_generation_dataset(
+            release_version,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    return sorted(problems, key=lambda x: str(x.question_id))
 
 
 class DatasetManager:
@@ -422,11 +723,23 @@ class LongBenchManager(DatasetManager):
 
         return datasets
 
+    @staticmethod
+    def normalize_task_name(dataset_name):
+        alias_map = {
+            "multinews": "multi_news",
+            "mulitinews": "multi_news",
+            "multinews_e": "multi_news_e",
+            "mulitinews_e": "multi_news_e",
+        }
+        return alias_map.get(dataset_name, dataset_name)
+
     def get_data(self, dataset_name):
+        dataset_name = self.normalize_task_name(dataset_name)
         data = load_longbench_dataset(self.path, dataset_name)
         return data
 
     def get_dataset_info(self, dataset_name):
+        dataset_name = self.normalize_task_name(dataset_name)
         if self.with_e:
             dataset_name = dataset_name[:-2]
         return (
@@ -446,6 +759,7 @@ class LongBenchManager(DatasetManager):
         truncate_from_middle=True,
     ):
         outputs = {"input_ids": [], "attention_mask": [], "index": []}
+        task = LongBenchManager.normalize_task_name(task)
         if task.endswith("_e"):
             task = task[:-2]
 
@@ -855,6 +1169,292 @@ class MathManager(DatasetManager):
         return outputs
 
 
+class AIME25Manager(DatasetManager):
+
+    def __init__(self, path, data_dir):
+        super().__init__(path, data_dir)
+
+    @staticmethod
+    def get_dataset_names():
+        return [
+            "aime25",
+        ]
+
+    def get_data(self, dataset_name):
+        return load_aime25_dataset(self.data_dir)
+
+    def get_dataset_info(self, dataset_name):
+        return (
+            datasets_prompt[dataset_name],
+            datasets_maxlen[dataset_name],
+            None,
+        )
+
+    @staticmethod
+    def process_raw_data(
+        data,
+        indices,
+        tokenizer,
+        apply_chat_template,
+        task,
+        max_length=3500,
+        truncate_from_middle=True,
+    ):
+        outputs = {"input_ids": [], "attention_mask": [], "index": []}
+        for it, index in enumerate(indices):
+            prompt_template = datasets_prompt[task]
+            prompt = prompt_template.format(question=data["question"][it])
+
+            if truncate_from_middle:
+                tokenized_prompt = tokenizer.encode(prompt)
+                if len(tokenized_prompt) > max_length:
+                    half = int(max_length / 2)
+                    prompt = tokenizer.decode(
+                        tokenized_prompt[:half],
+                        skip_special_tokens=True) + tokenizer.decode(
+                            tokenized_prompt[-half:], skip_special_tokens=True)
+            else:
+                tokenized_prompt = tokenizer.encode(prompt)
+                prompt = tokenizer.decode(tokenized_prompt[-max_length:],
+                                          skip_special_tokens=True)
+
+            encoded = apply_chat_template(prompt, tokenizer)
+
+            outputs["input_ids"].append(encoded["input_ids"])
+            outputs["attention_mask"].append(encoded["attention_mask"])
+            outputs["index"].append(index)
+
+        return outputs
+
+
+class GPQAManager(DatasetManager):
+
+    def __init__(self, path, data_dir, seed=0):
+        super().__init__(path, data_dir)
+        self.seed = seed
+
+    @staticmethod
+    def get_dataset_names():
+        return [
+            "gpqa",
+        ]
+
+    def get_data(self, dataset_name):
+        return load_gpqa_dataset(self.data_dir, seed=self.seed)
+
+    def get_dataset_info(self, dataset_name):
+        return (
+            datasets_prompt[dataset_name],
+            datasets_maxlen[dataset_name],
+            None,
+        )
+
+    @staticmethod
+    def process_raw_data(
+        data,
+        indices,
+        tokenizer,
+        apply_chat_template,
+        task,
+        max_length=3500,
+        truncate_from_middle=True,
+    ):
+        outputs = {"input_ids": [], "attention_mask": [], "index": []}
+        for it, index in enumerate(indices):
+            prompt_template = datasets_prompt[task]
+            prompt = prompt_template.format(
+                question=data["question"][it],
+                A=data["option_a"][it],
+                B=data["option_b"][it],
+                C=data["option_c"][it],
+                D=data["option_d"][it],
+            )
+
+            if truncate_from_middle:
+                tokenized_prompt = tokenizer.encode(prompt)
+                if len(tokenized_prompt) > max_length:
+                    half = int(max_length / 2)
+                    prompt = tokenizer.decode(
+                        tokenized_prompt[:half],
+                        skip_special_tokens=True) + tokenizer.decode(
+                            tokenized_prompt[-half:], skip_special_tokens=True)
+            else:
+                tokenized_prompt = tokenizer.encode(prompt)
+                prompt = tokenizer.decode(tokenized_prompt[-max_length:],
+                                          skip_special_tokens=True)
+
+            encoded = apply_chat_template(prompt, tokenizer)
+
+            outputs["input_ids"].append(encoded["input_ids"])
+            outputs["attention_mask"].append(encoded["attention_mask"])
+            outputs["index"].append(index)
+
+        return outputs
+
+
+class Math500Manager(DatasetManager):
+
+    def __init__(self, path, data_dir):
+        super().__init__(path, data_dir)
+
+    @staticmethod
+    def get_dataset_names():
+        return [
+            "math500",
+        ]
+
+    def get_data(self, dataset_name):
+        return load_math500_dataset(self.data_dir)
+
+    def get_dataset_info(self, dataset_name):
+        return (
+            datasets_prompt[dataset_name],
+            datasets_maxlen[dataset_name],
+            None,
+        )
+
+    @staticmethod
+    def process_raw_data(
+        data,
+        indices,
+        tokenizer,
+        apply_chat_template,
+        task,
+        max_length=3500,
+        truncate_from_middle=True,
+    ):
+        outputs = {"input_ids": [], "attention_mask": [], "index": []}
+        for it, index in enumerate(indices):
+            prompt_template = datasets_prompt[task]
+            prompt = prompt_template.format(question=data["question"][it])
+
+            if truncate_from_middle:
+                tokenized_prompt = tokenizer.encode(prompt)
+                if len(tokenized_prompt) > max_length:
+                    half = int(max_length / 2)
+                    prompt = tokenizer.decode(
+                        tokenized_prompt[:half],
+                        skip_special_tokens=True) + tokenizer.decode(
+                            tokenized_prompt[-half:], skip_special_tokens=True)
+            else:
+                tokenized_prompt = tokenizer.encode(prompt)
+                prompt = tokenizer.decode(tokenized_prompt[-max_length:],
+                                          skip_special_tokens=True)
+            encoded = apply_chat_template(prompt, tokenizer)
+
+            outputs["input_ids"].append(encoded["input_ids"])
+            outputs["attention_mask"].append(encoded["attention_mask"])
+            outputs["index"].append(index)
+
+        return outputs
+
+
+class MMLUProManager(DatasetManager):
+
+    def __init__(self, path, data_dir, n_shots=5):
+        super().__init__(path, data_dir)
+        self.n_shots = n_shots
+        self.test_rows = load_mmlu_pro_split(self.data_dir, "test")
+        self.val_rows = load_mmlu_pro_split(self.data_dir, "validation")
+        self.val_by_category = {}
+        for row in self.val_rows:
+            self.val_by_category.setdefault(row["category"], []).append(row)
+
+    @staticmethod
+    def get_dataset_names():
+        return [
+            "mmlu_pro",
+        ]
+
+    def get_data(self, dataset_name):
+        return Dataset.from_list(self.test_rows)
+
+    def get_dataset_info(self, dataset_name):
+        return (
+            datasets_prompt[dataset_name],
+            datasets_maxlen[dataset_name],
+            None,
+        )
+
+    @staticmethod
+    def _format_example(question, options, cot_content=""):
+        choice_map = "ABCDEFGHIJ"
+        cot_content = cot_content or "Let's think step by step."
+        if cot_content.startswith("A: "):
+            cot_content = cot_content[3:]
+
+        lines = [f"Question: {question}", "Options:"]
+        for idx, option in enumerate(options):
+            lines.append(f"{choice_map[idx]}. {option}")
+
+        if cot_content:
+            lines.append(f"Answer: {cot_content}")
+            lines.append("")
+        else:
+            lines.append("Answer:")
+
+        return "\n".join(lines)
+
+    def process_raw_data(
+        self,
+        data,
+        indices,
+        tokenizer,
+        apply_chat_template,
+        task,
+        max_length=3500,
+        truncate_from_middle=True,
+    ):
+        outputs = {"input_ids": [], "attention_mask": [], "index": []}
+        choice_map = "ABCDEFGHIJ"
+
+        for it, index in enumerate(indices):
+            category = data["category"][it]
+            fewshot_rows = self.val_by_category.get(category, [])[:self.n_shots]
+            examples = []
+            for row in fewshot_rows:
+                examples.append(
+                    self._format_example(
+                        row["question"],
+                        row["options"],
+                        row.get("cot_content", ""),
+                    ))
+            examples_text = "\n".join(examples)
+            if examples_text:
+                examples_text = examples_text + "\n"
+
+            options = []
+            for opt_idx, option in enumerate(data["options"][it]):
+                options.append(f"{choice_map[opt_idx]}. {option}")
+            prompt = datasets_prompt[task].format(
+                category=category,
+                examples=examples_text,
+                question=data["question"][it],
+                options="\n".join(options),
+            )
+
+            if truncate_from_middle:
+                tokenized_prompt = tokenizer.encode(prompt)
+                if len(tokenized_prompt) > max_length:
+                    half = int(max_length / 2)
+                    prompt = tokenizer.decode(
+                        tokenized_prompt[:half],
+                        skip_special_tokens=True) + tokenizer.decode(
+                            tokenized_prompt[-half:], skip_special_tokens=True)
+            else:
+                tokenized_prompt = tokenizer.encode(prompt)
+                prompt = tokenizer.decode(tokenized_prompt[-max_length:],
+                                          skip_special_tokens=True)
+
+            encoded = apply_chat_template(prompt, tokenizer)
+
+            outputs["input_ids"].append(encoded["input_ids"])
+            outputs["attention_mask"].append(encoded["attention_mask"])
+            outputs["index"].append(index)
+
+        return outputs
+
+
 class HumanEvalManager(DatasetManager):
 
     def __init__(
@@ -912,6 +1512,193 @@ class HumanEvalManager(DatasetManager):
                                           skip_special_tokens=True)
             encoded = apply_chat_template(prompt, tokenizer)
 
+            outputs["input_ids"].append(encoded["input_ids"])
+            outputs["attention_mask"].append(encoded["attention_mask"])
+            outputs["index"].append(index)
+
+        return outputs
+
+
+class AIME24Manager(DatasetManager):
+
+    def __init__(self, path, data_dir):
+        super().__init__(path, data_dir)
+
+    @staticmethod
+    def get_dataset_names():
+        return [
+            "aime24",
+        ]
+
+    def get_data(self, dataset_name):
+        return load_aime25_dataset(self.data_dir)
+
+    def get_dataset_info(self, dataset_name):
+        return (
+            datasets_prompt[dataset_name],
+            datasets_maxlen[dataset_name],
+            None,
+        )
+
+    @staticmethod
+    def process_raw_data(
+        data,
+        indices,
+        tokenizer,
+        apply_chat_template,
+        task,
+        max_length=3500,
+        truncate_from_middle=True,
+    ):
+        return AIME25Manager.process_raw_data(
+            data,
+            indices,
+            tokenizer,
+            apply_chat_template,
+            task,
+            max_length,
+            truncate_from_middle,
+        )
+
+
+class LiveCodeBenchManager(DatasetManager):
+
+    SYSTEM_MESSAGE_GENERIC = (
+        "You are an expert Python programmer. You will be given a question "
+        "(problem specification) and will generate a correct Python program "
+        "that matches the specification and passes all tests."
+    )
+    FORMATTING_MESSAGE_WITH_STARTER_CODE = (
+        "You will use the following starter code to write the solution to the "
+        "problem and enclose your code within delimiters."
+    )
+    FORMATTING_WITHOUT_STARTER_CODE = (
+        "Read the inputs from stdin solve the problem and write the answer to "
+        "stdout (do not directly test on the sample inputs). Enclose your "
+        "code within delimiters as follows. Ensure that when the python "
+        "program runs, it reads the inputs, runs the algorithm and writes "
+        "output to STDOUT."
+    )
+
+    def __init__(
+        self,
+        path,
+        data_dir,
+        release_version="release_latest",
+        not_fast=False,
+        start_date=None,
+        end_date=None,
+        max_new_tokens=2000,
+    ):
+        super().__init__(path, data_dir)
+        self.release_version = release_version
+        self.not_fast = not_fast
+        self.start_date = start_date
+        self.end_date = end_date
+        self.max_new_tokens = max_new_tokens
+
+    @staticmethod
+    def get_dataset_names():
+        return [
+            "livecodebench",
+        ]
+
+    @classmethod
+    def _format_problem_prompt(cls, question_content, starter_code):
+        prompt = f"### Question:\n{question_content}\n\n"
+        if starter_code:
+            prompt += (
+                f"### Format: {cls.FORMATTING_MESSAGE_WITH_STARTER_CODE}\n"
+            )
+            prompt += f"```python\n{starter_code}\n```\n\n"
+        else:
+            prompt += (
+                f"### Format: {cls.FORMATTING_WITHOUT_STARTER_CODE}\n"
+            )
+            prompt += "```python\n# YOUR CODE HERE\n```\n\n"
+        prompt += "### Answer: (use the provided format with backticks)\n\n"
+        return prompt
+
+    def get_data(self, dataset_name):
+        problems = load_livecodebench_code_generation_dataset(
+            release_version=self.release_version,
+            not_fast=self.not_fast,
+            start_date=self.start_date,
+            end_date=self.end_date,
+        )
+        ret = []
+        for problem in problems:
+            ret.append({
+                "question_id": str(problem.question_id),
+                "question_content": problem.question_content,
+                "starter_code": problem.starter_code or "",
+                "platform": problem.platform.value,
+                "contest_date": problem.contest_date.isoformat(),
+                "answers": [""],
+                "all_classes": None,
+                "length": 0,
+            })
+        return Dataset.from_list(ret)
+
+    def get_dataset_info(self, dataset_name):
+        return (
+            None,
+            self.max_new_tokens,
+            "Code Generation",
+        )
+
+    @classmethod
+    def process_raw_data(
+        cls,
+        data,
+        indices,
+        tokenizer,
+        apply_chat_template,
+        task,
+        max_length=3500,
+        truncate_from_middle=True,
+    ):
+        outputs = {"input_ids": [], "attention_mask": [], "index": []}
+        for it, index in enumerate(indices):
+            user_prompt = cls._format_problem_prompt(
+                data["question_content"][it],
+                data["starter_code"][it],
+            )
+            if hasattr(tokenizer, "apply_chat_template"):
+                prompt = tokenizer.apply_chat_template(
+                    [
+                        {
+                            "role": "system",
+                            "content": cls.SYSTEM_MESSAGE_GENERIC,
+                        },
+                        {
+                            "role": "user",
+                            "content": user_prompt,
+                        },
+                    ],
+                    add_generation_prompt=True,
+                    tokenize=False,
+                )
+            else:
+                prompt = f"{cls.SYSTEM_MESSAGE_GENERIC}\n\n{user_prompt}"
+
+            tokenized_prompt = tokenizer.encode(prompt)
+            if truncate_from_middle and len(tokenized_prompt) > max_length:
+                half = int(max_length / 2)
+                prompt = tokenizer.decode(
+                    tokenized_prompt[:half],
+                    skip_special_tokens=True,
+                ) + tokenizer.decode(
+                    tokenized_prompt[-half:],
+                    skip_special_tokens=True,
+                )
+            elif len(tokenized_prompt) > max_length:
+                prompt = tokenizer.decode(
+                    tokenized_prompt[-max_length:],
+                    skip_special_tokens=True,
+                )
+
+            encoded = tokenizer(prompt)
             outputs["input_ids"].append(encoded["input_ids"])
             outputs["attention_mask"].append(encoded["attention_mask"])
             outputs["index"].append(index)

@@ -74,7 +74,12 @@ class LokiOffloadingCache(OffloadingCache):
                     os.path.join(self.aux_data_path, f"pca_components/pca_components_layer_{layer:02d}.pt"),
                     weights_only=True,
                 )
-                pca = pca.view(self.num_key_value_heads, self.head_dim, self.head_dim)
+                pca = pca.view(-1, self.head_dim, self.head_dim)
+                pca = self._slice_local_kv_head_tensor(
+                    pca,
+                    tensor_name=f"pca_components_layer_{layer:02d}",
+                    head_dim=0,
+                )
                 pca = pca.transpose(-1, -2).contiguous().to(self.dtype).to(self.layer_devices[layer])
             self.layers_pca_matrix[layer] = pca
 
@@ -326,4 +331,3 @@ def prepare_cache_for_generation(
     self._cache.reset(batch_size)
     model_kwargs["past_key_values"] = self._cache
     return True
-

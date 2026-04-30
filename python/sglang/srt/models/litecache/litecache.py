@@ -17,12 +17,78 @@ from torch import nn
 from transformers import PretrainedConfig
 
 from sglang.litecache.config_utils import ensure_litecache_custom_config
+from sglang.srt.distributed import get_tensor_model_parallel_world_size
 from sglang.srt.layers.logits_processor import LogitsProcessor, LogitsProcessorOutput
 from sglang.srt.layers.quantization.base_config import QuantizationConfig
 from sglang.srt.model_executor.forward_batch_info import ForwardBatch
 from sglang.srt.model_loader.weight_utils import default_weight_loader
+from sglang.srt.models.litecache.awq_linear import (
+    replace_litecache_linears_with_awq,
+    should_enable_litecache_awq,
+)
+from sglang.srt.models.transformers import replace_linear_class
 
 logger = logging.getLogger(__name__)
+
+
+def _finalize_litecache_awq_modules(root: nn.Module) -> int:
+    finalized = 0
+    for module in root.modules():
+        if not getattr(module, "_litecache_awq_linear", False):
+            continue
+        process_fn = getattr(module, "process_weights_after_loading", None)
+        if callable(process_fn):
+            process_fn()
+            finalized += 1
+    return finalized
+
+
+def _replace_litecache_linears_with_tp(model: nn.Module, quant_config) -> int:
+    tp_size = get_tensor_model_parallel_world_size()
+    if tp_size <= 1:
+        return 0
+
+    style_by_leaf = {
+        "q_proj": "colwise",
+        "k_proj": "colwise",
+        "v_proj": "colwise",
+        "o_proj": "rowwise",
+        "gate_proj": "colwise",
+        "up_proj": "colwise",
+        "down_proj": "rowwise",
+    }
+
+    replaced = 0
+    named_modules = list(model.named_modules())
+    module_index = dict(named_modules)
+    for full_name, module in named_modules:
+        if not isinstance(module, nn.Linear):
+            continue
+        leaf_name = full_name.split(".")[-1]
+        style = style_by_leaf.get(leaf_name)
+        if style is None:
+            continue
+        if "." not in full_name:
+            continue
+
+        parent_name, attr_name = full_name.rsplit(".", 1)
+        parent = module_index.get(parent_name)
+        if parent is None:
+            continue
+
+        new_module = replace_linear_class(module, style, quant_config)
+        # TP linear biases are loaded later via each parameter's weight_loader.
+        # Eagerly copying HF full bias into a sharded TP bias breaks colwise layers.
+        setattr(parent, attr_name, new_module)
+        replaced += 1
+
+    if replaced > 0:
+        logger.info(
+            "LiteCache TP enabled: replaced %d linear modules with TP-aware layers (tp_size=%d).",
+            replaced,
+            tp_size,
+        )
+    return replaced
 
 
 def _get_variant_name(config: PretrainedConfig) -> str:
@@ -34,12 +100,19 @@ def _get_variant_name(config: PretrainedConfig) -> str:
     4) fallback: "offloading"
     """
 
-    supported = {"offloading", "loki", "hash", "infinigen", "quest"}
+    supported = {"offloading", "loki", "hash", "infinigen", "quest", "fullattn"}
+    aliases = {
+        "full_attn": "fullattn",
+        "flash_attn": "fullattn",
+        "flashattn": "fullattn",
+        "full": "fullattn",
+    }
 
     def _normalize(value):
         if value is None:
             return None
         s = str(value).strip().lower()
+        s = aliases.get(s, s)
         return s or None
 
     def _get_custom_value(key: str):
@@ -151,7 +224,6 @@ class LiteCacheLlamaForCausalLM(nn.Module):
         prefix: str = "",
     ) -> None:
         super().__init__()
-        _ = quant_config
         _ = prefix
 
         _ensure_llama_compatible_config(config)
@@ -159,6 +231,7 @@ class LiteCacheLlamaForCausalLM(nn.Module):
         variant = _get_variant_name(config)
         logger.info("Using LiteCache variant=%s", variant)
 
+        from sglang.litecache.kvcache_full_attn import CustomStaticCache
         from sglang.litecache.kvcache_hash import HashOffloadingCache as HashOffloadingCacheOffloading
         from sglang.litecache.kvcache_offloading_hash import (
             HashOffloadingCache as HashOffloadingCacheDuohead,
@@ -169,11 +242,13 @@ class LiteCacheLlamaForCausalLM(nn.Module):
         from sglang.litecache.kvcache_offloading_loki import LokiOffloadingCache
         from sglang.litecache.kvcache_offloading_quest import QuestOffloadingCache
         from sglang.srt.models.litecache import (
+            modeling_llama_full as full_impl,
             modeling_llama_offloading as offloading_impl,
             modeling_llama_offloading_duohead as duohead_impl,
         )
 
         variant_to_cls = {
+            "fullattn": getattr(full_impl, "FullAttentionLlamaForCausalLM"),
             "offloading": getattr(offloading_impl, "OffloadingLlamaForCausalLM"),
             "hash": getattr(duohead_impl, "HashLlamaForCausalLM"),
             "loki": getattr(duohead_impl, "LokiLlamaForCausalLM"),
@@ -187,6 +262,7 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             "quest": QuestOffloadingCache,
         }
         variant_to_cache_cls: dict[str, Type] = {
+            "fullattn": CustomStaticCache,
             "hash": HashOffloadingCacheDuohead,
             "loki": LokiOffloadingCache,
             "infinigen": InfiniGenOffloadingCache,
@@ -199,6 +275,13 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             )
 
         self.model: nn.Module = variant_to_cls[variant](config)
+        self._tp_enabled = _replace_litecache_linears_with_tp(self.model, quant_config) > 0
+        self._awq_enabled = False
+        if should_enable_litecache_awq(quant_config):
+            replaced = replace_litecache_linears_with_awq(self.model, quant_config)
+            self._awq_enabled = replaced > 0
+            if self._awq_enabled:
+                logger.info("LiteCache Llama AWQ route enabled. replaced_linears=%d", replaced)
         self.logits_processor = LogitsProcessor(config)
 
         self._variant = variant
@@ -220,6 +303,11 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             getattr(config, "custom_config", None),
             self._hf_config,
         )
+        if self._awq_enabled and bool(getattr(self._custom_config, "enable_cuda_graph", False)):
+            logger.warning(
+                "LiteCache AWQ path currently disables internal CUDA graph for stability."
+            )
+            self._custom_config.enable_cuda_graph = False
         self._cache = None
         self._cache_batch_size: Optional[int] = None
 
@@ -243,7 +331,7 @@ class LiteCacheLlamaForCausalLM(nn.Module):
         )
         self._cache.build_cache()
         logger.info(
-            "Initialized LiteCache offloading cache: variant=%s offloading_method=%s device=cuda:%d",
+            "Initialized LiteCache cache: variant=%s offloading_method=%s device=cuda:%d",
             self._variant,
             self._offloading_method,
             device_idx,
@@ -340,6 +428,9 @@ class LiteCacheLlamaForCausalLM(nn.Module):
         )
         if non_next_missing:
             logger.info("LiteCache non-next missing sample: %s", non_next_missing[:24])
+        if self._awq_enabled:
+            finalized = _finalize_litecache_awq_modules(self)
+            logger.info("LiteCache AWQ post-load finalize done. modules=%d", finalized)
 
 
 class LiteCacheQwen2ForCausalLM(nn.Module):
@@ -354,12 +445,12 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
         prefix: str = "",
     ) -> None:
         super().__init__()
-        _ = quant_config
         _ = prefix
 
         variant = _get_variant_name(config)
         logger.info("Using LiteCache variant=%s (qwen2)", variant)
 
+        from sglang.litecache.kvcache_full_attn import CustomStaticCache
         from sglang.litecache.kvcache_hash import HashOffloadingCache as HashOffloadingCacheOffloading
         from sglang.litecache.kvcache_offloading_hash import (
             HashOffloadingCache as HashOffloadingCacheDuohead,
@@ -370,11 +461,13 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
         from sglang.litecache.kvcache_offloading_loki import LokiOffloadingCache
         from sglang.litecache.kvcache_offloading_quest import QuestOffloadingCache
         from sglang.srt.models.litecache import (
+            modeling_qwen2_full as full_impl,
             modeling_qwen2_offloading as offloading_impl,
             modeling_qwen2_offloading_duohead as duohead_impl,
         )
 
         variant_to_cls = {
+            "fullattn": getattr(full_impl, "FullAttentionQwen2ForCausalLM"),
             "offloading": getattr(offloading_impl, "OffloadingQwen2ForCausalLM"),
             "hash": getattr(duohead_impl, "HashQwen2ForCausalLM"),
             "loki": getattr(duohead_impl, "LokiQwen2ForCausalLM"),
@@ -388,6 +481,7 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             "quest": QuestOffloadingCache,
         }
         variant_to_cache_cls: dict[str, Type] = {
+            "fullattn": CustomStaticCache,
             "hash": HashOffloadingCacheDuohead,
             "loki": LokiOffloadingCache,
             "infinigen": InfiniGenOffloadingCache,
@@ -400,6 +494,13 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             )
 
         self.model: nn.Module = variant_to_cls[variant](config)
+        self._tp_enabled = _replace_litecache_linears_with_tp(self.model, quant_config) > 0
+        self._awq_enabled = False
+        if should_enable_litecache_awq(quant_config):
+            replaced = replace_litecache_linears_with_awq(self.model, quant_config)
+            self._awq_enabled = replaced > 0
+            if self._awq_enabled:
+                logger.info("LiteCache Qwen2 AWQ route enabled. replaced_linears=%d", replaced)
         self.logits_processor = LogitsProcessor(config)
 
         self._variant = variant
@@ -421,6 +522,11 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             getattr(config, "custom_config", None),
             self._hf_config,
         )
+        if self._awq_enabled and bool(getattr(self._custom_config, "enable_cuda_graph", False)):
+            logger.warning(
+                "LiteCache AWQ path currently disables internal CUDA graph for stability."
+            )
+            self._custom_config.enable_cuda_graph = False
         self._cache = None
         self._cache_batch_size: Optional[int] = None
 
@@ -444,7 +550,7 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
         )
         self._cache.build_cache()
         logger.info(
-            "Initialized LiteCache offloading cache: variant=%s offloading_method=%s device=cuda:%d",
+            "Initialized LiteCache cache: variant=%s offloading_method=%s device=cuda:%d",
             self._variant,
             self._offloading_method,
             device_idx,
@@ -540,6 +646,9 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
         )
         if non_next_missing:
             logger.info("LiteCache non-next missing sample: %s", non_next_missing[:24])
+        if self._awq_enabled:
+            finalized = _finalize_litecache_awq_modules(self)
+            logger.info("LiteCache AWQ post-load finalize done. modules=%d", finalized)
 
 
 EntryClass = [LiteCacheLlamaForCausalLM, LiteCacheQwen2ForCausalLM]

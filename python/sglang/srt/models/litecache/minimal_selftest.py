@@ -96,6 +96,7 @@ def build_args():
     parser.add_argument("--token-budget", type=float, default=0.2)
     parser.add_argument("--sink-budget", type=int, default=4)
     parser.add_argument("--recent-budget", type=int, default=128)
+    parser.add_argument("--selective-start-len", type=int, default=0)
     parser.add_argument("--num-channels", type=int, default=32)
     parser.add_argument("--rbits", type=int, default=32)
     parser.add_argument("--block-size", type=int, default=64)
@@ -104,6 +105,12 @@ def build_args():
     parser.add_argument("--num-omp-threads", type=int, default=4)
     parser.add_argument("--num-skip-layers", type=int, default=0)
     parser.add_argument("--num-overlapped-heads", type=int, default=0)
+    parser.add_argument(
+        "--max-reuse-count",
+        type=int,
+        default=10,
+        help="Force gather for a KV head after this many consecutive reuses.",
+    )
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--attention-backend", type=str, default=None)
     parser.add_argument("--mem-fraction-static", type=float, default=0.92)
@@ -198,6 +205,7 @@ def build_litecache_override(args) -> dict:
                 "token_budget": args.token_budget,
                 "sink_budget": args.sink_budget,
                 "recent_budget": args.recent_budget,
+                "selective_start_len": int(args.selective_start_len),
             },
             "offload_config": {
                 "attn_pattern_path": args.attn_pattern_path,
@@ -205,6 +213,7 @@ def build_litecache_override(args) -> dict:
                 "reuse_threshold_lower": 0.7,
                 "decay_p": 2.0,
                 "cosine_padding": 0.02,
+                "max_reuse_count": int(args.max_reuse_count),
                 "num_skip_layers": int(args.num_skip_layers),
                 "num_overlapped_heads": int(args.num_overlapped_heads),
                 "num_omp_threads": args.num_omp_threads,
@@ -270,6 +279,7 @@ def main():
         f"offloading_method={model_override.get('offloading_method', model_override.get('custom_config', {}).get('offloading_method'))}, "
         f"num_skip_layers={model_override.get('custom_config', {}).get('offload_config', {}).get('num_skip_layers')}, "
         f"num_overlapped_heads={model_override.get('custom_config', {}).get('offload_config', {}).get('num_overlapped_heads')}, "
+        f"max_reuse_count={model_override.get('custom_config', {}).get('offload_config', {}).get('max_reuse_count')}, "
         f"litecache_enable_cuda_graph={model_override.get('custom_config', {}).get('enable_cuda_graph')}, "
         f"engine_disable_cuda_graph={args.disable_cuda_graph}",
         flush=True,

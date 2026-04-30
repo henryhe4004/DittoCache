@@ -12,12 +12,12 @@ sparse_attention:
     rbit: 256
 offload:
   reuse_threshold_lower: -1.0
-  reuse_threshold_upper: 0.8
+  reuse_threshold_upper: 1 #原来是0.8
   decay_p: 3
   cosine_padding: 0.05
   num_omp_threads: 16
   num_overlapped_heads: 8
-  num_skip_layers: 1
+  num_skip_layers: 48
   attn_pattern_path:  "../auxiliary/attn_pattern/Qwen2.5-14B-Instruct-1M"
 enable_cuda_graph: true
 chunk_prefill_size: 4096 # 0 for no chunking

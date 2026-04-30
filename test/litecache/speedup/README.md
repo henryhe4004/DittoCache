@@ -32,6 +32,24 @@ Llama:
 - `run_n2n_llama_fullattn_bsz.sh`
 - `run_n2n_llama_fullattn_seqlen.sh`
 
+## Export CSV
+
+- `export_speedup_csv.py`
+  - Aggregates benchmark JSON files into one CSV table.
+  - Default input: `logs-perf-from32k/*.json`.
+  - Default output: `logs-perf-from32k/summary.csv`.
+
+Example:
+
+```bash
+cd /jhe/sglang/test/litecache/speedup
+python3 export_speedup_csv.py --input-dir logs-perf-from32k --output-csv logs-perf-from32k/summary.csv
+```
+
+`run_n2n_qwen_offloading_perf_from32k.sh` now exports CSV automatically after all runs.
+- Disable auto-export: `EXPORT_CSV=0`
+- Change output path: `CSV_SUMMARY=/path/to/your.csv`
+
 ## Example
 
 ```bash
