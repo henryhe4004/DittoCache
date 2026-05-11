@@ -77,7 +77,7 @@ def _fwd_mix_kernel(
             K_ptr = k_cache
             V_ptr = v_cache
 
-            cur_batch_seq_len = tl.load(topk_index_count)
+            cur_batch_seq_len = tl.load(topk_index_count + cur_batch)
             seq_len_end = tl.cdiv(cur_batch_seq_len, BLOCK_SEQ) * BLOCK_SEQ
 
             topk_index_ptr = (topk_index + cur_batch * stride_topk_indexb + cur_kv_head * stride_topk_indexh)
@@ -131,7 +131,7 @@ def _fwd_mix_kernel(
             K_ptr = k_buffer
             V_ptr = v_buffer
 
-            cur_batch_seq_len = tl.load(buffer_valid_count)
+            cur_batch_seq_len = tl.load(buffer_valid_count + cur_batch)
             seq_len_end = tl.cdiv(cur_batch_seq_len, BLOCK_SEQ) * BLOCK_SEQ
 
             for start_n in range(0, seq_len_end, BLOCK_SEQ):
@@ -273,4 +273,3 @@ def decode_mixed_attention_fwd_grouped(
         BLOCK_HGROUP,
         num_stages=num_stages,
     )
-

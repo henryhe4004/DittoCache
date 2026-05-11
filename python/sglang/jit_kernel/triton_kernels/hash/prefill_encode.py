@@ -27,7 +27,7 @@ def _hash_encode_append_prefill(
     batch_id = tl.program_id(1)
     head_id = tl.program_id(2)
 
-    cur_batch_seq_len = tl.load(seq_len_ptr)
+    cur_batch_seq_len = tl.load(seq_len_ptr + batch_id)
 
     DataPtr = data_ptr + batch_id * data_stride0 + head_id * HEAD_DIM
     OutputCodePtr = (
@@ -88,7 +88,7 @@ def hash_encode_append_prefill(
     key_data,               # [b, s, h, d]
     code_cache,             # [b, smax, h, num_chunk]
     hash_weights,           # [h, d, rbit]
-    seq_len_tensor,         # [1]
+    seq_len_tensor,         # [b]
     packbit_aux_tensor,     # [32]
 ) -> None:
     RBIT = hash_weights.shape[-1]

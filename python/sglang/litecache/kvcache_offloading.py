@@ -35,6 +35,8 @@ DISABLE_PERSISTENT_CACHING = False if os.environ.get(
     "DISABLE_PERSISTENT_CACHING") is None else int(
         os.environ["DISABLE_PERSISTENT_CACHING"]) > 0
 
+logger = logging.getLogger(__name__)
+
 
 def create_aligned_cuda_tensor(data_numel, dtype, device, pagesize):
     elem_size = dtype.itemsize
@@ -102,12 +104,18 @@ class OffloadingCache(CustomStaticCache):
         self.debug_stall_min_ms = float(
             os.environ.get("LITECACHE_DEBUG_STALL_MIN_MS", "0")
         )
+        self.debug_batch = os.environ.get("LITECACHE_DEBUG_BATCH", "0") == "1"
+        self._warned_ragged_decode_batch = False
         # Safety switch: bypass prefetch kernel launch to keep system runnable.
         self.disable_prefetch = os.environ.get("LITECACHE_DISABLE_PREFETCH", "0") == "1"
         # Keep a host mirror of prefetch-k to avoid CUDA tensor .item() during graph capture.
         self.topk_prefetch_k_host = 0
-        self.cache_length_host = [0 for _ in range(self.num_layers)]
-        self.cpu_cache_length_host = [0 for _ in range(self.num_layers)]
+        self.topk_current_k_host = 0
+        self.topk_prefetch_k_host_per_row = []
+        self.topk_current_k_host_per_row = []
+        max_batch = int(self.config.kvcache_manager_config.max_batch_size)
+        self.cache_length_host = [[0] * max_batch for _ in range(self.num_layers)]
+        self.cpu_cache_length_host = [[0] * max_batch for _ in range(self.num_layers)]
         self._decode_transfer_step_idx = 0
         self.record_overlap_stats = (
             os.environ.get("LITECACHE_RECORD_OVERLAP_STATS", "0") == "1"
@@ -567,7 +575,7 @@ class OffloadingCache(CustomStaticCache):
             cache_data = torch.zeros((numel_one_head * num_gpu_heads, ),
                                      dtype=self.dtype,
                                      device=layer_device)
-            gpu_cache_length = torch.zeros((1, ),
+            gpu_cache_length = torch.zeros((self.config.kvcache_manager_config.max_batch_size, ),
                                            dtype=torch.int32,
                                            device=layer_device)
             self.cache_tensors['cache_data'][l] = cache_data
@@ -595,7 +603,7 @@ class OffloadingCache(CustomStaticCache):
                                      dtype=self.dtype,
                                      device="cpu",
                                      pin_memory=True)
-            cache_length = torch.zeros((1, ),
+            cache_length = torch.zeros((self.config.kvcache_manager_config.max_batch_size, ),
                                        dtype=torch.int32,
                                        device=layer_device)
             self.cache_tensors['cpu_cache_data'][l] = cache_data
@@ -610,10 +618,10 @@ class OffloadingCache(CustomStaticCache):
                 dtype=self.dtype,
                 device=self.layer_devices[l],
                 pagesize=GPU_PAGE_SIZE)
-            buffer_length = torch.zeros((1, ),
+            buffer_length = torch.zeros((self.config.kvcache_manager_config.max_batch_size, ),
                                         dtype=torch.int32,
                                         device=layer_device)
-            buffer_ptr = torch.zeros((1, ),
+            buffer_ptr = torch.zeros((self.config.kvcache_manager_config.max_batch_size, ),
                                      dtype=torch.int32,
                                      device=layer_device)
             self.cache_tensors['gpu_buffer_data_raw'][l] = raw_data
@@ -635,7 +643,13 @@ class OffloadingCache(CustomStaticCache):
         # flag[2] = current batch size (<= max batch size)
         # flag[3] = current max_seq_len
         # flag[4] = current max_buffer_len
-        self.metadata_tensors['gather_engine_metadata'] = torch.full((6, ),
+        # flag[6:] = per flattened KV head gather lengths for the current batch
+        gather_meta_len = (
+            6
+            + self.config.kvcache_manager_config.max_batch_size
+            * self.num_key_value_heads
+        )
+        self.metadata_tensors['gather_engine_metadata'] = torch.full((gather_meta_len, ),
                                  -1,
                                  device="cpu",
                                  dtype=torch.int32,
@@ -702,12 +716,12 @@ class OffloadingCache(CustomStaticCache):
                 device=device_idx,
             )
             self.metadata_tensors[f'topk_prefetch_k_{device_idx}'] = torch.zeros(
-                (1, ),
+                (self.config.kvcache_manager_config.max_batch_size, ),
                 dtype=torch.int32,
                 device=device_idx,
             )
             self.metadata_tensors[f'topk_current_k_{device_idx}'] = torch.zeros(
-                (1, ),
+                (self.config.kvcache_manager_config.max_batch_size, ),
                 dtype=torch.int32,
                 device=device_idx,
             )
@@ -741,7 +755,7 @@ class OffloadingCache(CustomStaticCache):
                                                num_gpu_heads, self.head_dim)
             cache_length = self.cache_tensors['cache_length'][l]
             cache_length.zero_()
-            self.cache_length_host[l] = 0
+            self.cache_length_host[l] = [0] * self.config.kvcache_manager_config.max_batch_size
 
     def _reset_offload_tensors(self, batch_size):
         # reset cpu kv cache
@@ -757,7 +771,7 @@ class OffloadingCache(CustomStaticCache):
                                                        self.head_dim)
             cpu_cache_length = self.cache_tensors['cpu_cache_length'][l]
             cpu_cache_length.zero_()
-            self.cpu_cache_length_host[l] = 0
+            self.cpu_cache_length_host[l] = [0] * self.config.kvcache_manager_config.max_batch_size
 
             num_cpu_heads = self.layers_cpu_head_ids[l].numel()
             if num_cpu_heads == 0:
@@ -780,7 +794,10 @@ class OffloadingCache(CustomStaticCache):
                 continue
 
             gpu_buffer_ptr = self.cache_tensors['gpu_buffer_ptr'][l]
-            gpu_buffer_ptr[0] = self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget
+            gpu_buffer_ptr[:batch_size] = (
+                self.config.sparse_attention_config.sink_budget
+                + self.config.sparse_attention_config.recent_budget
+            )
 
     def _reset_topk_tensors(self, batch_size):
         raise NotImplementedError
@@ -798,6 +815,18 @@ class OffloadingCache(CustomStaticCache):
         self.max_prefetch_topk_len = (self.max_buffer_len - self.config.sparse_attention_config.sink_budget - self.config.sparse_attention_config.recent_budget - 1)
         self.max_current_topk_len = self.max_buffer_len
 
+        if self.debug_batch:
+            logger.info(
+                "LiteCache reset: requested_batch=%d configured_max_batch=%d "
+                "max_tokens=%d max_seq_len=%d max_sparse_tokens=%d max_buffer_len=%d",
+                batch_size,
+                self.config.kvcache_manager_config.max_batch_size,
+                self.config.kvcache_manager_config.max_tokens,
+                self.max_seq_len,
+                self.max_sparse_tokens,
+                self.max_buffer_len,
+            )
+
         self._reset_cache_tensors(batch_size)
         self._reset_offload_tensors(batch_size)
         self._reset_topk_tensors(batch_size)
@@ -807,6 +836,7 @@ class OffloadingCache(CustomStaticCache):
         self.metadata_tensors['gather_engine_metadata'][3] = self.max_seq_len
         self.metadata_tensors['gather_engine_metadata'][4] = self.max_buffer_len
         self.metadata_tensors['gather_engine_metadata'][5] = self.max_prefetch_topk_len
+        self.metadata_tensors['gather_engine_metadata'][6:].zero_()
 
         self.metadata_tensors['cpu_indices_data'].fill_(-1)
         self.cpu_indices_buffer = self.metadata_tensors['cpu_indices_data'][:batch_size * 
@@ -845,11 +875,277 @@ class OffloadingCache(CustomStaticCache):
         self._pending_overlap_head_mask = [None for _ in range(self.num_layers)]
         self._decode_overlap_metrics = [None for _ in range(self.num_layers)]
 
+    def reset_batch_rows(self, row_indices: list[int]) -> None:
+        if not row_indices:
+            return
+        rows = torch.tensor(row_indices, dtype=torch.long)
+        sink_recent = (
+            self.config.sparse_attention_config.sink_budget
+            + self.config.sparse_attention_config.recent_budget
+        )
+        for l in range(self.num_layers):
+            row_device = self.cache_tensors['cpu_cache_length'][l].device
+            layer_rows = rows.to(device=row_device, non_blocking=True)
+            if self.cache_tensors['cache_length'][l] is not None:
+                self.cache_tensors['cache_length'][l][layer_rows] = 0
+            self.cache_tensors['cpu_cache_length'][l][layer_rows] = 0
+            if self.cache_tensors['gpu_buffer_ptr'][l] is not None:
+                self.cache_tensors['gpu_buffer_ptr'][l][layer_rows] = sink_recent
+            if self.cache_tensors['gpu_buffer_length'][l] is not None:
+                self.cache_tensors['gpu_buffer_length'][l][layer_rows] = 0
+            for row in row_indices:
+                self.cache_length_host[l][row] = 0
+                self.cpu_cache_length_host[l][row] = 0
+                start = row * self.num_key_value_heads
+                end = start + self.num_key_value_heads
+                self.metadata_tensors['ready_flag'][l][start:end] = False
+                self.metadata_tensors['gather_mask'][l][start:end] = True
+                self.metadata_tensors['reuse_count'][l][start:end] = 0
+                self.metadata_tensors['cached_query'][l][row].zero_()
+
+    def move_batch_rows(self, old_to_new_rows: dict[int, int]) -> None:
+        if not old_to_new_rows:
+            return
+
+        max_batch = int(self.config.kvcache_manager_config.max_batch_size)
+        normalized = {
+            int(old): int(new)
+            for old, new in old_to_new_rows.items()
+            if int(old) != int(new)
+        }
+        if not normalized:
+            return
+        bad_rows = [
+            row
+            for pair in normalized.items()
+            for row in pair
+            if row < 0 or row >= max_batch
+        ]
+        if bad_rows:
+            raise RuntimeError(
+                f"LiteCache batch-row remap out of range: {normalized}, "
+                f"max_batch_size={max_batch}"
+            )
+
+        def _index_copy_rows(tensor: torch.Tensor | None, dim: int) -> None:
+            if tensor is None:
+                return
+            old_rows = torch.tensor(
+                list(normalized.keys()), dtype=torch.long, device=tensor.device
+            )
+            new_rows = torch.tensor(
+                list(normalized.values()), dtype=torch.long, device=tensor.device
+            )
+            src = tensor.index_select(dim, old_rows).clone()
+            tensor.index_copy_(dim, new_rows, src)
+
+        def _index_copy_head_rows(tensor: torch.Tensor | None) -> None:
+            if tensor is None:
+                return
+            old_indices: list[int] = []
+            new_indices: list[int] = []
+            for old, new in normalized.items():
+                old_indices.extend(
+                    range(
+                        old * self.num_key_value_heads,
+                        (old + 1) * self.num_key_value_heads,
+                    )
+                )
+                new_indices.extend(
+                    range(
+                        new * self.num_key_value_heads,
+                        (new + 1) * self.num_key_value_heads,
+                    )
+                )
+            old_tensor = torch.tensor(
+                old_indices, dtype=torch.long, device=tensor.device
+            )
+            new_tensor = torch.tensor(
+                new_indices, dtype=torch.long, device=tensor.device
+            )
+            src = tensor.index_select(0, old_tensor).clone()
+            tensor.index_copy_(0, new_tensor, src)
+
+        def _copy_kv_cache_rows(
+            tensor: torch.Tensor | None,
+            row_lengths: list[int],
+        ) -> None:
+            if tensor is None:
+                return
+            snapshots = []
+            seq_cap = int(tensor.size(2))
+            for old, new in normalized.items():
+                valid_len = max(0, min(int(row_lengths[old]), seq_cap))
+                if valid_len == 0:
+                    continue
+                snapshots.append(
+                    (
+                        new,
+                        valid_len,
+                        tensor[:, old : old + 1, :valid_len].clone(),
+                    )
+                )
+            for new, valid_len, src in snapshots:
+                tensor[:, new : new + 1, :valid_len].copy_(src)
+
+        for layer_idx in range(self.num_layers):
+            _index_copy_rows(self.cache_tensors['cache_length'][layer_idx], 0)
+            _index_copy_rows(self.cache_tensors['cpu_cache_length'][layer_idx], 0)
+            _index_copy_rows(self.cache_tensors['gpu_buffer_ptr'][layer_idx], 0)
+            _index_copy_rows(self.cache_tensors['gpu_buffer_length'][layer_idx], 0)
+            _copy_kv_cache_rows(
+                self.kv_caches[layer_idx],
+                self.cache_length_host[layer_idx],
+            )
+            _copy_kv_cache_rows(
+                self.cpu_kv_caches[layer_idx],
+                self.cpu_cache_length_host[layer_idx],
+            )
+            _index_copy_rows(self.gpu_kv_buffers[layer_idx], 1)
+            _index_copy_rows(self.metadata_tensors['cached_query'][layer_idx], 0)
+            _index_copy_head_rows(self.metadata_tensors['ready_flag'][layer_idx])
+            _index_copy_head_rows(self.metadata_tensors['gather_mask'][layer_idx])
+            _index_copy_head_rows(self.metadata_tensors['reuse_count'][layer_idx])
+
+            cache_lengths = [
+                self.cache_length_host[layer_idx][old]
+                for old in normalized.keys()
+            ]
+            cpu_cache_lengths = [
+                self.cpu_cache_length_host[layer_idx][old]
+                for old in normalized.keys()
+            ]
+            for new, value in zip(normalized.values(), cache_lengths):
+                self.cache_length_host[layer_idx][new] = int(value)
+            for new, value in zip(normalized.values(), cpu_cache_lengths):
+                self.cpu_cache_length_host[layer_idx][new] = int(value)
+
+    def trim_prefill_padding(self, extend_seq_lens: list[int], padded_q_len: int) -> None:
+        if not extend_seq_lens or all(int(x) == int(padded_q_len) for x in extend_seq_lens):
+            return
+        if len(extend_seq_lens) != self.curr_batch_size:
+            raise RuntimeError(
+                "LiteCache trim_prefill_padding length mismatch: "
+                f"extend_seq_lens={extend_seq_lens}, "
+                f"curr_batch_size={self.curr_batch_size}."
+            )
+        trims = torch.tensor(
+            [int(padded_q_len) - int(x) for x in extend_seq_lens],
+            dtype=torch.int32,
+        )
+        sink_recent = (
+            self.config.sparse_attention_config.sink_budget
+            + self.config.sparse_attention_config.recent_budget
+        )
+
+        def _align_for_gpu_buffer(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+            if src.shape == dst.shape:
+                return src
+            if (
+                src.ndim == 4
+                and src.shape[0] == dst.shape[0]
+                and src.shape[1] == dst.shape[2]
+                and src.shape[2] == dst.shape[1]
+                and src.shape[3] == dst.shape[3]
+            ):
+                return src.transpose(1, 2).contiguous()
+            raise RuntimeError(
+                "LiteCache trim_prefill_padding buffer shape mismatch: "
+                f"src={tuple(src.shape)} dst={tuple(dst.shape)}"
+            )
+
+        for layer_idx in range(self.num_layers):
+            for name, host_lengths in (
+                ("cache_length", self.cache_length_host),
+                ("cpu_cache_length", self.cpu_cache_length_host),
+            ):
+                length_tensor = self.cache_tensors.get(name, [None])[layer_idx]
+                if length_tensor is None:
+                    continue
+                active = length_tensor[:self.curr_batch_size]
+                layer_trims = trims.to(device=active.device, non_blocking=True)
+                active.sub_(layer_trims)
+                for row, trim in enumerate(trims.tolist()):
+                    host_lengths[layer_idx][row] -= int(trim)
+
+            if self.layers_full_gpu_mask[layer_idx]:
+                continue
+
+            cpu_head_ids = self.layers_cpu_head_ids[layer_idx]
+            if cpu_head_ids.numel() == 0:
+                continue
+            cpu_head_ids_cpu = cpu_head_ids.cpu()
+            for row in range(self.curr_batch_size):
+                new_len = int(self.cpu_cache_length_host[layer_idx][row])
+                sink = min(self.config.sparse_attention_config.sink_budget, new_len)
+                recent = min(
+                    self.config.sparse_attention_config.recent_budget,
+                    max(new_len - sink, 0),
+                )
+                self.cache_tensors['gpu_buffer_ptr'][layer_idx][row] = sink_recent
+                if self.cache_tensors['gpu_buffer_length'][layer_idx] is not None:
+                    self.cache_tensors['gpu_buffer_length'][layer_idx][row] = 0
+                if sink > 0:
+                    sink_key_states = self.cpu_kv_caches[layer_idx][
+                        0, row:row + 1, :sink, cpu_head_ids_cpu, :
+                    ]
+                    sink_value_states = self.cpu_kv_caches[layer_idx][
+                        1, row:row + 1, :sink, cpu_head_ids_cpu, :
+                    ]
+                    sink_key_target = self.gpu_kv_buffers[layer_idx][
+                        0, row:row + 1, :sink, :, :
+                    ]
+                    sink_value_target = self.gpu_kv_buffers[layer_idx][
+                        1, row:row + 1, :sink, :, :
+                    ]
+                    sink_key_target.copy_(
+                        _align_for_gpu_buffer(sink_key_states, sink_key_target)
+                    )
+                    sink_value_target.copy_(
+                        _align_for_gpu_buffer(sink_value_states, sink_value_target)
+                    )
+                if recent > 0:
+                    recent_start = new_len - recent
+                    recent_key_states = self.cpu_kv_caches[layer_idx][
+                        0, row:row + 1, recent_start:new_len, cpu_head_ids_cpu, :
+                    ]
+                    recent_value_states = self.cpu_kv_caches[layer_idx][
+                        1, row:row + 1, recent_start:new_len, cpu_head_ids_cpu, :
+                    ]
+                    recent_key_target = self.gpu_kv_buffers[layer_idx][
+                        0, row:row + 1, sink:sink + recent, :, :
+                    ]
+                    recent_value_target = self.gpu_kv_buffers[layer_idx][
+                        1, row:row + 1, sink:sink + recent, :, :
+                    ]
+                    recent_key_target.copy_(
+                        _align_for_gpu_buffer(recent_key_states, recent_key_target)
+                    )
+                    recent_value_target.copy_(
+                        _align_for_gpu_buffer(recent_value_states, recent_value_target)
+                    )
+
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
+        active = slice(0, self.curr_batch_size)
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
-            return int(self.cache_length_host[layer_idx])
+            return int(min(self.cache_length_host[layer_idx][active]))
         else:
-            return int(self.cpu_cache_length_host[layer_idx])
+            return int(min(self.cpu_cache_length_host[layer_idx][active]))
+
+    def _active_cache_length_tensor(self, name: str, layer_idx: int) -> torch.Tensor:
+        return self.cache_tensors[name][layer_idx][:self.curr_batch_size]
+
+    def _set_active_host_lengths(self, host_lengths, layer_idx: int, value: int) -> None:
+        for idx in range(self.curr_batch_size):
+            host_lengths[layer_idx][idx] = int(value)
+
+    def _set_active_host_lengths_from_tensor(self, host_lengths, layer_idx: int, values: torch.Tensor) -> None:
+        for idx, value in enumerate(values.detach().cpu().tolist()):
+            host_lengths[layer_idx][idx] = int(value)
+
+    def _increment_active_host_lengths(self, host_lengths, layer_idx: int, delta: int = 1) -> None:
+        for idx in range(self.curr_batch_size):
+            host_lengths[layer_idx][idx] += int(delta)
 
     # ==================== Copy Engine ====================
     def _init_offloading(self):
@@ -896,50 +1192,115 @@ class OffloadingCache(CustomStaticCache):
 
     def update_metadata(self, q_len: int, is_prefill=False, layer_idx: int = 0):
         super().update_metadata(q_len, is_prefill, layer_idx)
+        if self.layers_gpu_head_ids[layer_idx].numel() > 0:
+            active_seq_lens = self.cache_length_host[layer_idx][
+                : self.curr_batch_size
+            ]
+        else:
+            active_seq_lens = self.cpu_cache_length_host[layer_idx][
+                : self.curr_batch_size
+            ]
+        for device_idx in self.unique_devices:
+            rope_device = self.metadata_tensors[f"rope_offsets_{device_idx}"].device
+            if self.layers_gpu_head_ids[layer_idx].numel() > 0:
+                rope_offsets = self._active_cache_length_tensor(
+                    "cache_length", layer_idx
+                ).to(device=rope_device, non_blocking=True)
+            else:
+                rope_offsets = self._active_cache_length_tensor(
+                    "cpu_cache_length", layer_idx
+                ).to(device=rope_device, non_blocking=True)
+            self.metadata_tensors[f"rope_offsets_{device_idx}"][
+                : self.curr_batch_size
+            ] = rope_offsets
         if is_prefill:
             self.first_decode_layer_step = True
             self._decode_transfer_step_idx = 0
             if self.record_transfer_stats:
                 reset_transfer_stats()
+            if self.debug_batch and layer_idx == 0:
+                logger.info(
+                    "LiteCache metadata prefill: batch=%d q_len=%d seq_lens=%s",
+                    self.curr_batch_size,
+                    q_len,
+                    active_seq_lens,
+                )
         else:
-            curr_seqlen = self.get_seq_length(0)
-            # Clamp sink/recent by current sequence length to avoid invalid budgets
-            # on short prompts (e.g. seq_len < sink+recent).
-            sink = min(self.config.sparse_attention_config.sink_budget, curr_seqlen)
-            recent = min(
-                self.config.sparse_attention_config.recent_budget,
-                max(curr_seqlen - sink, 0),
-            )
-            keep_budget = min(curr_seqlen, sink + recent + 1)
-            selective_start_len = min(self.selective_start_len, curr_seqlen)
-            if curr_seqlen <= selective_start_len:
-                # Short context: keep all tokens (no sparsification), but still
-                # prefetch CPU-offloaded history so attention data is complete.
-                raw_k = curr_seqlen
-                topk_prefetch_k = raw_k - keep_budget
-            else:
-                extra_len = curr_seqlen - selective_start_len
-                if self.topk_ratio < 1:
-                    raw_k = selective_start_len + int(extra_len * self.topk_ratio)
+            active_seq_lens = [int(x) for x in active_seq_lens]
+            topk_prefetch_ks = []
+            topk_current_ks = []
+            for curr_seqlen in active_seq_lens:
+                # Clamp sink/recent by row sequence length to avoid invalid
+                # budgets on short prompts (e.g. seq_len < sink+recent).
+                sink = min(self.config.sparse_attention_config.sink_budget, curr_seqlen)
+                recent = min(
+                    self.config.sparse_attention_config.recent_budget,
+                    max(curr_seqlen - sink, 0),
+                )
+                keep_budget = min(curr_seqlen, sink + recent + 1)
+                selective_start_len = min(self.selective_start_len, curr_seqlen)
+                if curr_seqlen <= selective_start_len:
+                    raw_k = curr_seqlen
+                    topk_prefetch_k = raw_k - keep_budget
                 else:
-                    raw_k = selective_start_len + int(self.topk_ratio)
-                raw_k = max(raw_k, selective_start_len)
-                topk_prefetch_k = raw_k - keep_budget
-            topk_current_k = raw_k
+                    extra_len = curr_seqlen - selective_start_len
+                    if self.topk_ratio < 1:
+                        raw_k = selective_start_len + int(extra_len * self.topk_ratio)
+                    else:
+                        raw_k = selective_start_len + int(self.topk_ratio)
+                    raw_k = max(raw_k, selective_start_len)
+                    topk_prefetch_k = raw_k - keep_budget
 
-            topk_prefetch_k = max(min(topk_prefetch_k, self.max_prefetch_topk_len), 0)
-            topk_current_k = max(min(topk_current_k, self.max_current_topk_len), keep_budget)
-            topk_current_k = min(topk_current_k, curr_seqlen)
-            self.topk_prefetch_k_host = int(topk_prefetch_k)
+                topk_current_k = raw_k
+                topk_prefetch_k = max(
+                    min(topk_prefetch_k, self.max_prefetch_topk_len), 0
+                )
+                topk_current_k = max(
+                    min(topk_current_k, self.max_current_topk_len), keep_budget
+                )
+                topk_current_k = min(topk_current_k, curr_seqlen)
+                topk_prefetch_ks.append(int(topk_prefetch_k))
+                topk_current_ks.append(int(topk_current_k))
 
+            self.topk_prefetch_k_host_per_row = topk_prefetch_ks
+            self.topk_current_k_host_per_row = topk_current_ks
+            self.topk_prefetch_k_host = max(topk_prefetch_ks, default=0)
+            self.topk_current_k_host = max(topk_current_ks, default=0)
+            if self.debug_batch and layer_idx == 0:
+                logger.info(
+                    "LiteCache metadata decode: batch=%d q_len=%d seq_lens=%s "
+                    "prefetch_k=%s current_k=%s max_prefetch_k=%d max_current_k=%d",
+                    self.curr_batch_size,
+                    q_len,
+                    active_seq_lens,
+                    topk_prefetch_ks,
+                    topk_current_ks,
+                    self.topk_prefetch_k_host,
+                    self.topk_current_k_host,
+                )
+
+            is_first_decode_layer_step = self.first_decode_layer_step
             for device_idx in self.unique_devices:
-                if self.first_decode_layer_step:
-                    self.metadata_tensors[f'query_cache_valid_{device_idx}'].fill_(False)
-                    self.first_decode_layer_step = False
-                else:
-                    self.metadata_tensors[f'query_cache_valid_{device_idx}'].fill_(True)
-                self.metadata_tensors[f'topk_prefetch_k_{device_idx}'].fill_(topk_prefetch_k)
-                self.metadata_tensors[f'topk_current_k_{device_idx}'].fill_(topk_current_k)
+                self.metadata_tensors[f'query_cache_valid_{device_idx}'].fill_(
+                    not is_first_decode_layer_step
+                )
+                prefetch_tensor = torch.tensor(
+                    topk_prefetch_ks,
+                    dtype=torch.int32,
+                    device=device_idx,
+                )
+                current_tensor = torch.tensor(
+                    topk_current_ks,
+                    dtype=torch.int32,
+                    device=device_idx,
+                )
+                self.metadata_tensors[f'topk_prefetch_k_{device_idx}'][
+                    :self.curr_batch_size
+                ].copy_(prefetch_tensor)
+                self.metadata_tensors[f'topk_current_k_{device_idx}'][
+                    :self.curr_batch_size
+                ].copy_(current_tensor)
+            self.first_decode_layer_step = False
 
             for l in range(self.num_layers):
                 num_cpu_heads = self.layers_cpu_head_ids[l].numel()
@@ -947,10 +1308,16 @@ class OffloadingCache(CustomStaticCache):
                     continue
                 buffer_append_ptr = self.cache_tensors['gpu_buffer_ptr'][l]
                 limit = self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1
-                buffer_append_ptr[0] = torch.where(
-                    buffer_append_ptr[0] >= limit,
-                    self.config.sparse_attention_config.sink_budget,
-                    buffer_append_ptr[0],
+                active_ptr = buffer_append_ptr[:self.curr_batch_size]
+                active_ptr.copy_(
+                    torch.where(
+                        active_ptr >= limit,
+                        torch.full_like(
+                            active_ptr,
+                            self.config.sparse_attention_config.sink_budget,
+                        ),
+                        active_ptr,
+                    )
                 )
 
         # print("\nupdate metadata", q_len)
@@ -1102,52 +1469,77 @@ class OffloadingCache(CustomStaticCache):
                                          self.head_dim)
         prefill_len = key_states.shape[1]
 
-        gpu_seq_offset = None
+        prefill_old_lengths = None
+        gpu_seq_offsets = None
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
             torch.cuda.nvtx.range_push("append gpu cache")
-            seq_len_tensor = self.cache_tensors['cache_length'][layer_idx]
-            gpu_seq_offset = int(seq_len_tensor.item())
-            new_gpu_seq_len = gpu_seq_offset + prefill_len
-            assert new_gpu_seq_len <= self.max_seq_len, \
-                f"input kv states length {prefill_len} + current seq length {gpu_seq_offset}, " \
+            seq_len_tensor = self._active_cache_length_tensor('cache_length', layer_idx)
+            gpu_seq_offsets = seq_len_tensor.clone()
+            prefill_old_lengths = gpu_seq_offsets.detach().cpu().tolist()
+            new_gpu_seq_lens = gpu_seq_offsets + prefill_len
+            max_new_gpu_seq_len = int(new_gpu_seq_lens.max().item())
+            assert max_new_gpu_seq_len <= self.max_seq_len, \
+                f"input kv states length {prefill_len} + max current seq length {int(gpu_seq_offsets.max().item())}, " \
                 f"should be less than max_seq_len = {self.max_seq_len}"
-            self.kv_caches[layer_idx][0, :,
-                                    gpu_seq_offset:new_gpu_seq_len, :, :].copy_(key_states[:, :,
-                                    self.layers_gpu_head_ids[layer_idx], :])
-            self.kv_caches[layer_idx][1, :,
-                                    gpu_seq_offset:new_gpu_seq_len, :, :].copy_(value_states[:, :,
-                                    self.layers_gpu_head_ids[layer_idx], :])
-            seq_len_tensor[0] = new_gpu_seq_len
-            self.cache_length_host[layer_idx] = int(new_gpu_seq_len)
+            gpu_head_ids = self.layers_gpu_head_ids[layer_idx]
+            if gpu_head_ids.numel() > 0 and int(gpu_head_ids.max().item()) >= key_states.shape[2]:
+                raise RuntimeError(
+                    f"LiteCache GPU head id out of range at layer={layer_idx}: "
+                    f"head_ids={gpu_head_ids.detach().cpu().tolist()}, "
+                    f"num_key_value_heads={key_states.shape[2]}"
+                )
+            for row in range(self.curr_batch_size):
+                start = int(gpu_seq_offsets[row].item())
+                end = start + prefill_len
+                self.kv_caches[layer_idx][
+                    0, row:row + 1, start:end, :, :
+                ].copy_(key_states[row:row + 1, :, gpu_head_ids, :])
+                self.kv_caches[layer_idx][
+                    1, row:row + 1, start:end, :, :
+                ].copy_(value_states[row:row + 1, :, gpu_head_ids, :])
+            seq_len_tensor.copy_(new_gpu_seq_lens)
+            self._set_active_host_lengths_from_tensor(
+                self.cache_length_host, layer_idx, new_gpu_seq_lens
+            )
             torch.cuda.nvtx.range_pop()
 
         if not self.layers_full_gpu_mask[layer_idx]:
-            cpu_seq_len_tensor = self.cache_tensors['cpu_cache_length'][layer_idx]
-            cpu_seq_offset = int(cpu_seq_len_tensor.item())
-            if gpu_seq_offset is not None and gpu_seq_offset != cpu_seq_offset:
+            cpu_seq_len_tensor = self._active_cache_length_tensor(
+                'cpu_cache_length', layer_idx
+            )
+            cpu_seq_offsets = cpu_seq_len_tensor.clone()
+            if prefill_old_lengths is None:
+                prefill_old_lengths = cpu_seq_offsets.detach().cpu().tolist()
+            if gpu_seq_offsets is not None and not torch.equal(gpu_seq_offsets, cpu_seq_offsets):
                 raise RuntimeError(
                     f"LiteCache GPU/CPU seq length mismatch at layer={layer_idx}: "
-                    f"gpu={gpu_seq_offset} cpu={cpu_seq_offset}"
+                    f"gpu={gpu_seq_offsets.detach().cpu().tolist()} "
+                    f"cpu={cpu_seq_offsets.detach().cpu().tolist()}"
                 )
-            new_cpu_seq_len = cpu_seq_offset + prefill_len
-            assert new_cpu_seq_len <= self.max_seq_len, \
-                f"input kv states length {prefill_len} + current seq length {cpu_seq_offset}, " \
+            new_cpu_seq_lens = cpu_seq_offsets + prefill_len
+            max_new_cpu_seq_len = int(new_cpu_seq_lens.max().item())
+            assert max_new_cpu_seq_len <= self.max_seq_len, \
+                f"input kv states length {prefill_len} + max current seq length {int(cpu_seq_offsets.max().item())}, " \
                 f"should be less than max_seq_len = {self.max_seq_len}"
 
             with torch.cuda.stream(self.transfer_stream):
                 for bsz in range(key_states.shape[0]):
+                    start = int(cpu_seq_offsets[bsz].item())
+                    end = start + prefill_len
                     # pytorch doesn't support cudaMemcpy2DAsync, so offload batch by batch
                     self.cpu_kv_caches[layer_idx][
-                        0, bsz:bsz + 1, cpu_seq_offset:new_cpu_seq_len,
+                        0, bsz:bsz + 1, start:end,
                         ...].copy_(key_states[bsz:bsz + 1, ...], non_blocking=True)
                     self.cpu_kv_caches[layer_idx][
-                        1, bsz:bsz + 1, cpu_seq_offset:new_cpu_seq_len,
+                        1, bsz:bsz + 1, start:end,
                         ...].copy_(value_states[bsz:bsz + 1, ...], non_blocking=True)
                 self.transfer_event.record(self.transfer_stream)
 
             self.prefill_copy_buffer = (key_states, value_states)
-            cpu_seq_len_tensor[0] = new_cpu_seq_len
-            self.cpu_cache_length_host[layer_idx] = int(new_cpu_seq_len)
+            cpu_seq_len_tensor.copy_(new_cpu_seq_lens)
+            self._set_active_host_lengths_from_tensor(
+                self.cpu_cache_length_host, layer_idx, new_cpu_seq_lens
+            )
             # Ensure D2H prefill copies are visible before rebuilding sink/recent windows.
             self.transfer_event.synchronize()
 
@@ -1155,15 +1547,12 @@ class OffloadingCache(CustomStaticCache):
             torch.cuda.nvtx.range_push("append sink recent")
             cpu_head_ids = self.layers_cpu_head_ids[layer_idx]
             cpu_head_ids_cpu = cpu_head_ids.cpu()
-            sink = min(
-                self.config.sparse_attention_config.sink_budget,
-                new_cpu_seq_len,
-            )
-            recent = min(
-                self.config.sparse_attention_config.recent_budget,
-                max(new_cpu_seq_len - sink, 0),
-            )
-
+            if cpu_head_ids.numel() > 0 and int(cpu_head_ids.max().item()) >= key_states.shape[2]:
+                raise RuntimeError(
+                    f"LiteCache CPU head id out of range at layer={layer_idx}: "
+                    f"head_ids={cpu_head_ids.detach().cpu().tolist()}, "
+                    f"num_key_value_heads={key_states.shape[2]}"
+                )
             def _align_for_gpu_buffer(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
                 if src.shape == dst.shape:
                     return src
@@ -1182,62 +1571,97 @@ class OffloadingCache(CustomStaticCache):
                     f"src={tuple(src.shape)} dst={tuple(dst.shape)}"
                 )
 
-            if sink > 0:
-                sink_key_states = self.cpu_kv_caches[layer_idx][
-                    0, :, :sink, cpu_head_ids_cpu, :
-                ]
-                sink_value_states = self.cpu_kv_caches[layer_idx][
-                    1, :, :sink, cpu_head_ids_cpu, :
-                ]
-                sink_key_target = self.gpu_kv_buffers[layer_idx][0, :, :sink, :, :]
-                sink_value_target = self.gpu_kv_buffers[layer_idx][1, :, :sink, :, :]
-                sink_key_target.copy_(
-                    _align_for_gpu_buffer(sink_key_states, sink_key_target)
+            sink_recent = (
+                self.config.sparse_attention_config.sink_budget
+                + self.config.sparse_attention_config.recent_budget
+            )
+            for row in range(self.curr_batch_size):
+                new_cpu_seq_len = int(new_cpu_seq_lens[row].item())
+                sink = min(
+                    self.config.sparse_attention_config.sink_budget,
+                    new_cpu_seq_len,
                 )
-                sink_value_target.copy_(
-                    _align_for_gpu_buffer(sink_value_states, sink_value_target)
+                recent = min(
+                    self.config.sparse_attention_config.recent_budget,
+                    max(new_cpu_seq_len - sink, 0),
                 )
-            if recent > 0:
-                recent_start = new_cpu_seq_len - recent
-                recent_key_states = self.cpu_kv_caches[layer_idx][
-                    0, :, recent_start:new_cpu_seq_len, cpu_head_ids_cpu, :
-                ]
-                recent_value_states = self.cpu_kv_caches[layer_idx][
-                    1, :, recent_start:new_cpu_seq_len, cpu_head_ids_cpu, :
-                ]
-                recent_key_target = self.gpu_kv_buffers[layer_idx][
-                    0, :, sink:sink + recent, :, :
-                ]
-                recent_value_target = self.gpu_kv_buffers[layer_idx][
-                    1, :, sink:sink + recent, :, :
-                ]
-                recent_key_target.copy_(
-                    _align_for_gpu_buffer(recent_key_states, recent_key_target)
-                )
-                recent_value_target.copy_(
-                    _align_for_gpu_buffer(recent_value_states, recent_value_target)
-                )
+                self.cache_tensors['gpu_buffer_ptr'][layer_idx][row] = sink_recent
+                if self.cache_tensors['gpu_buffer_length'][layer_idx] is not None:
+                    self.cache_tensors['gpu_buffer_length'][layer_idx][row] = 0
+                if sink > 0:
+                    sink_key_states = self.cpu_kv_caches[layer_idx][
+                        0, row:row + 1, :sink, cpu_head_ids_cpu, :
+                    ]
+                    sink_value_states = self.cpu_kv_caches[layer_idx][
+                        1, row:row + 1, :sink, cpu_head_ids_cpu, :
+                    ]
+                    sink_key_target = self.gpu_kv_buffers[layer_idx][
+                        0, row:row + 1, :sink, :, :
+                    ]
+                    sink_value_target = self.gpu_kv_buffers[layer_idx][
+                        1, row:row + 1, :sink, :, :
+                    ]
+                    sink_key_target.copy_(
+                        _align_for_gpu_buffer(sink_key_states, sink_key_target)
+                    )
+                    sink_value_target.copy_(
+                        _align_for_gpu_buffer(sink_value_states, sink_value_target)
+                    )
+                if recent > 0:
+                    recent_start = new_cpu_seq_len - recent
+                    recent_key_states = self.cpu_kv_caches[layer_idx][
+                        0, row:row + 1, recent_start:new_cpu_seq_len, cpu_head_ids_cpu, :
+                    ]
+                    recent_value_states = self.cpu_kv_caches[layer_idx][
+                        1, row:row + 1, recent_start:new_cpu_seq_len, cpu_head_ids_cpu, :
+                    ]
+                    recent_key_target = self.gpu_kv_buffers[layer_idx][
+                        0, row:row + 1, sink:sink + recent, :, :
+                    ]
+                    recent_value_target = self.gpu_kv_buffers[layer_idx][
+                        1, row:row + 1, sink:sink + recent, :, :
+                    ]
+                    recent_key_target.copy_(
+                        _align_for_gpu_buffer(recent_key_states, recent_key_target)
+                    )
+                    recent_value_target.copy_(
+                        _align_for_gpu_buffer(recent_value_states, recent_value_target)
+                    )
             torch.cuda.nvtx.range_pop()
+
+        if not hasattr(self, "_last_prefill_old_lengths"):
+            self._last_prefill_old_lengths = {}
+        self._last_prefill_old_lengths[layer_idx] = [
+            int(x) for x in (prefill_old_lengths or [0] * self.curr_batch_size)
+        ]
 
         # For external chunked prefill, attention in this step must see all
         # prefix tokens accumulated so far.
         if self.layers_full_gpu_mask[layer_idx]:
-            full_seq_len = int(self.cache_tensors["cache_length"][layer_idx].item())
+            full_seq_len = int(
+                self._active_cache_length_tensor("cache_length", layer_idx).max().item()
+            )
             return (
-                self.kv_caches[layer_idx][0, :, :full_seq_len, :, :],
-                self.kv_caches[layer_idx][1, :, :full_seq_len, :, :],
+                self.kv_caches[layer_idx][0, :self.curr_batch_size, :full_seq_len, :, :],
+                self.kv_caches[layer_idx][1, :self.curr_batch_size, :full_seq_len, :, :],
             )
 
-        full_seq_len = int(self.cache_tensors["cpu_cache_length"][layer_idx].item())
+        full_seq_len = int(
+            self._active_cache_length_tensor("cpu_cache_length", layer_idx).max().item()
+        )
         if full_seq_len <= prefill_len:
             return key_states, value_states
 
         layer_device = key_states.device
-        full_key_states = self.cpu_kv_caches[layer_idx][0, :, :full_seq_len, :, :].to(
+        full_key_states = self.cpu_kv_caches[layer_idx][
+            0, :self.curr_batch_size, :full_seq_len, :, :
+        ].to(
             layer_device,
             non_blocking=True,
         )
-        full_value_states = self.cpu_kv_caches[layer_idx][1, :, :full_seq_len, :, :].to(
+        full_value_states = self.cpu_kv_caches[layer_idx][
+            1, :self.curr_batch_size, :full_seq_len, :, :
+        ].to(
             layer_device,
             non_blocking=True,
         )
@@ -1273,14 +1697,14 @@ class OffloadingCache(CustomStaticCache):
         if self.layers_full_gpu_mask[layer_idx]:
             KVLib.kvcache_append_tensor_pos(
                 self.kv_caches[layer_idx], key_states, value_states,
-                self.cache_tensors['cache_length'][layer_idx])
+                self._active_cache_length_tensor('cache_length', layer_idx))
         else:
             KVLib.kvcache_append_tensor_pos_head_sparse(
                 self.kv_caches[layer_idx], key_states, value_states,
                 self.layers_gpu_head_ids[layer_idx],
-                self.cache_tensors['cache_length'][layer_idx])
-        self.cache_tensors['cache_length'][layer_idx] += 1
-        self.cache_length_host[layer_idx] += 1
+                self._active_cache_length_tensor('cache_length', layer_idx))
+        self._active_cache_length_tensor('cache_length', layer_idx).add_(1)
+        self._increment_active_host_lengths(self.cache_length_host, layer_idx)
         torch.cuda.nvtx.range_pop()
 
     def append_topk_cache_decode(
@@ -1340,8 +1764,16 @@ class OffloadingCache(CustomStaticCache):
         torch.cuda.nvtx.range_push(f"decode_append_and_wait_layer{layer_idx}")
         total_heads = self.curr_batch_size * self.num_key_value_heads
         if self.debug_cpugather:
-            ptr_before = int(self.cache_tensors['gpu_buffer_ptr'][layer_idx].item())
-            cpu_len_before = int(self.cache_tensors['cpu_cache_length'][layer_idx].item())
+            ptr_before = int(
+                self._active_cache_length_tensor('gpu_buffer_ptr', layer_idx)
+                .min()
+                .item()
+            )
+            cpu_len_before = int(
+                self._active_cache_length_tensor('cpu_cache_length', layer_idx)
+                .min()
+                .item()
+            )
             self._debug_cpugather_log(
                 "wait_enter",
                 layer_idx,
@@ -1364,8 +1796,8 @@ class OffloadingCache(CustomStaticCache):
             value_states,
             self.gpu_kv_buffers[layer_idx],
             self.cpu_kv_caches[layer_idx],
-            self.cache_tensors['gpu_buffer_ptr'][layer_idx],
-            self.cache_tensors['cpu_cache_length'][layer_idx],
+            self._active_cache_length_tensor('gpu_buffer_ptr', layer_idx),
+            self._active_cache_length_tensor('cpu_cache_length', layer_idx),
             self.metadata_tensors['ready_flag'][layer_idx],
             self.layers_cpu_head_ids[layer_idx],
         )
@@ -1388,9 +1820,9 @@ class OffloadingCache(CustomStaticCache):
             stream_ready=self._safe_stream_query(stream),
         )
         self._debug_ready_flag_snapshot("wait_ready_after_enqueue", layer_idx, total_heads)
-        self.cache_tensors['cpu_cache_length'][layer_idx] += 1
-        self.cpu_cache_length_host[layer_idx] += 1
-        self.cache_tensors['gpu_buffer_ptr'][layer_idx] += 1
+        self._active_cache_length_tensor('cpu_cache_length', layer_idx).add_(1)
+        self._increment_active_host_lengths(self.cpu_cache_length_host, layer_idx)
+        self._active_cache_length_tensor('gpu_buffer_ptr', layer_idx).add_(1)
         torch.cuda.nvtx.range_pop()
 
     def launch_prefetch(self, indices: torch.Tensor,
@@ -1421,7 +1853,9 @@ class OffloadingCache(CustomStaticCache):
         requested_prefetch_k = int(self.topk_prefetch_k_host)
         try:
             if not torch.cuda.is_current_stream_capturing():
-                requested_prefetch_k = int(k_tensor[0].item())
+                requested_prefetch_k = int(
+                    k_tensor[: self.curr_batch_size].max().item()
+                )
         except Exception:
             # Fall back to host mirror when stream capture state/query is unavailable.
             pass
@@ -1430,7 +1864,7 @@ class OffloadingCache(CustomStaticCache):
             min(requested_prefetch_k, prefetch_k_shape, self.max_prefetch_topk_len),
         )
         if requested_prefetch_k != prefetch_k:
-            k_tensor[0] = prefetch_k
+            k_tensor[: self.curr_batch_size].clamp_(0, prefetch_k)
 
         if indices.dtype != torch.int32:
             t_cast = time.perf_counter()
@@ -1523,7 +1957,13 @@ class OffloadingCache(CustomStaticCache):
                     idx_max = -1
                     neg_count = 0
                 seq_cap = (
-                    int(self.cache_tensors["topk_code_length"][prefetch_layer_idx].item())
+                    int(
+                        self.cache_tensors["topk_code_length"][
+                            prefetch_layer_idx
+                        ][: self.curr_batch_size]
+                        .max()
+                        .item()
+                    )
                     if "topk_code_length" in self.cache_tensors
                     else -1
                 )
@@ -1542,12 +1982,16 @@ class OffloadingCache(CustomStaticCache):
                     prefetch_layer_idx,
                     err=repr(exc),
                 )
-        self._debug_cpugather_log(
-            "prefetch_native_call_enter",
-            prefetch_layer_idx,
-            stream_ready=self._safe_stream_query(stream),
-            gather_meta=tuple(int(x) for x in self.metadata_tensors['gather_engine_metadata'][:6]),
-        )
+        if self.debug_cpugather:
+            self._debug_cpugather_log(
+                "prefetch_native_call_enter",
+                prefetch_layer_idx,
+                stream_ready=self._safe_stream_query(stream),
+                gather_meta=tuple(
+                    int(x)
+                    for x in self.metadata_tensors["gather_engine_metadata"][:6]
+                ),
+            )
         # KVLib.real_indices_and_launch_prefetch(
         #     indices,
         #     head_mask,

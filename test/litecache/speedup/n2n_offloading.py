@@ -165,7 +165,7 @@ def parse_args() -> argparse.Namespace:
         "--skip-invalid-batch",
         dest="skip_invalid_batch",
         action="store_true",
-        default=True,
+        default=False,
         help="Skip run when LiteCache method is used with batch_size != 1.",
     )
     parser.add_argument(
@@ -778,12 +778,6 @@ def build_engine_for_bench(
         max_total_tokens = None
         log("[Engine] max_total_tokens=<auto-profiled by available GPU memory>")
 
-    if litecache_enabled and args.batch_size != 1:
-        raise ValueError(
-            "LiteCache SGLang bridge currently supports batch_size=1 only. "
-            f"Got batch_size={args.batch_size}."
-        )
-
     chunked_prefill_size = int(cfg.get("chunk_prefill_size", args.chunked_prefill_size))
     max_running_requests = (
         int(args.max_running_requests)
@@ -850,7 +844,7 @@ def build_engine_for_bench(
                 "aux_data_path": cfg.get("aux_data_path") or args.aux_data_path,
                 "kvcache_manager_config": {
                     "max_tokens": int(litecache_kvcache_max_tokens),
-                    "max_batch_size": int(cfg.get("max_batch_size", args.batch_size)),
+                    "max_batch_size": int(args.batch_size),
                     "gpu_memory_budget": float(
                         cfg.get("max_gpu_memory_size", args.gpu_memory_budget)
                     ),

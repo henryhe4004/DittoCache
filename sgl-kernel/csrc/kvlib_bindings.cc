@@ -138,9 +138,14 @@ TORCH_LIBRARY_FRAGMENT(sgl_kernel, m) {
   // Flash-attention decode
   m.def("kvlib_flash_index_decode(Tensor query_states, Tensor key_states, Tensor value_states, "
         "Tensor gather_idx, float scale) -> Tensor[]");
+  m.def("kvlib_flash_index_decode_varlen(Tensor query_states, Tensor key_states, Tensor value_states, "
+        "Tensor gather_idx, Tensor gather_lens, float scale) -> Tensor[]");
   m.def("kvlib_flash_mixed_decode(Tensor query_states, Tensor cached_keys, Tensor cached_values, "
         "Tensor top_index, Tensor buffer_keys, Tensor buffer_values, Tensor k_head_mask, "
         "Tensor k_head_index, int real_seq_len, float scale) -> Tensor[]");
+  m.def("kvlib_flash_mixed_decode_varlen(Tensor query_states, Tensor cached_keys, Tensor cached_values, "
+        "Tensor top_index, Tensor buffer_keys, Tensor buffer_values, Tensor k_head_mask, "
+        "Tensor k_head_index, Tensor real_seq_lens, float scale) -> Tensor[]");
   m.def("kvlib_flash_decode(Tensor query_states, Tensor key_states, Tensor value_states, "
         "float scale, int real_seq_len) -> Tensor[]");
   // KVCache append
@@ -245,6 +250,21 @@ TORCH_LIBRARY_IMPL(sgl_kernel, CUDA, m) {
                gather_idx,
                static_cast<float>(scale));
          });
+  m.impl("kvlib_flash_index_decode_varlen",
+         [](torch::Tensor query_states,
+            torch::Tensor key_states,
+            torch::Tensor value_states,
+            torch::Tensor gather_idx,
+            torch::Tensor gather_lens,
+            double scale) {
+           return kvlib::mha_index_decode_fwd_varlen(
+               query_states,
+               key_states,
+               value_states,
+               gather_idx,
+               gather_lens,
+               static_cast<float>(scale));
+         });
   m.impl("kvlib_flash_mixed_decode",
          [](torch::Tensor query_states,
             torch::Tensor cached_keys,
@@ -266,6 +286,29 @@ TORCH_LIBRARY_IMPL(sgl_kernel, CUDA, m) {
                k_head_mask,
                k_head_index,
                static_cast<int>(real_seq_len),
+               static_cast<float>(scale));
+         });
+  m.impl("kvlib_flash_mixed_decode_varlen",
+         [](torch::Tensor query_states,
+            torch::Tensor cached_keys,
+            torch::Tensor cached_values,
+            torch::Tensor top_index,
+            torch::Tensor buffer_keys,
+            torch::Tensor buffer_values,
+            torch::Tensor k_head_mask,
+            torch::Tensor k_head_index,
+            torch::Tensor real_seq_lens,
+            double scale) {
+           return kvlib::mha_mixed_decode_fwd_varlen(
+               query_states,
+               cached_keys,
+               cached_values,
+               top_index,
+               buffer_keys,
+               buffer_values,
+               k_head_mask,
+               k_head_index,
+               real_seq_lens,
                static_cast<float>(scale));
          });
   m.impl("kvlib_flash_decode",

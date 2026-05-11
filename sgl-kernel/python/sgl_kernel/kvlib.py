@@ -780,6 +780,25 @@ def flash_index_decode(
     key_states: torch.Tensor,
     value_states: torch.Tensor,
     gather_idx: torch.Tensor,
+    gather_lens_or_scale,
+    scale: Optional[float] = None,
+):
+    if scale is None:
+        scale = gather_lens_or_scale
+        return torch.ops.sgl_kernel.kvlib_flash_index_decode(
+            query_states, key_states, value_states, gather_idx, scale
+        )
+    gather_lens = gather_lens_or_scale
+    return torch.ops.sgl_kernel.kvlib_flash_index_decode_varlen(
+        query_states, key_states, value_states, gather_idx, gather_lens, scale
+    )
+
+
+def flash_index_decode_legacy(
+    query_states: torch.Tensor,
+    key_states: torch.Tensor,
+    value_states: torch.Tensor,
+    gather_idx: torch.Tensor,
     scale: float,
 ):
     return torch.ops.sgl_kernel.kvlib_flash_index_decode(
@@ -796,9 +815,22 @@ def flash_mixed_decode(
     buffer_values: torch.Tensor,
     k_head_mask: torch.Tensor,
     k_head_index: torch.Tensor,
-    real_seq_len: int,
+    real_seq_len,
     scale: float,
 ):
+    if isinstance(real_seq_len, torch.Tensor):
+        return torch.ops.sgl_kernel.kvlib_flash_mixed_decode_varlen(
+            query_states,
+            cached_keys,
+            cached_values,
+            top_index,
+            buffer_keys,
+            buffer_values,
+            k_head_mask,
+            k_head_index,
+            real_seq_len,
+            scale,
+        )
     return torch.ops.sgl_kernel.kvlib_flash_mixed_decode(
         query_states,
         cached_keys,

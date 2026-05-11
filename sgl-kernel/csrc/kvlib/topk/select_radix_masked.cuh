@@ -86,24 +86,28 @@ __global__ void radix_masked_kernel(
     T* out_buf, IdxT* out_idx_buf, T* out,
     IdxT* out_idx, Counter<T, IdxT>* counters, IdxT* histograms,
     const IdxT max_len, const IdxT max_k,
-    const bool select_min, const int pass) {
+    const bool select_min, const int pass,
+    const bool real_len_is_scalar, const bool real_k_is_scalar) {
   const size_t batch_id = blockIdx.y;
 
   if (*(batch_mask + batch_id)) {
+    const IdxT row_real_len = real_len[real_len_is_scalar ? 0 : batch_id];
+    const IdxT row_real_k =
+        max(IdxT(0), min(real_k[real_k_is_scalar ? 0 : batch_id], row_real_len));
     auto counter = counters + batch_id;
     IdxT current_k;
     IdxT previous_len;
     IdxT current_len;
     if (pass == 0) {
-      current_k = *real_k;
-      previous_len = *real_len;
+      current_k = row_real_k;
+      previous_len = row_real_len;
       // Need to do this so setting counter->previous_len for the next pass is
       // correct. This value is meaningless for pass 0, but it's fine because
       // pass 0 won't be the last pass in this implementation so pass 0 won't
       // hit the "if (pass == num_passes - 1)" branch. Maybe it's better to
       // reload counter->previous_len and use it rather than current_len in
       // last_filter()
-      current_len = *real_len;
+      current_len = row_real_len;
     } else {
       current_k = counter->k;
       current_len = counter->len;
@@ -124,7 +128,7 @@ __global__ void radix_masked_kernel(
     if (pass == 0 || pass == 1 || previous_len > buf_len) {
       in_buf = in + batch_id * max_len;
       in_idx_buf = in_idx ? (in_idx + batch_id * max_len) : nullptr;
-      previous_len = *real_len;
+      previous_len = row_real_len;
     } else {
       in_buf += batch_id * buf_len;
       in_idx_buf += batch_id * buf_len;
@@ -190,7 +194,7 @@ __global__ void radix_masked_kernel(
           last_filter<T, IdxT, BitsPerPass>(
               out_buf ? out_buf : in_buf,
               out_idx_buf ? out_idx_buf : in_idx_buf, out, out_idx,
-              out_buf ? current_len : *real_len, *real_k, counter, select_min, pass);
+              out_buf ? current_len : row_real_len, row_real_k, counter, select_min, pass);
         }
       }
     }
@@ -206,6 +210,7 @@ void radix_masked_topk(const T* in, const IdxT* in_idx, const MaskT* batch_mask,
                        int batch_size, IdxT max_len, IdxT max_k, T* out, IdxT* out_idx,
                        bool select_min, bool fused_last_filter,
                        unsigned grid_dim, int sm_cnt,
+                       bool real_len_is_scalar, bool real_k_is_scalar,
                        rmm::cuda_stream_view stream,
                        rmm::mr::device_memory_resource* mr) {
   static_assert(calc_num_passes<T, BitsPerPass>() > 1);
@@ -277,9 +282,12 @@ void radix_masked_topk(const T* in, const IdxT* in_idx, const MaskT* batch_mask,
 
       kernel<<<blocks, BlockSize, 0, stream>>>(
           chunk_in, chunk_in_idx, chunk_batch_mask,
-          real_len, real_k, in_buf, in_idx_buf, out_buf,
+          real_len + (real_len_is_scalar ? 0 : offset),
+          real_k + (real_k_is_scalar ? 0 : offset),
+          in_buf, in_idx_buf, out_buf,
           out_idx_buf, chunk_out, chunk_out_idx, counters.data(),
-          histograms.data(), max_len, max_k, select_min, pass);
+          histograms.data(), max_len, max_k, select_min, pass,
+          real_len_is_scalar, real_k_is_scalar);
       RAFT_CUDA_TRY(cudaPeekAtLastError());
     }
   }
@@ -292,23 +300,27 @@ __global__ void radix_masked_topk_one_block_kernel(
     const IdxT *real_len, const IdxT *real_k,
     const IdxT max_len, const IdxT max_k, T* out,
     IdxT* out_idx, const bool select_min, T* buf1,
-    IdxT* idx_buf1, T* buf2, IdxT* idx_buf2) {
+    IdxT* idx_buf1, T* buf2, IdxT* idx_buf2,
+    const bool real_len_is_scalar, const bool real_k_is_scalar) {
   constexpr int num_buckets = calc_num_buckets<BitsPerPass>();
   __shared__ Counter<T, IdxT> counter;
   __shared__ IdxT histogram[num_buckets];
 
+  const size_t batch_id =
+      blockIdx.x;  // size_t to avoid multiplication overflow
+  const IdxT row_real_len = real_len[real_len_is_scalar ? 0 : batch_id];
+  const IdxT row_real_k =
+      max(IdxT(0), min(real_k[real_k_is_scalar ? 0 : batch_id], row_real_len));
+
   if (threadIdx.x == 0) {
-    counter.k = *real_k;
-    counter.len = *real_len;
-    counter.previous_len = *real_len;
+    counter.k = row_real_k;
+    counter.len = row_real_len;
+    counter.previous_len = row_real_len;
     counter.kth_value_bits = 0;
     counter.out_cnt = 0;
     counter.out_back_cnt = 0;
   }
   __syncthreads();
-
-  const size_t batch_id =
-      blockIdx.x;  // size_t to avoid multiplication overflow
 
   if (*(batch_mask + batch_id)) {
     in += batch_id * max_len;
@@ -351,7 +363,7 @@ __global__ void radix_masked_topk_one_block_kernel(
       if (counter.len == counter.k || pass == num_passes - 1) {
         last_filter<T, IdxT, BitsPerPass>(
             pass == 0 ? in : out_buf, pass == 0 ? in_idx : out_idx_buf, out,
-            out_idx, current_len, *real_k, &counter, select_min, pass);
+            out_idx, current_len, row_real_k, &counter, select_min, pass);
         break;
       }
     }
@@ -375,6 +387,7 @@ void radix_masked_topk_one_block(
   int batch_size, IdxT max_len, IdxT max_k,
   T* out, IdxT* out_idx,
   bool select_min, int sm_cnt,
+  bool real_len_is_scalar, bool real_k_is_scalar,
   rmm::cuda_stream_view stream,
   rmm::mr::device_memory_resource* mr
 ) {
@@ -407,9 +420,12 @@ void radix_masked_topk_one_block(
     int chunk_size = std::min(max_chunk_size, batch_size - offset);
     kernel<<<chunk_size, BlockSize, 0, stream>>>(
         in + offset * max_len, in_idx ? (in_idx + offset * max_len) : nullptr,
-        batch_mask + offset, real_len, real_k,
+        batch_mask + offset,
+        real_len + (real_len_is_scalar ? 0 : offset),
+        real_k + (real_k_is_scalar ? 0 : offset),
         max_len, max_k, out + offset * max_k, out_idx + offset * max_k,
-        select_min, buf1.data(), idx_buf1.data(), buf2.data(), idx_buf2.data());
+        select_min, buf1.data(), idx_buf1.data(), buf2.data(), idx_buf2.data(),
+        real_len_is_scalar, real_k_is_scalar);
   }
 }
 
@@ -484,6 +500,8 @@ void select_k_masked(
   IdxT* out_idx,
   bool select_min,
   bool fused_last_filter,
+  bool real_len_is_scalar,
+  bool real_k_is_scalar,
   rmm::cuda_stream_view stream,
   rmm::mr::device_memory_resource* mr = nullptr
 ) {
@@ -501,7 +519,7 @@ void select_k_masked(
     impl::radix_masked_topk_one_block<T, IdxT, MaskT, BitsPerPass, BlockSize>(
         in, in_idx, batch_mask, real_len, real_k,
         batch_size, max_len, max_k, out, out_idx, select_min,
-        sm_cnt, stream, mr);
+        sm_cnt, real_len_is_scalar, real_k_is_scalar, stream, mr);
   } else {
     unsigned grid_dim = impl::calc_grid_dim<T, IdxT, BitsPerPass, BlockSize>(
         batch_size, max_len, sm_cnt);
@@ -509,12 +527,13 @@ void select_k_masked(
       impl::radix_masked_topk_one_block<T, IdxT, MaskT, BitsPerPass, BlockSize>(
           in, in_idx, batch_mask, real_len, real_k,
           batch_size, max_len, max_k, out, out_idx, select_min,
-          sm_cnt, stream, mr);
+          sm_cnt, real_len_is_scalar, real_k_is_scalar, stream, mr);
     } else {
       impl::radix_masked_topk<T, IdxT, MaskT, BitsPerPass, BlockSize>(
           in, in_idx, batch_mask, real_len, real_k,
           batch_size, max_len, max_k, out, out_idx, select_min,
-          fused_last_filter, grid_dim, sm_cnt, stream, mr);
+          fused_last_filter, grid_dim, sm_cnt,
+          real_len_is_scalar, real_k_is_scalar, stream, mr);
     }
   }
 }

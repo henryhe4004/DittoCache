@@ -43,7 +43,7 @@ def _fwd_grouped_kernel_stage1(
     offs_d = tl.arange(0, BLOCK_DIM)
     mask_d = offs_d < HEAD_DIM
 
-    cur_batch_seq_len = tl.load(kv_seq_len)
+    cur_batch_seq_len = tl.load(kv_seq_len + cur_batch)
     kv_splits = tl.load(num_kv_splits)
 
     offs_q = cur_batch * stride_qbs + cur_head[:, None] * stride_qh + offs_d[None, :] # [16, BLOCK_DIM]
@@ -129,7 +129,7 @@ def _decode_grouped_att_m_fwd(
     v_buffer,        # [b, s, h, d]
     att_out,         # [b, hq, split, d]
     att_lse,         # [b, hq, split]
-    kv_seq_len,      # [1]
+    kv_seq_len,      # [b]
     num_kv_splits,   # [1]
     max_kv_splits,   # const
     sm_scale,        # const
@@ -204,7 +204,7 @@ def _fwd_kernel_stage2(
     cur_batch = tl.program_id(0)
     cur_head = tl.program_id(1)
 
-    cur_batch_seq_len = tl.load(kv_seqlen)
+    cur_batch_seq_len = tl.load(kv_seqlen + cur_batch)
     kv_splits = tl.load(num_kv_splits)
 
     offs_d = tl.arange(0, BLOCK_DIM)
@@ -250,7 +250,7 @@ def _decode_softmax_reducev_fwd(
     logits,           # [b, h, split, d]
     lse,              # [b, h, split]
     o,                # [b, 1, h, d]
-    kv_seqlen,        # [1, ]
+    kv_seqlen,        # [b]
     num_kv_splits,    # [1, ]
     max_kv_splits,    # const
 ):

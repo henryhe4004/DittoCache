@@ -41,7 +41,10 @@ def _flash_attn_with_kvcache(
     causal: bool = True,
     q_start_idx: int = 0,
 ) -> torch.Tensor:
-    if _flash_attn is not None:
+    flash_attn_can_use_end_aligned_causal = (
+        not causal or q_start_idx == k_cache.shape[1] - query_states.shape[1]
+    )
+    if _flash_attn is not None and flash_attn_can_use_end_aligned_causal:
         return _flash_attn.flash_attn_with_kvcache(
             query_states,
             k_cache=k_cache,
@@ -328,29 +331,51 @@ def attention_sparse_offloading_prefill_forward(
         self.layer_idx,
     )
 
-    if num_chunks <= 1:
+    old_lengths_by_layer = getattr(past_key_value, "_last_prefill_old_lengths", {})
+    prefill_old_lengths = old_lengths_by_layer.get(self.layer_idx)
+    ragged_existing_lengths = (
+        prefill_old_lengths is not None
+        and len(set(int(x) for x in prefill_old_lengths)) > 1
+    )
+
+    if ragged_existing_lengths:
+        attn_output = torch.empty_like(query_states)
+        for row, old_len in enumerate(prefill_old_lengths):
+            k_len = int(old_len) + seq_len
+            attn_output[row:row + 1] = _flash_attn_with_kvcache(
+                query_states[row:row + 1],
+                k_cache=key_states[row:row + 1, :k_len, ...],
+                v_cache=value_states[row:row + 1, :k_len, ...],
+                causal=self.is_causal,
+                q_start_idx=int(old_len),
+            )
+        query_states[:] = attn_output
+    elif num_chunks <= 1:
+        q_start_idx = max(int(key_states.shape[1]) - int(seq_len), 0)
         attn_output = _flash_attn_with_kvcache(
             query_states,
             k_cache=key_states,
             v_cache=value_states,
             causal=self.is_causal,
+            q_start_idx=q_start_idx,
         )
         query_states[:] = attn_output
     else:
+        q_start_base = max(int(key_states.shape[1]) - int(seq_len), 0)
         attn_chunk_size = chunk_size // batch_size
         attn_num_chunks = (seq_len + attn_chunk_size - 1) // attn_chunk_size
         for i in range(attn_num_chunks):
             start = i * attn_chunk_size
             end = min(start + attn_chunk_size, seq_len)
-            chunk_k = key_states[:, :end, ...]
-            chunk_v = value_states[:, :end, ...]
+            chunk_k = key_states[:, :q_start_base + end, ...]
+            chunk_v = value_states[:, :q_start_base + end, ...]
             chunk_q = query_states[:, start:end, ...]
             chunk_attn_out = _flash_attn_with_kvcache(
                 chunk_q,
                 k_cache=chunk_k,
                 v_cache=chunk_v,
                 causal=self.is_causal,
-                q_start_idx=start,
+                q_start_idx=q_start_base + start,
             )
             query_states[:, start:end, ...] = chunk_attn_out
     attn_output = query_states.view(-1, local_attn_hidden_size)
@@ -634,8 +659,27 @@ def llm_sparse_offloading_prefill_forward(
             hidden_states,
             past_key_value=past_key_values,
         )
-    # Align with myTransformer: only keep the last prefill token as decode input.
-    hidden_states = hidden_states.view(bsz, q_len, -1)[:, -1, :].view(bsz, -1).contiguous()
+    # Align with myTransformer: only keep the last real prefill token as decode
+    # input. Online batching can pad ragged extend rows to a common q_len, so
+    # the final physical column is not always a real token.
+    hidden_states = hidden_states.view(bsz, q_len, -1)
+    extend_seq_lens = getattr(past_key_values, "_current_extend_seq_lens", None)
+    if extend_seq_lens is None:
+        hidden_states = hidden_states[:, -1, :]
+    else:
+        row_ids = torch.arange(bsz, dtype=torch.long, device=hidden_states.device)
+        token_ids = torch.tensor(
+            [int(x) - 1 for x in extend_seq_lens],
+            dtype=torch.long,
+            device=hidden_states.device,
+        )
+        if int(token_ids.min().item()) < 0 or int(token_ids.max().item()) >= q_len:
+            raise RuntimeError(
+                "LiteCache prefill extend_seq_lens out of range: "
+                f"extend_seq_lens={extend_seq_lens}, q_len={q_len}"
+            )
+        hidden_states = hidden_states[row_ids, token_ids, :]
+    hidden_states = hidden_states.view(bsz, -1).contiguous()
     hidden_states = self.norm(hidden_states, is_prefill=True)
     hidden_states = hidden_states.view(bsz, 1, -1)
 

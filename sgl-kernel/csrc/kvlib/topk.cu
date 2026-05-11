@@ -86,6 +86,14 @@ void TopkMaskedCUDA(
   int32_t max_len = data.size(2);
   int32_t max_k = out_index.sizes().back();
   int32_t total_batch_size = batch_size * num_head;
+  bool real_len_is_scalar = real_len.numel() == 1;
+  bool real_k_is_scalar = real_k.numel() == 1;
+  TORCH_CHECK(real_len_is_scalar || real_len.numel() >= total_batch_size,
+              "real_len must have 1 element or at least batch_size*num_head elements, got ",
+              real_len.numel(), " for total rows ", total_batch_size);
+  TORCH_CHECK(real_k_is_scalar || real_k.numel() >= total_batch_size,
+              "real_k must have 1 element or at least batch_size*num_head elements, got ",
+              real_k.numel(), " for total rows ", total_batch_size);
 
   auto device = data.device();
   int32_t device_id = device.index();
@@ -103,7 +111,8 @@ void TopkMaskedCUDA(
         real_k.data_ptr<int32_t>(),
         total_batch_size, max_len, max_k,
         (half*)out_values.data_ptr<at::Half>(),
-        out_index.data_ptr<int32_t>(), !largest, true, stream, &my_mr);
+        out_index.data_ptr<int32_t>(), !largest, true,
+        real_len_is_scalar, real_k_is_scalar, stream, &my_mr);
   } else if (scalar_type == at::ScalarType::Float) {
     raft::matrix::detail::select::radix::select_k_masked<float, int32_t, bool,
                                                          11, 512>(
@@ -112,7 +121,8 @@ void TopkMaskedCUDA(
         real_k.data_ptr<int32_t>(),
         total_batch_size, max_len, max_k,
         out_values.data_ptr<float>(),
-        out_index.data_ptr<int32_t>(), !largest, true, stream, &my_mr);
+        out_index.data_ptr<int32_t>(), !largest, true,
+        real_len_is_scalar, real_k_is_scalar, stream, &my_mr);
   } else {
     TORCH_CHECK(false, "Top-k kernel unsupported scalar type: ", scalar_type);
   }

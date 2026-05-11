@@ -610,6 +610,7 @@ __global__ void StaticHammingScoreMaskKernel(
     int64_t key_code_seq_stride,
     int64_t key_code_head_stride,
     int32_t max_seqlen,
+    int32_t seqlen_numel,
     int32_t sink,
     int32_t recent,
     int32_t skip_sink,
@@ -621,10 +622,11 @@ __global__ void StaticHammingScoreMaskKernel(
     const int32_t tid = threadIdx.x;
     const int32_t batch_id = head_idx / NumKVHead;
     const int32_t kv_head_id = head_idx % NumKVHead;
+    const int32_t row_seq_len = seqlen_ptr[seqlen_numel == 1 ? 0 : batch_id];
 
     const int32_t block_id = blockIdx.x;
     const int32_t block_start_seq = block_id * BLOCK_SEQ;
-    const int32_t left_seq = min(BLOCK_SEQ, *seqlen_ptr - block_start_seq);
+    const int32_t left_seq = max(0, min(BLOCK_SEQ, row_seq_len - block_start_seq));
     const int32_t left_elem = left_seq * NumChunk;
 
     extern __shared__ int32_t smem[];
@@ -664,9 +666,9 @@ __global__ void StaticHammingScoreMaskKernel(
     if (tid < left_seq) {
       // transpose
       bool is_sink_or_recent = (block_start_seq + tid) < sink ||
-                               (block_start_seq + tid) >= (*seqlen_ptr - recent);
+                               (block_start_seq + tid) >= (row_seq_len - recent);
       bool is_skip_sink_or_recent = (block_start_seq + tid) < skip_sink ||
-                                    (block_start_seq + tid) >= (*seqlen_ptr - skip_recent);
+                                    (block_start_seq + tid) >= (row_seq_len - skip_recent);
       half* o_ptr =
           (half*)output_ptr + head_idx * max_seqlen + (block_start_seq + tid);
       half sum = (half)(0.);
@@ -681,6 +683,13 @@ __global__ void StaticHammingScoreMaskKernel(
         *o_ptr = max_value;
       } else {
         *o_ptr = sum;
+      }
+    }
+    if (tid < BLOCK_SEQ && tid >= left_seq) {
+      const int32_t seq_id = block_start_seq + tid;
+      if (seq_id < max_seqlen) {
+        half* o_ptr = (half*)output_ptr + head_idx * max_seqlen + seq_id;
+        *o_ptr = max_value;
       }
     }
   } else {
@@ -709,6 +718,10 @@ void StaticHammingScoreMaskCUDA(
   int32_t num_head = query_code.size(2);
   int32_t gqa_size = num_head / num_kv_head;
   int32_t total_num_heads = bsz * num_kv_head;
+  int32_t seqlen_numel = seqlen.numel();
+  TORCH_CHECK(seqlen_numel == 1 || seqlen_numel >= bsz,
+              "seqlen must have 1 element or at least batch_size elements, got ",
+              seqlen_numel, " for batch_size ", bsz);
 
   auto device = key_codes.device();
   int32_t device_id = device.index();
@@ -740,7 +753,7 @@ void StaticHammingScoreMaskCUDA(
                     (half*)(score.data_ptr<at::Half>()), mask.data_ptr<bool>(),
                     seqlen.data_ptr<int32_t>(), max_value, min_value,
                     key_codes.stride(0) / 2, key_codes.stride(1) / 2,
-                    key_codes.stride(2) / 2, max_seqlen,
+                    key_codes.stride(2) / 2, max_seqlen, seqlen_numel,
                     sink, recent, skip_sink, skip_recent);
 
           } else {
@@ -757,7 +770,7 @@ void StaticHammingScoreMaskCUDA(
                     (half*)(score.data_ptr<at::Half>()), mask.data_ptr<bool>(),
                     seqlen.data_ptr<int32_t>(), max_value, min_value,
                     key_codes.stride(0), key_codes.stride(1),
-                    key_codes.stride(2), max_seqlen,
+                    key_codes.stride(2), max_seqlen, seqlen_numel,
                     sink, recent, skip_sink, skip_recent);
           }
         });

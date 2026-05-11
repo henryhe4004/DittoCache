@@ -86,7 +86,12 @@ def full_attention_prefill_forward(
     batch_size = past_key_value.get_cur_batch_size()
     hidden_size = hidden_states.shape[-1]
     local_attn_hidden_size = _local_attn_hidden_size(self)
-    prefix_len = past_key_value.get_seq_length(self.layer_idx)
+    old_lengths = past_key_value.get_seq_lengths(self.layer_idx)
+    extend_seq_lens = getattr(past_key_value, "_current_extend_seq_lens", None)
+    if extend_seq_lens is None:
+        row_lens = [hidden_states.shape[0] // batch_size] * batch_size
+    else:
+        row_lens = [int(x) for x in extend_seq_lens]
 
     query_states = self.q_proj(hidden_states)
     key_states = self.k_proj(hidden_states)
@@ -104,13 +109,33 @@ def full_attention_prefill_forward(
     )
     query_states = query_states.view(batch_size, -1, self.num_heads, self.head_dim)
 
-    attn_output = _flash_attn_with_kvcache(
-        query_states,
-        k_cache=key_states,
-        v_cache=value_states,
-        causal=True,
-        q_start_idx=prefix_len,
+    ragged_prefill = (
+        len(set(old_lengths)) > 1
+        or len(set(row_lens)) > 1
+        or any(int(x) != query_states.shape[1] for x in row_lens)
     )
+    if ragged_prefill:
+        attn_output = torch.zeros_like(query_states)
+        for row, (old_len, row_len) in enumerate(zip(old_lengths, row_lens)):
+            if row_len <= 0:
+                continue
+            k_len = int(old_len) + int(row_len)
+            attn_output[row : row + 1, :row_len] = _flash_attn_with_kvcache(
+                query_states[row : row + 1, :row_len],
+                k_cache=key_states[row : row + 1, :k_len, ...],
+                v_cache=value_states[row : row + 1, :k_len, ...],
+                causal=True,
+                q_start_idx=int(old_len),
+            )
+    else:
+        prefix_len = int(old_lengths[0]) if old_lengths else 0
+        attn_output = _flash_attn_with_kvcache(
+            query_states,
+            k_cache=key_states,
+            v_cache=value_states,
+            causal=True,
+            q_start_idx=prefix_len,
+        )
     attn_output = attn_output.view(-1, local_attn_hidden_size)
     attn_output = self.o_proj(attn_output)
 
@@ -264,10 +289,18 @@ def llm_prefill_forward(
 ) -> Union[Tuple, BaseModelOutputWithPast]:
     chunk_size = getattr(past_key_values.config, "chunk_prefill_size", 0)
     chunk_size = input_ids.shape[1] if chunk_size <= 0 else chunk_size
+    original_extend_seq_lens = getattr(past_key_values, "_current_extend_seq_lens", None)
+    final_hidden_states = None
     for chunk_start in range(0, input_ids.shape[1], chunk_size):
         chunk_input_ids = input_ids[:, chunk_start : chunk_start + chunk_size]
         hidden_states = self.embed_tokens(chunk_input_ids)
         bsz, q_len, _ = hidden_states.shape
+        if original_extend_seq_lens is not None:
+            chunk_extend_seq_lens = [
+                max(0, min(int(row_len) - chunk_start, q_len))
+                for row_len in original_extend_seq_lens
+            ]
+            past_key_values._current_extend_seq_lens = chunk_extend_seq_lens
         past_key_values.update_metadata(q_len)
         hidden_states = hidden_states.view(bsz * q_len, -1)
         for decoder_layer in self.layers:
@@ -275,8 +308,24 @@ def llm_prefill_forward(
                 hidden_states,
                 past_key_value=past_key_values,
             )
+        hidden_states = hidden_states.view(bsz, q_len, -1)
+        if final_hidden_states is None:
+            final_hidden_states = torch.empty(
+                (bsz, hidden_states.shape[-1]),
+                dtype=hidden_states.dtype,
+                device=hidden_states.device,
+            )
+        if original_extend_seq_lens is None:
+            final_hidden_states.copy_(hidden_states[:, -1, :])
+        else:
+            for row, row_len in enumerate(original_extend_seq_lens):
+                final_pos = int(row_len) - 1
+                if chunk_start <= final_pos < chunk_start + q_len:
+                    final_hidden_states[row].copy_(hidden_states[row, final_pos - chunk_start])
 
-    hidden_states = hidden_states.view(bsz, q_len, -1)[:, -1, :].view(bsz, -1).contiguous()
+    if original_extend_seq_lens is not None:
+        past_key_values._current_extend_seq_lens = original_extend_seq_lens
+    hidden_states = final_hidden_states.contiguous()
     hidden_states = self.norm(hidden_states, is_prefill=True)
     hidden_states = hidden_states.view(bsz, 1, -1)
 
@@ -353,6 +402,7 @@ def llm_decode_forward(
         self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
         hidden_states = self._graph_buffers[bsz]["output_hidden_states"]
 
+    past_key_values.record_decode_step()
     hidden_states = hidden_states.view(bsz, 1, -1)
     return BaseModelOutputWithPast(
         last_hidden_state=hidden_states,

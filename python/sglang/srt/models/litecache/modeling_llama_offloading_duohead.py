@@ -67,12 +67,19 @@ def _replace_backbone_model(parent: nn.Module, model_cls, config) -> None:
         torch.cuda.empty_cache()
     parent.model = model_cls(config)
 
-def _flash_attn_with_kvcache(query_states: torch.Tensor, k_cache: torch.Tensor, v_cache: torch.Tensor, causal: bool = True):
+def _flash_attn_with_kvcache(
+    query_states: torch.Tensor,
+    k_cache: torch.Tensor,
+    v_cache: torch.Tensor,
+    causal: bool = True,
+    cache_seqlens: Optional[torch.Tensor] = None,
+):
     if _flash_attn is not None:
         return _flash_attn.flash_attn_with_kvcache(
             query_states,
             k_cache=k_cache,
             v_cache=v_cache,
+            cache_seqlens=cache_seqlens,
             causal=causal,
         )
 
@@ -91,14 +98,29 @@ def _flash_attn_with_kvcache(query_states: torch.Tensor, k_cache: torch.Tensor, 
     q = query_states.transpose(1, 2)
     k = k_cache.transpose(1, 2)
     v = v_cache.transpose(1, 2)
-    out = F.scaled_dot_product_attention(
-        q,
-        k,
-        v,
-        attn_mask=None,
-        dropout_p=0.0,
-        is_causal=causal,
-    )
+    if cache_seqlens is None:
+        out = F.scaled_dot_product_attention(
+            q,
+            k,
+            v,
+            attn_mask=None,
+            dropout_p=0.0,
+            is_causal=causal,
+        )
+    else:
+        out_rows = []
+        for row, seq_len in enumerate(cache_seqlens.detach().cpu().tolist()):
+            out_rows.append(
+                F.scaled_dot_product_attention(
+                    q[row:row + 1],
+                    k[row:row + 1, :, : int(seq_len), :],
+                    v[row:row + 1, :, : int(seq_len), :],
+                    attn_mask=None,
+                    dropout_p=0.0,
+                    is_causal=causal,
+                )
+            )
+        out = torch.cat(out_rows, dim=0)
     return out.transpose(1, 2).contiguous()
 
 
@@ -256,21 +278,29 @@ class CustomLlamaAttention(LlamaFlashAttention2):
                     )
                     _stall_log("attn_mixed_exit", self.layer_idx, buffer_len=buffer_len)
                 else:
-                    key_states, value_states = past_key_value.decode_get_attn_data_full_cpu(
+                    key_states, value_states, cache_seqlens = past_key_value.decode_get_attn_data_full_cpu(
                         self.layer_idx
                     )
                     _stall_log("attn_full_cpu_enter", self.layer_idx)
                     attn_output = _flash_attn_with_kvcache(
-                        query_states, k_cache=key_states, v_cache=value_states
+                        query_states,
+                        k_cache=key_states,
+                        v_cache=value_states,
+                        cache_seqlens=cache_seqlens,
                     )
                     _stall_log("attn_full_cpu_exit", self.layer_idx)
             else:
-                key_states, value_states, topk_indices = past_key_value.decode_get_attn_data_full_gpu(
+                key_states, value_states, topk_indices, topk_count = past_key_value.decode_get_attn_data_full_gpu(
                     self.layer_idx
                 )
                 _stall_log("attn_full_gpu_enter", self.layer_idx)
                 attn_output, _ = KVLib.flash_index_decode(
-                    query_states, key_states, value_states, topk_indices, self.scale
+                    query_states,
+                    key_states,
+                    value_states,
+                    topk_indices,
+                    topk_count,
+                    self.scale,
                 )
                 _stall_log("attn_full_gpu_exit", self.layer_idx)
 
@@ -523,4 +553,3 @@ class QuestLlamaForCausalLM(LlamaForCausalLM):
         transformers.generation.utils.GenerationMixin._prepare_cache_for_generation = (
             prepare_cache_for_generation
         )
-

@@ -49,7 +49,10 @@ class HashOffloadingCache(OffloadingCache):
 
         self.layers_hash_cache = [None for _ in range(self.num_layers)]
         self.layers_hash_cache_data = [None for _ in range(self.num_layers)]
-        self.layers_gpu_hash_cache_length = [0 for _ in range(self.num_layers)]
+        self.layers_hash_cache_length_tensor = [None for _ in range(self.num_layers)]
+        self.layers_gpu_hash_cache_length = [
+            [0] * max_batch for _ in range(self.num_layers)
+        ]
         self.layers_hash_weight = [None for _ in range(self.num_layers)]
 
         for layer in range(self.num_layers):
@@ -75,6 +78,11 @@ class HashOffloadingCache(OffloadingCache):
                     head_dim=0,
                 )
                 self.layers_hash_weight[layer] = hash_weight.to(self.layer_devices[layer]).to(self.dtype)
+            self.layers_hash_cache_length_tensor[layer] = torch.zeros(
+                (max_batch,),
+                dtype=torch.int32,
+                device=self.layer_devices[layer],
+            )
 
         self.hash_packbit_aux_tensors = {}
         for device in self.unique_devices:
@@ -88,23 +96,142 @@ class HashOffloadingCache(OffloadingCache):
             self.layers_hash_cache[layer] = self.layers_hash_cache_data[layer][
                 :gpu_hash_numel
             ].view(batch_size, self.max_seq_len, self.num_key_value_heads, self.rbits // 32)
-            self.layers_gpu_hash_cache_length[layer] = 0
+            self.layers_gpu_hash_cache_length[layer] = [
+                0
+            ] * self.config.kvcache_manager_config.max_batch_size
+            self.layers_hash_cache_length_tensor[layer].zero_()
+
+    def _active_hash_lengths(self, layer_idx: int, device: torch.device) -> torch.Tensor:
+        return self.layers_hash_cache_length_tensor[layer_idx][
+            :self.curr_batch_size
+        ].to(device=device, non_blocking=True)
+
+    def _set_active_hash_lengths(self, layer_idx: int, value: int) -> None:
+        self.layers_hash_cache_length_tensor[layer_idx][
+            :self.curr_batch_size
+        ].fill_(value)
+        for idx in range(self.curr_batch_size):
+            self.layers_gpu_hash_cache_length[layer_idx][idx] = int(value)
+
+    def _increment_active_hash_lengths(self, layer_idx: int) -> None:
+        self.layers_hash_cache_length_tensor[layer_idx][
+            :self.curr_batch_size
+        ].add_(1)
+        for idx in range(self.curr_batch_size):
+            self.layers_gpu_hash_cache_length[layer_idx][idx] += 1
+
+    def reset_batch_rows(self, row_indices: list[int]) -> None:
+        super().reset_batch_rows(row_indices)
+        if not row_indices:
+            return
+        rows = torch.tensor(row_indices, dtype=torch.long)
+        for layer_idx in range(self.num_layers):
+            layer_rows = rows.to(
+                device=self.layers_hash_cache_length_tensor[layer_idx].device,
+                non_blocking=True,
+            )
+            self.layers_hash_cache_length_tensor[layer_idx][layer_rows] = 0
+            for row in row_indices:
+                self.layers_gpu_hash_cache_length[layer_idx][row] = 0
+
+    def move_batch_rows(self, old_to_new_rows: dict[int, int]) -> None:
+        super().move_batch_rows(old_to_new_rows)
+        normalized = {
+            int(old): int(new)
+            for old, new in old_to_new_rows.items()
+            if int(old) != int(new)
+        }
+        if not normalized:
+            return
+
+        def _index_copy_rows(tensor: torch.Tensor | None, dim: int) -> None:
+            if tensor is None:
+                return
+            old_rows = torch.tensor(
+                list(normalized.keys()), dtype=torch.long, device=tensor.device
+            )
+            new_rows = torch.tensor(
+                list(normalized.values()), dtype=torch.long, device=tensor.device
+            )
+            src = tensor.index_select(dim, old_rows).clone()
+            tensor.index_copy_(dim, new_rows, src)
+
+        def _copy_hash_rows(
+            tensor: torch.Tensor | None,
+            row_lengths: dict[int, int],
+        ) -> None:
+            if tensor is None:
+                return
+            snapshots = []
+            seq_cap = int(tensor.size(1))
+            for old, new in normalized.items():
+                valid_len = max(0, min(int(row_lengths.get(old, 0)), seq_cap))
+                if valid_len == 0:
+                    continue
+                snapshots.append(
+                    (new, valid_len, tensor[old : old + 1, :valid_len].clone())
+                )
+            for new, valid_len, src in snapshots:
+                tensor[new : new + 1, :valid_len].copy_(src)
+
+        for layer_idx in range(self.num_layers):
+            row_lengths = {
+                old: self.layers_gpu_hash_cache_length[layer_idx][old]
+                for old in normalized.keys()
+            }
+            _index_copy_rows(self.layers_hash_cache_length_tensor[layer_idx], 0)
+            _copy_hash_rows(self.layers_hash_cache[layer_idx], row_lengths)
+            hash_lengths = [
+                self.layers_gpu_hash_cache_length[layer_idx][old]
+                for old in normalized.keys()
+            ]
+            for new, value in zip(normalized.values(), hash_lengths):
+                self.layers_gpu_hash_cache_length[layer_idx][new] = int(value)
+
+    def trim_prefill_padding(self, extend_seq_lens: list[int], padded_q_len: int) -> None:
+        super().trim_prefill_padding(extend_seq_lens, padded_q_len)
+        if not extend_seq_lens or all(int(x) == int(padded_q_len) for x in extend_seq_lens):
+            return
+        trims = torch.tensor(
+            [int(padded_q_len) - int(x) for x in extend_seq_lens],
+            dtype=torch.int32,
+        )
+        for layer_idx in range(self.num_layers):
+            active = self.layers_hash_cache_length_tensor[layer_idx][
+                :self.curr_batch_size
+            ]
+            active.sub_(trims.to(device=active.device, non_blocking=True))
+            for row, trim in enumerate(trims.tolist()):
+                self.layers_gpu_hash_cache_length[layer_idx][row] -= int(trim)
 
     def append_topk_cache_prefill(self, query_states, key_states, values_states, layer_idx):
         del query_states, values_states
         sequence_length = key_states.shape[1]
-        seq_offset = int(self.layers_gpu_hash_cache_length[layer_idx])
-        new_seq_len = seq_offset + sequence_length
-        assert new_seq_len <= self.max_seq_len, \
+        active_lengths = self.layers_gpu_hash_cache_length[layer_idx][
+            :self.curr_batch_size
+        ]
+        new_lengths = [int(x) + sequence_length for x in active_lengths]
+        max_new_seq_len = max(new_lengths) if new_lengths else 0
+        assert max_new_seq_len <= self.max_seq_len, \
             f"hash cache append exceeds max_seq_len at layer={layer_idx}: " \
-            f"{seq_offset} + {sequence_length} > {self.max_seq_len}"
-        prefill_multi_hash_encode(
-            key_states,
-            self.layers_hash_weight[layer_idx],
-            self.layers_hash_cache[layer_idx][:, seq_offset:new_seq_len, :, :],
-            self.hash_packbit_aux_tensors[key_states.device.index],
-        )
-        self.layers_gpu_hash_cache_length[layer_idx] = new_seq_len
+            f"max({active_lengths}) + {sequence_length} > {self.max_seq_len}"
+        for row, seq_offset in enumerate(active_lengths):
+            seq_offset = int(seq_offset)
+            new_seq_len = seq_offset + sequence_length
+            prefill_multi_hash_encode(
+                key_states[row:row + 1],
+                self.layers_hash_weight[layer_idx],
+                self.layers_hash_cache[layer_idx][
+                    row:row + 1, seq_offset:new_seq_len, :, :
+                ],
+                self.hash_packbit_aux_tensors[key_states.device.index],
+            )
+        tensor = self.layers_hash_cache_length_tensor[layer_idx][
+            :self.curr_batch_size
+        ]
+        tensor.copy_(torch.tensor(new_lengths, dtype=tensor.dtype, device=tensor.device))
+        for idx, value in enumerate(new_lengths):
+            self.layers_gpu_hash_cache_length[layer_idx][idx] = int(value)
 
     def _decode_append_hash_qk(self, query_states, key_states, query_layer_idx, key_layer_idx):
         query_out = torch.zeros(
@@ -120,9 +247,9 @@ class HashOffloadingCache(OffloadingCache):
             query_out,
             self.layers_hash_weight[query_layer_idx % self.num_layers],
             self.hash_packbit_aux_tensors[key_states.device.index],
-            self.layers_gpu_hash_cache_length[key_layer_idx],
+            self._active_hash_lengths(key_layer_idx, key_states.device),
         )
-        self.layers_gpu_hash_cache_length[key_layer_idx] += 1
+        self._increment_active_hash_lengths(key_layer_idx)
         return query_out
 
     def _decode_append_hash_qqk(self, query_states, query_states2, key_states, query_layer_idx, query_layer_idx2, key_layer_idx):
@@ -147,9 +274,9 @@ class HashOffloadingCache(OffloadingCache):
             query_out2,
             self.layers_hash_weight[query_layer_idx2 % self.num_layers],
             self.hash_packbit_aux_tensors[key_states.device.index],
-            self.layers_gpu_hash_cache_length[key_layer_idx],
+            self._active_hash_lengths(key_layer_idx, key_states.device),
         )
-        self.layers_gpu_hash_cache_length[key_layer_idx] += 1
+        self._increment_active_hash_lengths(key_layer_idx)
         return query_out1, query_out2
 
     def _decode_append_hash_k(self, key_states, layer_idx):
@@ -158,9 +285,9 @@ class HashOffloadingCache(OffloadingCache):
             self.layers_hash_cache[layer_idx],
             self.layers_hash_weight[layer_idx],
             self.hash_packbit_aux_tensors[key_states.device.index],
-            self.layers_gpu_hash_cache_length[layer_idx],
+            self._active_hash_lengths(layer_idx, key_states.device),
         )
-        self.layers_gpu_hash_cache_length[layer_idx] += 1
+        self._increment_active_hash_lengths(layer_idx)
 
     def append_topk_cache_decode(self, key_states, value_states, layer_idx, prefetch_query_states=None, current_query_states=None):
         del value_states
@@ -203,25 +330,30 @@ class HashOffloadingCache(OffloadingCache):
             exclude_recent = 0
             k_tensor = self.metadata_tensors[f"topk_current_k_{device_idx}"]
 
-        k = int(k_tensor[0].item())
+        k = int(self.topk_prefetch_k_host if is_prefetch else self.topk_current_k_host)
         if k <= 0:
             return torch.empty(
-                (self.curr_batch_size * self.num_key_value_heads, 0),
+                (self.curr_batch_size, self.num_key_value_heads, 0),
                 dtype=torch.int32,
                 device=query.device,
             )
 
-        seq_len_tensor = torch.tensor(
-            [int(self.layers_gpu_hash_cache_length[layer_idx])],
-            dtype=torch.int32,
-            device=query.device,
-        )
+        seq_len_tensor = self._active_hash_lengths(layer_idx, query.device)
+        score_buf = self.metadata_tensors[f"gpu_topk_scores_{device_idx}"][
+            : self.curr_batch_size
+        ]
+        index_buf = self.metadata_tensors[f"gpu_topk_indices_{device_idx}"][
+            : self.curr_batch_size
+        ]
+        value_buf = self.metadata_tensors[f"gpu_topk_values_{device_idx}"][
+            : self.curr_batch_size
+        ]
 
         KVLib.static_hamming_score_mask(
-            self.layers_hash_cache[layer_idx],
+            self.layers_hash_cache[layer_idx][: self.curr_batch_size],
             query,
             mask,
-            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            score_buf,
             seq_len_tensor,
             self.rbits,
             float(torch.finfo(torch.float16).max),
@@ -233,21 +365,34 @@ class HashOffloadingCache(OffloadingCache):
         )
 
         KVLib.batch_topk_masked(
-            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            score_buf,
             mask,
-            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"],
-            self.metadata_tensors[f"gpu_topk_values_{device_idx}"],
-            seq_len_tensor,
-            k_tensor,
+            index_buf,
+            value_buf,
+            seq_len_tensor.repeat_interleave(self.num_key_value_heads),
+            k_tensor[:self.curr_batch_size].repeat_interleave(
+                self.num_key_value_heads
+            ),
             False,
         )
-        seq_len = int(seq_len_tensor[0].item())
-        if seq_len <= 0:
-            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"].zero_()
-        else:
-            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"].clamp_(0, seq_len - 1)
+        topk_indices = index_buf
+        active_indices = topk_indices.reshape(
+            self.curr_batch_size * self.num_key_value_heads,
+            self.max_buffer_len,
+        )
+        per_head_seq_lens = seq_len_tensor.repeat_interleave(
+            self.num_key_value_heads
+        ).to(device=topk_indices.device, dtype=topk_indices.dtype)
+        # Dynamic online batching can mix rows with different existing KV
+        # lengths. Clamp per row/head; using the batch max can leave invalid
+        # indices for shorter rows and later trigger a CUDA IndexKernel assert.
+        # Keep this graph-safe: no tensor .item() inside decode CUDA graph capture.
+        row_max_indices = (per_head_seq_lens - 1).clamp_min(0).view(-1, 1)
+        active_indices.clamp_min_(0)
+        active_indices.copy_(torch.minimum(active_indices, row_max_indices))
+        active_indices.masked_fill_((per_head_seq_lens <= 0).view(-1, 1), 0)
 
-        return self.metadata_tensors[f"gpu_topk_indices_{device_idx}"]
+        return topk_indices[:, :, :k].contiguous()
 
 
 def prepare_cache_for_generation(

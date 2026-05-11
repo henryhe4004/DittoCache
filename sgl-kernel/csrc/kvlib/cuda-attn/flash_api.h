@@ -285,7 +285,7 @@ void run_mha_gather_fwd(Flash_fwd_params &params, cudaStream_t stream,
   }
 }
 
-std::vector<at::Tensor> mha_index_decode_fwd(
+std::vector<at::Tensor> mha_index_decode_fwd_impl(
     at::Tensor
         &q,  // batch_size x seqlen_q x num_heads x round_multiple(head_size, 8)
     const at::Tensor &k,    // batch_size x seqlen_k x num_heads_k x
@@ -293,6 +293,7 @@ std::vector<at::Tensor> mha_index_decode_fwd(
     const at::Tensor &v,    // batch_size x seqlen_k x num_heads_k x
                             // round_multiple(head_size, 8)
     const at::Tensor &idx,  // batch_size x num_heads[_k] x seqlen_gather
+    const at::Tensor *gather_lens,
     const float softmax_scale) {
   auto dprops = at::cuda::getCurrentDeviceProperties();
   bool is_sm8x = dprops->major == 8 && dprops->minor >= 0;
@@ -331,6 +332,13 @@ std::vector<at::Tensor> mha_index_decode_fwd(
   const int num_heads_k = k.size(2);
   const int num_heads_gather = idx.size(1);
   const int seqlen_gather = idx.size(2);
+  if (gather_lens != nullptr) {
+    TORCH_CHECK(gather_lens->dtype() == torch::kInt32,
+                "gather_lens must be int32");
+    TORCH_CHECK(gather_lens->is_cuda(), "gather_lens must be on CUDA");
+    TORCH_CHECK(gather_lens->numel() >= batch_size,
+                "gather_lens must have at least batch_size elements");
+  }
 
   TORCH_CHECK(batch_size > 0, "batch size must be positive");
   TORCH_CHECK(
@@ -379,9 +387,10 @@ std::vector<at::Tensor> mha_index_decode_fwd(
       torch::empty({batch_size, num_heads, seqlen_q}, opts.dtype(at::kFloat));
 
   Flash_fwd_params params;
+  void *seqused_k = gather_lens == nullptr ? nullptr : gather_lens->data_ptr<int>();
   set_params_fprop(params, batch_size, seqlen_q, seqlen_k, seqlen_q_rounded,
                    seqlen_k_rounded, num_heads, num_heads_k, head_size,
-                   head_size_rounded, q, k, v, out, nullptr, nullptr, nullptr,
+                   head_size_rounded, q, k, v, out, nullptr, nullptr, seqused_k,
                    nullptr, softmax_lse.data_ptr(), 0.0f, softmax_scale, -1, -1,
                    0.0f);
 
@@ -410,6 +419,25 @@ std::vector<at::Tensor> mha_index_decode_fwd(
   return {out, softmax_lse};
 }
 
+std::vector<at::Tensor> mha_index_decode_fwd(
+    at::Tensor &q,
+    const at::Tensor &k,
+    const at::Tensor &v,
+    const at::Tensor &idx,
+    const float softmax_scale) {
+  return mha_index_decode_fwd_impl(q, k, v, idx, nullptr, softmax_scale);
+}
+
+std::vector<at::Tensor> mha_index_decode_fwd_varlen(
+    at::Tensor &q,
+    const at::Tensor &k,
+    const at::Tensor &v,
+    const at::Tensor &idx,
+    const at::Tensor &gather_lens,
+    const float softmax_scale) {
+  return mha_index_decode_fwd_impl(q, k, v, idx, &gather_lens, softmax_scale);
+}
+
 //////////////////////////////////////////////////////////////////////////////////
 
 void run_mha_mixed_fwd(Flash_fwd_params &params, cudaStream_t stream,
@@ -423,7 +451,7 @@ void run_mha_mixed_fwd(Flash_fwd_params &params, cudaStream_t stream,
   }
 }
 
-std::vector<at::Tensor> mha_mixed_decode_fwd(
+std::vector<at::Tensor> mha_mixed_decode_fwd_impl(
     at::Tensor
         &q,  // batch_size x seqlen_q x num_heads x round_multiple(head_size, 8)
     const at::Tensor &cached_k,  // batch_size x (>real_k_seq) x (<num_heads_k>)
@@ -437,6 +465,7 @@ std::vector<at::Tensor> mha_mixed_decode_fwd(
         &buffer_v,  // batch_size x (>real_k_seq) x (<num_heads_k>) x head_size
     const at::Tensor &k_head_mask,   // num_heads_k
     const at::Tensor &k_head_index,  // num_heads_K
+    const at::Tensor *real_seq_lens,
     const int real_k_seq, const float softmax_scale) {
   auto dprops = at::cuda::getCurrentDeviceProperties();
   bool is_sm8x = dprops->major == 8 && dprops->minor >= 0;
@@ -491,12 +520,20 @@ std::vector<at::Tensor> mha_mixed_decode_fwd(
   int seqlen_q = sizes[1];
   int num_heads = sizes[2];
   const int head_size = sizes[3];
-  const int seqlen_k = real_k_seq;
+  int seqlen_k = real_k_seq;
   // const int num_heads_k = cached_k.size(2);
   const int num_heads_k = k_head_mask.size(0);
 
   // const int num_heads_gather = gather_idx.size(1);
   // const int seqlen_gather = gather_idx.size(2);
+  if (real_seq_lens != nullptr) {
+    TORCH_CHECK(real_seq_lens->dtype() == torch::kInt32,
+                "real_seq_lens must be int32");
+    TORCH_CHECK(real_seq_lens->is_cuda(), "real_seq_lens must be on CUDA");
+    TORCH_CHECK(real_seq_lens->numel() >= batch_size,
+                "real_seq_lens must have at least batch_size elements");
+    seqlen_k = real_seq_lens->max().item<int32_t>();
+  }
 
   TORCH_CHECK(batch_size > 0, "batch size must be positive");
   TORCH_CHECK(
@@ -512,7 +549,7 @@ std::vector<at::Tensor> mha_mixed_decode_fwd(
   TORCH_CHECK(num_heads_k == gather_idx.size(1));
   TORCH_CHECK(num_heads_k == k_head_index.size(0));
 
-  TORCH_CHECK(seqlen_k == gather_idx.size(2));
+  TORCH_CHECK(seqlen_k <= gather_idx.size(2));
   TORCH_CHECK(seqlen_k <= buffer_k.size(1));
 
   // Faster to transpose q from (b, 1, (nheads_kv ngroups), d) to (b, ngroups,
@@ -551,10 +588,12 @@ std::vector<at::Tensor> mha_mixed_decode_fwd(
       torch::empty({batch_size, num_heads, seqlen_q}, opts.dtype(at::kFloat));
 
   Flash_fwd_params params;
+  void *seqused_k =
+      real_seq_lens == nullptr ? nullptr : real_seq_lens->data_ptr<int>();
   set_params_fprop(params, batch_size, seqlen_q, seqlen_k, seqlen_q_rounded,
                    seqlen_k_rounded, num_heads, num_heads_k, head_size,
                    head_size_rounded, q, cached_k, cached_v, out, nullptr,
-                   nullptr, nullptr, nullptr, softmax_lse.data_ptr(), 0.0f,
+                   nullptr, seqused_k, nullptr, softmax_lse.data_ptr(), 0.0f,
                    softmax_scale, -1, -1, 0.0f);
 
   // set_params_gather(params, gather_idx, num_heads_gather,
@@ -583,6 +622,38 @@ std::vector<at::Tensor> mha_mixed_decode_fwd(
     softmax_lse = softmax_lse.reshape({batch_size, num_heads_k * seqlen_q, 1});
   }
   return {out, softmax_lse};
+}
+
+std::vector<at::Tensor> mha_mixed_decode_fwd(
+    at::Tensor &q,
+    const at::Tensor &cached_k,
+    const at::Tensor &cached_v,
+    const at::Tensor &gather_idx,
+    const at::Tensor &buffer_k,
+    const at::Tensor &buffer_v,
+    const at::Tensor &k_head_mask,
+    const at::Tensor &k_head_index,
+    const int real_k_seq,
+    const float softmax_scale) {
+  return mha_mixed_decode_fwd_impl(
+      q, cached_k, cached_v, gather_idx, buffer_k, buffer_v, k_head_mask,
+      k_head_index, nullptr, real_k_seq, softmax_scale);
+}
+
+std::vector<at::Tensor> mha_mixed_decode_fwd_varlen(
+    at::Tensor &q,
+    const at::Tensor &cached_k,
+    const at::Tensor &cached_v,
+    const at::Tensor &gather_idx,
+    const at::Tensor &buffer_k,
+    const at::Tensor &buffer_v,
+    const at::Tensor &k_head_mask,
+    const at::Tensor &k_head_index,
+    const at::Tensor &real_seq_lens,
+    const float softmax_scale) {
+  return mha_mixed_decode_fwd_impl(
+      q, cached_k, cached_v, gather_idx, buffer_k, buffer_v, k_head_mask,
+      k_head_index, &real_seq_lens, /*real_k_seq=*/0, softmax_scale);
 }
 
 //////////////////////////////////////////////////////////////////////////////////

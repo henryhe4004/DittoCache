@@ -1,44 +1,44 @@
 {
   "status": "ok",
   "method": "offloading",
-  "config_file": "/jhe/myTransformer/config/hata_offloading/Qwen2.5-14B-Instruct-1M-8K.yaml",
+  "config_file": "/jhe/sglang/test/litecache/speedup/../config/hata_offloading/Qwen2.5-14B-Instruct-1M-8K.yaml",
   "data": "/jhe/sglang/test/litecache/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-8K.jsonl",
   "batch_size": 1,
   "max_seq_len": 8000,
   "warmup": 1,
   "epoch": 3,
   "input_tokens": 7710,
-  "avg_elapsed_s": 4.4138428557198495,
-  "p50_elapsed_s": 4.414629060192965,
-  "avg_tokens_per_s": 11.554570871129012,
-  "overall_tokens_per_s": 11.554557257041825,
+  "avg_elapsed_s": 4.376849945324163,
+  "p50_elapsed_s": 4.373942967969924,
+  "avg_tokens_per_s": 11.652236077920868,
+  "overall_tokens_per_s": 11.652215780091767,
   "epoch_elapsed_s": [
-    4.407622304861434,
-    4.414629060192965,
-    4.41927720210515
+    4.384918523952365,
+    4.371688344050199,
+    4.373942967969924
   ],
   "epoch_tokens_per_s": [
-    11.570864396377386,
-    11.552499497606888,
-    11.540348719402765
+    11.630774830003212,
+    11.665973414918797,
+    11.659959988840596
   ],
-  "avg_prefill_latency_s": 2.322373357717879,
-  "avg_decode_latency_ms_per_step": 52.28673745004926,
-  "avg_decode_tokens_per_s": 19.12530897330148,
+  "avg_prefill_latency_s": 2.2864369579280415,
+  "avg_decode_latency_ms_per_step": 52.260324684903026,
+  "avg_decode_tokens_per_s": 19.134975005386924,
   "epoch_prefill_latency_s": [
-    2.3159319849219173,
-    2.323121404158883,
-    2.3280666840728372
+    2.294492492917925,
+    2.281073892954737,
+    2.283744487911463
   ],
   "epoch_decode_latency_ms_per_step": [
-    52.29225799848791,
-    52.287691400852054,
-    52.28026295080781
+    52.260650775860995,
+    52.265361277386546,
+    52.254962001461536
   ],
   "epoch_decode_tokens_per_s": [
-    19.12328972347907,
-    19.124959875044407,
-    19.127677321380965
+    19.134855482165108,
+    19.133130921887766,
+    19.136938612107894
   ],
   "runtime_meta": {
     "litecache_enabled": true,
@@ -46,6 +46,7 @@
     "offloading_method": "hash",
     "max_total_tokens": null,
     "sglang_cuda_graph_enabled": false,
-    "litecache_cuda_graph_enabled": true
+    "litecache_cuda_graph_enabled": true,
+    "transfer_stats_enabled": false
   }
 }

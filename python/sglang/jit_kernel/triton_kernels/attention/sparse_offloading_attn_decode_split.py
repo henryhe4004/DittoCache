@@ -37,10 +37,10 @@ def _fwd_kernel_stage2(
     cur_batch_seq_len = -1
     if (on_gpu == 1):
         if topk_index_count is not None:
-            cur_batch_seq_len = tl.load(topk_index_count)
+            cur_batch_seq_len = tl.load(topk_index_count + cur_batch)
     else:
         if buffer_valid_count is not None:
-            cur_batch_seq_len = tl.load(buffer_valid_count)
+            cur_batch_seq_len = tl.load(buffer_valid_count + cur_batch)
 
     kv_splits = tl.load(num_kv_splits)
 
@@ -209,12 +209,12 @@ def _fwd_mix_split_kernel(
     cur_batch_seq_len = -1
     if is_on_gpu:
         if topk_index_count is not None:
-            cur_batch_seq_len = tl.load(topk_index_count)
+            cur_batch_seq_len = tl.load(topk_index_count + cur_batch)
 
     else:
         if buffer_valid_count is not None:
             # for offload
-            cur_batch_seq_len = tl.load(buffer_valid_count)
+            cur_batch_seq_len = tl.load(buffer_valid_count + cur_batch)
 
     kv_len_per_split = (
         tl.cdiv(tl.cdiv(cur_batch_seq_len, kv_splits), BLOCK_SEQ) * BLOCK_SEQ)

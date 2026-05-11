@@ -339,6 +339,7 @@ __global__ void CUDAAppendOffloadTensorPosWait(
     volatile bool* ready_flags,
     const int32_t batch_size, const int32_t num_heads,
     const int32_t num_cpu_heads, const int32_t head_dim,
+    const int32_t gpu_pos_numel, const int32_t cpu_pos_numel,
     const int64_t gpu_t_stride, const int64_t gpu_b_stride,
     const int64_t gpu_h_stride, const int64_t gpu_s_stride,
     const int64_t cpu_t_stride, const int64_t cpu_b_stride,
@@ -349,6 +350,8 @@ __global__ void CUDAAppendOffloadTensorPosWait(
 
   int bsz_id = blockIdx.x;
   int head_id = blockIdx.y;
+  const int32_t cur_gpu_pos = gpu_pos[gpu_pos_numel == 1 ? 0 : bsz_id];
+  const int32_t cur_cpu_pos = cpu_pos[cpu_pos_numel == 1 ? 0 : bsz_id];
 
   T* input_ptr = nullptr;
   T* output_ptr = nullptr;
@@ -358,7 +361,7 @@ __global__ void CUDAAppendOffloadTensorPosWait(
     int64_t src_offset = bsz_id * num_heads * head_dim + head_id * head_dim;
 
     if (warp_id == 0) {  // key
-      int64_t dst_offset = bsz_id * cpu_b_stride + (*cpu_pos) * cpu_s_stride +
+      int64_t dst_offset = bsz_id * cpu_b_stride + cur_cpu_pos * cpu_s_stride +
                            head_id * cpu_h_stride;
       input_ptr = key + src_offset;
       output_ptr = cpu_dst + dst_offset;
@@ -366,7 +369,7 @@ __global__ void CUDAAppendOffloadTensorPosWait(
 
     else {  // value
       int64_t dst_offset = cpu_t_stride + bsz_id * cpu_b_stride +
-                           (*cpu_pos) * cpu_s_stride + head_id * cpu_h_stride;
+                           cur_cpu_pos * cpu_s_stride + head_id * cpu_h_stride;
       input_ptr = value + src_offset;
       output_ptr = cpu_dst + dst_offset;
     }
@@ -378,7 +381,7 @@ __global__ void CUDAAppendOffloadTensorPosWait(
         bsz_id * num_heads * head_dim + input_head_id * head_dim;
 
     if (warp_id == 0) {  // key
-      int64_t dst_offset = bsz_id * gpu_b_stride + (*gpu_pos) * gpu_s_stride +
+      int64_t dst_offset = bsz_id * gpu_b_stride + cur_gpu_pos * gpu_s_stride +
                            head_id * gpu_h_stride;
       input_ptr = key + src_offset;
       output_ptr = gpu_dst + dst_offset;
@@ -386,7 +389,7 @@ __global__ void CUDAAppendOffloadTensorPosWait(
 
     else {  // value
       int64_t dst_offset = gpu_t_stride + bsz_id * gpu_b_stride +
-                           (*gpu_pos) * gpu_s_stride + head_id * gpu_h_stride;
+                           cur_gpu_pos * gpu_s_stride + head_id * gpu_h_stride;
       input_ptr = value + src_offset;
       output_ptr = gpu_dst + dst_offset;
     }
@@ -434,6 +437,14 @@ void AppendOffloadTensorPosAndWait(
   int64_t cpu_b_stride = cpu_kv_cache.stride(1);
   int64_t cpu_h_stride = cpu_kv_cache.stride(3);
   int64_t cpu_s_stride = cpu_kv_cache.stride(2);
+  int32_t gpu_pos_numel = gpu_append_pos.numel();
+  int32_t cpu_pos_numel = cpu_append_pos.numel();
+  TORCH_CHECK(gpu_pos_numel == 1 || gpu_pos_numel >= bsz,
+              "gpu_append_pos must have 1 element or at least batch_size elements, got ",
+              gpu_pos_numel, " for batch_size ", bsz);
+  TORCH_CHECK(cpu_pos_numel == 1 || cpu_pos_numel >= bsz,
+              "cpu_append_pos must have 1 element or at least batch_size elements, got ",
+              cpu_pos_numel, " for batch_size ", bsz);
 
   constexpr int num_threads = 32 * 2;
   dim3 blk(num_threads);
@@ -453,6 +464,7 @@ void AppendOffloadTensorPosAndWait(
         gpu_append_pos.data_ptr<int32_t>(),
         cpu_append_pos.data_ptr<int32_t>(),
         ready_flags.data_ptr<bool>(), bsz, num_heads, num_cpu_heads, head_dim,
+        gpu_pos_numel, cpu_pos_numel,
         gpu_t_stride, gpu_b_stride, gpu_h_stride, gpu_s_stride, cpu_t_stride,
         cpu_b_stride, cpu_h_stride, cpu_s_stride);
   } else if (scalar_type == at::ScalarType::BFloat16) {
@@ -465,6 +477,7 @@ void AppendOffloadTensorPosAndWait(
         gpu_append_pos.data_ptr<int32_t>(),
         cpu_append_pos.data_ptr<int32_t>(),
         ready_flags.data_ptr<bool>(), bsz, num_heads, num_cpu_heads, head_dim,
+        gpu_pos_numel, cpu_pos_numel,
         gpu_t_stride, gpu_b_stride, gpu_h_stride, gpu_s_stride, cpu_t_stride,
         cpu_b_stride, cpu_h_stride, cpu_s_stride);
   } else {
@@ -591,18 +604,31 @@ __global__ void LaunchPrefetchingKernel(
   const int head_idx = blockIdx.x;
   const int tid = threadIdx.x;
   const int num_threads = blockDim.x;
+  const int32_t batch_id = head_idx / num_head;
+  const int32_t head_id = head_idx % num_head;
+  int32_t head_k = gpu_index_length[batch_id];
+  if (head_k < 0) {
+    head_k = 0;
+  }
+  if (head_k > src_len) {
+    head_k = src_len;
+  }
+  if (head_k > dst_len) {
+    head_k = dst_len;
+  }
 
   // compute real indices and copy to cpu
   if (gpu_gather_mask[head_idx]) {
     T* src_ptr = gpu_indices + head_idx * src_len;
-    const int32_t batch_id = head_idx / num_head;
-    const int32_t head_id = head_idx % num_head;
-    for (int i = tid; i < *gpu_index_length; i += num_threads) {
+    for (int i = tid; i < head_k; i += num_threads) {
       int64_t data =
           batch_id * num_head * cache_seq_len + head_id + src_ptr[i] * num_head;
       *(cpu_indices + head_idx * dst_len + i) = data;
       // __threadfence_system();
     }
+  }
+  if (tid == 0) {
+    cpu_gather_flag[6 + head_idx] = gpu_gather_mask[head_idx] ? head_k : 0;
   }
 
   // copy gather mask to cpu
@@ -613,7 +639,23 @@ __global__ void LaunchPrefetchingKernel(
 
   // copy metadata to cpu
   if (tid == 0 && head_idx == 0) {
-    cpu_gather_flag[1] = *gpu_index_length;
+    int32_t max_k = 0;
+    for (int batch = 0; batch < batch_size; ++batch) {
+      int32_t batch_k = gpu_index_length[batch];
+      if (batch_k < 0) {
+        batch_k = 0;
+      }
+      if (batch_k > src_len) {
+        batch_k = src_len;
+      }
+      if (batch_k > dst_len) {
+        batch_k = dst_len;
+      }
+      if (batch_k > max_k) {
+        max_k = batch_k;
+      }
+    }
+    cpu_gather_flag[1] = max_k;
     cpu_gather_flag[2] = batch_size;
   }
 
@@ -626,9 +668,9 @@ __global__ void SetReadyKernel2(int* gather_flag, int layer_idx) {
 
 void StaticLaunchPrefetching(torch::Tensor& gpu_indices,  // [b * h, max_topk + sink + recent + 1]
                              torch::Tensor& gpu_gather_mask,  // [b * h]
-                             torch::Tensor& gpu_index_length,  // [1, ]
+                             torch::Tensor& gpu_index_length,  // [b, ]
                              torch::Tensor& cpu_indices,  // [b * h, max_topk]
-                             torch::Tensor& cpu_gather_flag,  // [6, ]
+                             torch::Tensor& cpu_gather_flag,  // [6 + b * h, ]
                              torch::Tensor& cpu_ready_mask,  // [b * h]
                              int64_t batch_size, int64_t max_cache_seqlen,
                              int64_t num_heads, int64_t layer_idx) {

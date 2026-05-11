@@ -134,6 +134,7 @@ class CustomStaticCache(Cache):
         # ==================== metadata ====================
         self.curr_batch_size = 1
         self.cur_q_len = 0
+        self.cache_length_host = []
         self.max_seq_len = self.config.kvcache_manager_config.max_tokens
         self.mem_budget = int(
             self.config.kvcache_manager_config.gpu_memory_budget * 1024 * 1024 * 1024
@@ -243,6 +244,8 @@ class CustomStaticCache(Cache):
 
         self.cache_tensors["cache_data"] = [None for _ in range(self.num_layers)]
         self.cache_tensors["cache_length"] = [None for _ in range(self.num_layers)]
+        max_batch = int(self.config.kvcache_manager_config.max_batch_size)
+        self.cache_length_host = [[0] * max_batch for _ in range(self.num_layers)]
         for l in range(self.num_layers):
             layer_device = self.layer_devices[l]
             cache_data = torch.zeros(
@@ -251,7 +254,7 @@ class CustomStaticCache(Cache):
                 device=layer_device,
             )
             cache_length = torch.zeros(
-                (1,),
+                (max_batch,),
                 dtype=torch.int32,
                 device=layer_device,
             )
@@ -274,13 +277,22 @@ class CustomStaticCache(Cache):
             )
             cache_length = self.cache_tensors["cache_length"][l]
             cache_length.zero_()
+            for row in range(len(self.cache_length_host[l])):
+                self.cache_length_host[l][row] = 0
 
     # ====================== HF APIs ======================
     def reorder_cache(self, beam_idx: torch.LongTensor):
         raise NotImplementedError
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
-        return self.cache_tensors["cache_length"][layer_idx].item()
+        active = slice(0, self.curr_batch_size)
+        return int(min(self.cache_length_host[layer_idx][active]))
+
+    def get_seq_lengths(self, layer_idx: Optional[int] = 0) -> list[int]:
+        return [
+            int(x)
+            for x in self.cache_length_host[layer_idx][: self.curr_batch_size]
+        ]
 
     def get_max_length(self) -> Optional[int]:
         return self.max_seq_len
@@ -294,31 +306,113 @@ class CustomStaticCache(Cache):
 
         self._reset_cache_tensors(batch_size)
 
+    def reset_batch_rows(self, row_indices: list[int]) -> None:
+        if not row_indices:
+            return
+        max_batch = int(self.config.kvcache_manager_config.max_batch_size)
+        bad_rows = [int(row) for row in row_indices if row < 0 or row >= max_batch]
+        if bad_rows:
+            raise RuntimeError(
+                f"LiteCache full-attn reset rows out of range: {bad_rows}, "
+                f"max_batch_size={max_batch}"
+            )
+        for layer_idx in range(self.num_layers):
+            rows = torch.tensor(
+                row_indices,
+                dtype=torch.long,
+                device=self.cache_tensors["cache_length"][layer_idx].device,
+            )
+            self.cache_tensors["cache_length"][layer_idx][rows] = 0
+            for row in row_indices:
+                self.cache_length_host[layer_idx][int(row)] = 0
+
+    def move_batch_rows(self, old_to_new_rows: dict[int, int]) -> None:
+        if not old_to_new_rows:
+            return
+        max_batch = int(self.config.kvcache_manager_config.max_batch_size)
+        normalized = {
+            int(old): int(new)
+            for old, new in old_to_new_rows.items()
+            if int(old) != int(new)
+        }
+        if not normalized:
+            return
+        bad_rows = [
+            row
+            for pair in normalized.items()
+            for row in pair
+            if row < 0 or row >= max_batch
+        ]
+        if bad_rows:
+            raise RuntimeError(
+                f"LiteCache full-attn row remap out of range: {normalized}, "
+                f"max_batch_size={max_batch}"
+            )
+
+        def _index_copy_rows(tensor: torch.Tensor, dim: int) -> None:
+            old_rows = torch.tensor(
+                list(normalized.keys()), dtype=torch.long, device=tensor.device
+            )
+            new_rows = torch.tensor(
+                list(normalized.values()), dtype=torch.long, device=tensor.device
+            )
+            src = tensor.index_select(dim, old_rows).clone()
+            tensor.index_copy_(dim, new_rows, src)
+
+        for layer_idx in range(self.num_layers):
+            _index_copy_rows(self.cache_tensors["cache_length"][layer_idx], 0)
+            kv_cache = self.kv_caches[layer_idx]
+            if kv_cache is not None:
+                snapshots = []
+                seq_cap = int(kv_cache.size(2))
+                for old, new in normalized.items():
+                    valid_len = max(
+                        0,
+                        min(int(self.cache_length_host[layer_idx][old]), seq_cap),
+                    )
+                    if valid_len == 0:
+                        continue
+                    snapshots.append(
+                        (
+                            new,
+                            valid_len,
+                            kv_cache[:, old : old + 1, :valid_len].clone(),
+                        )
+                    )
+                for new, valid_len, src in snapshots:
+                    kv_cache[:, new : new + 1, :valid_len].copy_(src)
+
+            old_lengths = [
+                self.cache_length_host[layer_idx][old]
+                for old in normalized.keys()
+            ]
+            for new, value in zip(normalized.values(), old_lengths):
+                self.cache_length_host[layer_idx][new] = int(value)
+
     # =====================================================
     # call this before cuda graph
     def update_metadata(self, q_len: int, is_prefill: bool = False, layer_idx: int = 0):
         del is_prefill  # unused for now
         self.cur_q_len = q_len
         for device_idx in self.unique_devices:
+            device = torch.device("cuda", int(device_idx))
             rope_indptr = torch.arange(
                 0,
                 (self.curr_batch_size + 1) * q_len,
                 q_len,
                 dtype=torch.int32,
-                device=device_idx,
-            )
-            rope_offsets = torch.full(
-                (self.curr_batch_size,),
-                self.get_seq_length(layer_idx),
-                dtype=torch.int32,
-                device=device_idx,
+                device=device,
             )
             self.metadata_tensors[f"rope_indptr_{device_idx}"][
                 : self.curr_batch_size + 1
             ] = rope_indptr
             self.metadata_tensors[f"rope_offsets_{device_idx}"][
                 : self.curr_batch_size
-            ] = rope_offsets
+            ].copy_(
+                self.cache_tensors["cache_length"][layer_idx][
+                    : self.curr_batch_size
+                ].to(device=device, dtype=torch.int32, non_blocking=True)
+            )
 
     def get_rope_metadata(self, device: Optional[torch.device] = None):
         if device is None:
@@ -338,7 +432,7 @@ class CustomStaticCache(Cache):
         return self.cur_q_len
 
     def get_seqlen_tensor(self, layer_idx: int):
-        return self.cache_tensors["cache_length"][layer_idx]
+        return self.cache_tensors["cache_length"][layer_idx][: self.curr_batch_size]
 
     def append_prefill(
         self,
@@ -348,10 +442,25 @@ class CustomStaticCache(Cache):
     ):
         q_len = self.cur_q_len
         seq_len_tensor = self.cache_tensors["cache_length"][layer_idx]
-        seq_len = seq_len_tensor.item()
-        assert (
-            q_len + seq_len <= self.max_seq_len
-        ), f"input kv states length {q_len} + current seq length {seq_len}, should be less than max_seq_len = {self.max_seq_len}"
+        active_seq_lens = seq_len_tensor[: self.curr_batch_size]
+        extend_seq_lens = getattr(self, "_current_extend_seq_lens", None)
+        if extend_seq_lens is None:
+            row_lens = [int(q_len)] * self.curr_batch_size
+        else:
+            if len(extend_seq_lens) != self.curr_batch_size:
+                raise RuntimeError(
+                    "LiteCache full-attn extend length mismatch: "
+                    f"extend_seq_lens={extend_seq_lens}, "
+                    f"curr_batch_size={self.curr_batch_size}."
+                )
+            row_lens = [int(x) for x in extend_seq_lens]
+        old_lengths = [int(x) for x in self.cache_length_host[layer_idx][: self.curr_batch_size]]
+        max_new_seq_len = max(old + row_len for old, row_len in zip(old_lengths, row_lens))
+        if max_new_seq_len > self.max_seq_len:
+            raise AssertionError(
+                f"input kv states max length {max_new_seq_len}, "
+                f"should be less than max_seq_len = {self.max_seq_len}"
+            )
         key_states = key_states.view(
             self.curr_batch_size,
             q_len,
@@ -364,12 +473,32 @@ class CustomStaticCache(Cache):
             self.num_key_value_heads,
             self.head_dim,
         )
-        self.kv_caches[layer_idx][0, :, seq_len : seq_len + q_len, :, :] = key_states
-        self.kv_caches[layer_idx][1, :, seq_len : seq_len + q_len, :, :] = value_states
-        key_states = self.kv_caches[layer_idx][0, :, : seq_len + q_len, :, :]
-        value_states = self.kv_caches[layer_idx][1, :, : seq_len + q_len, :, :]
-        seq_len_tensor[0] = seq_len + q_len
-        return key_states, value_states
+        for row, (old_len, row_len) in enumerate(zip(old_lengths, row_lens)):
+            if row_len <= 0:
+                continue
+            self.kv_caches[layer_idx][
+                0, row : row + 1, old_len : old_len + row_len, :, :
+            ] = key_states[row : row + 1, :row_len]
+            self.kv_caches[layer_idx][
+                1, row : row + 1, old_len : old_len + row_len, :, :
+            ] = value_states[row : row + 1, :row_len]
+            self.cache_length_host[layer_idx][row] = old_len + row_len
+        new_lengths = torch.tensor(
+            [old + row_len for old, row_len in zip(old_lengths, row_lens)],
+            dtype=active_seq_lens.dtype,
+            device=active_seq_lens.device,
+        )
+        active_seq_lens.copy_(new_lengths)
+        if not hasattr(self, "_last_prefill_old_lengths"):
+            self._last_prefill_old_lengths = {}
+        if not hasattr(self, "_last_prefill_row_lengths"):
+            self._last_prefill_row_lengths = {}
+        self._last_prefill_old_lengths[layer_idx] = old_lengths
+        self._last_prefill_row_lengths[layer_idx] = row_lens
+        return (
+            self.kv_caches[layer_idx][0, :, :max_new_seq_len, :, :],
+            self.kv_caches[layer_idx][1, :, :max_new_seq_len, :, :],
+        )
 
     def append_decode(
         self,
@@ -393,10 +522,15 @@ class CustomStaticCache(Cache):
             self.kv_caches[layer_idx],
             key_states,
             value_states,
-            self.cache_tensors["cache_length"][layer_idx],
+            self.cache_tensors["cache_length"][layer_idx][: self.curr_batch_size],
         )
-        self.cache_tensors["cache_length"][layer_idx] += 1
+        self.cache_tensors["cache_length"][layer_idx][: self.curr_batch_size] += 1
         return self.kv_caches[layer_idx][0, ...], self.kv_caches[layer_idx][1, ...]
+
+    def record_decode_step(self) -> None:
+        for layer_idx in range(self.num_layers):
+            for row in range(self.curr_batch_size):
+                self.cache_length_host[layer_idx][row] += 1
 
 
 def prepare_cache_for_generation(  # HF-style helper, kept for compatibility

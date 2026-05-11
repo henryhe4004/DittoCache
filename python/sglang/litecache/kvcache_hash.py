@@ -196,12 +196,13 @@ class HashOffloadingCache(OffloadingCache):
                            self.hash_dim)
         self.cache_tensors['topk_code_data'] = [None for l in range(self.num_layers)]
         self.cache_tensors['topk_code_length'] = [None for l in range(self.num_layers)]
+        max_batch = self.config.kvcache_manager_config.max_batch_size
         for l in range(self.num_layers):
             layer_device = self.layer_devices[l]
             code_data = torch.zeros((numel_one_layer, ),
                                      dtype=torch.int32,
                                      device=layer_device)
-            code_length = torch.zeros((1, ),
+            code_length = torch.zeros((max_batch, ),
                                       dtype=torch.int32,
                                       device=layer_device)
             self.cache_tensors['topk_code_data'][l] = code_data
@@ -220,6 +221,82 @@ class HashOffloadingCache(OffloadingCache):
             code_length = self.cache_tensors['topk_code_length'][l]
             code_length.zero_()
 
+    def reset_batch_rows(self, row_indices: list[int]) -> None:
+        super().reset_batch_rows(row_indices)
+        if not row_indices:
+            return
+        rows = torch.tensor(row_indices, dtype=torch.long)
+        for layer_idx in range(self.num_layers):
+            layer_rows = rows.to(
+                device=self.cache_tensors['topk_code_length'][layer_idx].device,
+                non_blocking=True,
+            )
+            self.cache_tensors['topk_code_length'][layer_idx][layer_rows] = 0
+
+    def move_batch_rows(self, old_to_new_rows: dict[int, int]) -> None:
+        super().move_batch_rows(old_to_new_rows)
+        normalized = {
+            int(old): int(new)
+            for old, new in old_to_new_rows.items()
+            if int(old) != int(new)
+        }
+        if not normalized:
+            return
+
+        def _index_copy_rows(tensor: torch.Tensor | None, dim: int) -> None:
+            if tensor is None:
+                return
+            old_rows = torch.tensor(
+                list(normalized.keys()), dtype=torch.long, device=tensor.device
+            )
+            new_rows = torch.tensor(
+                list(normalized.values()), dtype=torch.long, device=tensor.device
+            )
+            src = tensor.index_select(dim, old_rows).clone()
+            tensor.index_copy_(dim, new_rows, src)
+
+        def _copy_topk_rows(
+            tensor: torch.Tensor | None,
+            row_lengths: dict[int, int],
+        ) -> None:
+            if tensor is None:
+                return
+            snapshots = []
+            seq_cap = int(tensor.size(1))
+            for old, new in normalized.items():
+                valid_len = max(0, min(int(row_lengths.get(old, 0)), seq_cap))
+                if valid_len == 0:
+                    continue
+                snapshots.append(
+                    (new, valid_len, tensor[old : old + 1, :valid_len].clone())
+                )
+            for new, valid_len, src in snapshots:
+                tensor[new : new + 1, :valid_len].copy_(src)
+
+        for layer_idx in range(self.num_layers):
+            row_lengths = {
+                old: int(
+                    self.cache_tensors['topk_code_length'][layer_idx][old].item()
+                )
+                for old in normalized.keys()
+            }
+            _index_copy_rows(self.cache_tensors['topk_code_length'][layer_idx], 0)
+            _copy_topk_rows(self.topk_codes[layer_idx], row_lengths)
+
+    def trim_prefill_padding(self, extend_seq_lens: list[int], padded_q_len: int) -> None:
+        super().trim_prefill_padding(extend_seq_lens, padded_q_len)
+        if not extend_seq_lens or all(int(x) == int(padded_q_len) for x in extend_seq_lens):
+            return
+        trims = torch.tensor(
+            [int(padded_q_len) - int(x) for x in extend_seq_lens],
+            dtype=torch.int32,
+        )
+        for layer_idx in range(self.num_layers):
+            active = self.cache_tensors['topk_code_length'][layer_idx][
+                :self.curr_batch_size
+            ]
+            active.sub_(trims.to(device=active.device, non_blocking=True))
+
     def append_topk_cache_prefill(
         self,
         query_states: torch.Tensor,
@@ -236,8 +313,10 @@ class HashOffloadingCache(OffloadingCache):
             self.cache_tensors['topk_code_length'][layer_idx],
             self.metadata_tensors[f'packbit_aux_tensor_{key_states.device.index}'],
         )
-        seqlen_tensor = self.cache_tensors['topk_code_length'][layer_idx]
-        seqlen_tensor[0] = seqlen_tensor[0].item() + key_states.shape[1]
+        seqlen_tensor = self.cache_tensors['topk_code_length'][layer_idx][
+            :self.curr_batch_size
+        ]
+        seqlen_tensor.add_(key_states.shape[1])
         torch.cuda.nvtx.range_pop()
 
     def _decode_append_hash_qk(self, query_states: torch.Tensor,
@@ -256,7 +335,9 @@ class HashOffloadingCache(OffloadingCache):
             query_out,
             self.metadata_tensors['hash_weights'][query_layer_idx],
             self.metadata_tensors[f'packbit_aux_tensor_{key_states.device.index}'],
-            self.cache_tensors['topk_code_length'][key_layer_idx],
+            self.cache_tensors['topk_code_length'][key_layer_idx][
+                :self.curr_batch_size
+            ],
         )
         return query_out
 
@@ -278,7 +359,9 @@ class HashOffloadingCache(OffloadingCache):
             query_out2,
             self.metadata_tensors['hash_weights'][query_layer_idx2],
             self.metadata_tensors[f'packbit_aux_tensor_{key_states.device.index}'],
-            self.cache_tensors['topk_code_length'][key_layer_idx],
+            self.cache_tensors['topk_code_length'][key_layer_idx][
+                :self.curr_batch_size
+            ],
         )
 
         return query_out1, query_out2
@@ -289,7 +372,9 @@ class HashOffloadingCache(OffloadingCache):
             self.topk_codes[layer_idx],
             self.metadata_tensors['hash_weights'][layer_idx],
             self.metadata_tensors[f'packbit_aux_tensor_{key_states.device.index}'],
-            self.cache_tensors['topk_code_length'][layer_idx],
+            self.cache_tensors['topk_code_length'][layer_idx][
+                :self.curr_batch_size
+            ],
         )
 
     def append_topk_cache_decode(
@@ -333,7 +418,9 @@ class HashOffloadingCache(OffloadingCache):
             prefetch_query_code = None
             current_query_code = None
 
-        self.cache_tensors['topk_code_length'][layer_idx] += 1
+        self.cache_tensors['topk_code_length'][layer_idx][
+            :self.curr_batch_size
+        ].add_(1)
 
         torch.cuda.nvtx.range_pop()
 
@@ -377,7 +464,13 @@ class HashOffloadingCache(OffloadingCache):
         head_mask: torch.Tensor,
     ) -> torch.Tensor:
         device_idx = query.device.index
-        seq_len = int(self.cache_tensors["topk_code_length"][layer_idx].item()) - 1
+        seq_len_tensor = (
+            self.cache_tensors["topk_code_length"][layer_idx][
+                :self.curr_batch_size
+            ]
+            - 1
+        ).clamp_min(0)
+        seq_len = int(seq_len_tensor.max().item())
         k = int(self.topk_prefetch_k_host)
         if seq_len <= 0 or k <= 0:
             return torch.empty(
@@ -386,13 +479,24 @@ class HashOffloadingCache(OffloadingCache):
                 device="cpu",
             )
 
-        seq_len_tensor = torch.tensor([seq_len], dtype=torch.int32, device=query.device)
-        k_tensor = torch.tensor([min(k, seq_len)], dtype=torch.int32, device=query.device)
+        seq_len_tensor = seq_len_tensor.to(device=query.device, dtype=torch.int32)
+        k_tensor = self.metadata_tensors[f"topk_prefetch_k_{device_idx}"][
+            :self.curr_batch_size
+        ].to(device=query.device, dtype=torch.int32)
+        score_buf = self.metadata_tensors[f"gpu_topk_scores_{device_idx}"][
+            :self.curr_batch_size
+        ]
+        index_buf = self.metadata_tensors[f"gpu_topk_indices_{device_idx}"][
+            :self.curr_batch_size
+        ]
+        value_buf = self.metadata_tensors[f"gpu_topk_values_{device_idx}"][
+            :self.curr_batch_size
+        ]
         KVLib.static_hamming_score_mask(
-            self.topk_codes[layer_idx],
+            self.topk_codes[layer_idx][: self.curr_batch_size],
             query,
             head_mask,
-            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            score_buf,
             seq_len_tensor,
             self.rbits,
             torch.finfo(torch.float16).max,
@@ -403,16 +507,17 @@ class HashOffloadingCache(OffloadingCache):
             self.config.sparse_attention_config.recent_budget,
         )
         KVLib.batch_topk_masked(
-            self.metadata_tensors[f"gpu_topk_scores_{device_idx}"],
+            score_buf,
             head_mask,
-            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"],
-            self.metadata_tensors[f"gpu_topk_values_{device_idx}"],
-            seq_len_tensor,
-            k_tensor,
+            index_buf,
+            value_buf,
+            seq_len_tensor.repeat_interleave(self.num_key_value_heads),
+            k_tensor.repeat_interleave(self.num_key_value_heads),
             False,
         )
+        max_k = int(k_tensor.max().item())
         return (
-            self.metadata_tensors[f"gpu_topk_indices_{device_idx}"][:, :, : k_tensor[0].item()]
+            index_buf[:, :, :max_k]
             .reshape(self.curr_batch_size * self.num_key_value_heads, -1)
             .detach()
             .to(dtype=torch.int32)
@@ -476,12 +581,30 @@ class HashOffloadingCache(OffloadingCache):
             exclude_sink = 0
             exclude_recent = 0
             k = self.metadata_tensors[f'topk_current_k_{device_idx}']
+        max_k = int(self.topk_prefetch_k_host if is_prefetch else self.topk_current_k_host)
+        if max_k <= 0:
+            return torch.empty(
+                (self.curr_batch_size, self.num_key_value_heads, 0),
+                dtype=torch.int32,
+                device=query.device,
+            )
+        active_k = k[:self.curr_batch_size]
+        max_k = min(max_k, self.max_prefetch_topk_len if is_prefetch else self.max_current_topk_len)
+        score_buf = self.metadata_tensors[f'gpu_topk_scores_{device_idx}'][
+            :self.curr_batch_size
+        ]
+        index_buf = self.metadata_tensors[f'gpu_topk_indices_{device_idx}'][
+            :self.curr_batch_size
+        ]
+        value_buf = self.metadata_tensors[f'gpu_topk_values_{device_idx}'][
+            :self.curr_batch_size
+        ]
         # checked
         KVLib.static_hamming_score_mask(
-            self.topk_codes[layer_idx],
+            self.topk_codes[layer_idx][: self.curr_batch_size],
             query,
             mask,
-            self.metadata_tensors[f'gpu_topk_scores_{device_idx}'],
+            score_buf,
             self.cache_tensors['topk_code_length'][layer_idx],
             self.rbits,
             torch.finfo(torch.float16).max,
@@ -493,20 +616,34 @@ class HashOffloadingCache(OffloadingCache):
         )
         # checked
         KVLib.batch_topk_masked(
-            self.metadata_tensors[f'gpu_topk_scores_{device_idx}'],
+            score_buf,
             mask,
-            self.metadata_tensors[f'gpu_topk_indices_{device_idx}'],
-            self.metadata_tensors[f'gpu_topk_values_{device_idx}'],
-            self.cache_tensors['topk_code_length'][layer_idx],
-            k,
+            index_buf,
+            value_buf,
+            self.cache_tensors['topk_code_length'][layer_idx][
+                :self.curr_batch_size
+            ].repeat_interleave(self.num_key_value_heads),
+            active_k.repeat_interleave(self.num_key_value_heads),
             False,
         )
-        # index = self.metadata_tensors[f'gpu_topk_indices_{device_idx}'][..., :k[0].item()]
-        # print(index.min(), index.max())
-        # non_valid_index = self.metadata_tensors[f'gpu_topk_indices_{device_idx}'][..., k[0].item():]
-        # print(non_valid_index.min(), non_valid_index.max())
-        # print(self.cache_tensors['topk_code_length'][layer_idx])
-        return self.metadata_tensors[f'gpu_topk_indices_{device_idx}']
+        topk_indices = index_buf
+        active = topk_indices.reshape(
+            self.curr_batch_size * self.num_key_value_heads,
+            self.max_buffer_len,
+        )
+        per_head_seq_lens = self.cache_tensors['topk_code_length'][layer_idx][
+            :self.curr_batch_size
+        ].repeat_interleave(self.num_key_value_heads).to(
+            device=topk_indices.device,
+            dtype=topk_indices.dtype,
+        )
+        # Keep decode CUDA graph capture safe: do not use tensor .item() here.
+        # The masked_fill handles zero-length rows without a CPU-side branch.
+        row_max_indices = (per_head_seq_lens - 1).clamp_min(0).view(-1, 1)
+        active.clamp_min_(0)
+        active.copy_(torch.minimum(active, row_max_indices))
+        active.masked_fill_((per_head_seq_lens <= 0).view(-1, 1), 0)
+        return topk_indices[:, :, :max_k].contiguous()
 
 """
 ===================================================

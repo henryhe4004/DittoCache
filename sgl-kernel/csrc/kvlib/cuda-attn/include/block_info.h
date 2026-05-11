@@ -39,7 +39,8 @@ struct BlockInfo {
                             : seqlen_k_cache + (params.knew_ptr == nullptr
                                                     ? 0
                                                     : params.seqlen_knew)),
-        actual_seqlen_gather(params.seqlen_gather) {}
+        actual_seqlen_gather(params.seqused_k ? params.seqused_k[bidb]
+                                              : params.seqlen_gather) {}
 
   template <typename index_t>
   __forceinline__ __device__ index_t q_offset(const index_t batch_stride,

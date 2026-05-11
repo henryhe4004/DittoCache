@@ -143,6 +143,7 @@ def _decode_multi_hash_encode_qk(
     query_code_output_ptr,
     query_code_output_stride0,
     CUR_SEQ,
+    CUR_SEQ_IS_TENSOR: tl.constexpr,
     BSZ,
     KV_HEAD,
     Q_HEAD,
@@ -162,6 +163,7 @@ def _decode_multi_hash_encode_qk(
     batch_id = tl.program_id(1) // KV_HEAD
     head_id = tl.program_id(1) % KV_HEAD
     start_n = tl.program_id(2)
+    cur_seq = tl.load(CUR_SEQ + batch_id) if CUR_SEQ_IS_TENSOR else CUR_SEQ
 
     # load pack tensor
     packbit_tensor = tl.load(packbit_tensor_ptr + tl.arange(0, CHUNK_SIZE))
@@ -233,7 +235,7 @@ def _decode_multi_hash_encode_qk(
 
         K_output_block_ptr = tl.make_block_ptr(
             base=key_code_output_ptr + batch_id * key_code_output_stride0 +
-            CUR_SEQ * KV_HEAD * NUM_CHUNK + head_id * NUM_CHUNK,
+            cur_seq * KV_HEAD * NUM_CHUNK + head_id * NUM_CHUNK,
             shape=(1, NUM_CHUNK),
             strides=(KV_HEAD * NUM_CHUNK, 1),
             offsets=(start_m * BLOCK_M, start_n),
@@ -295,6 +297,7 @@ def decode_multi_hash_encode_qk(
             query_code_output,
             query_code_output.stride(0),
             cur_seq,
+            isinstance(cur_seq, torch.Tensor),
             BSZ,
             NUM_KV_HEAD,
             NUM_HEAD,
@@ -325,6 +328,7 @@ def _decode_multi_hash_encode_qqk(
     query2_code_output_ptr,
     query2_code_output_stride0,
     CUR_SEQ,
+    CUR_SEQ_IS_TENSOR: tl.constexpr,
     BSZ,
     KV_HEAD,
     Q_HEAD,
@@ -345,6 +349,7 @@ def _decode_multi_hash_encode_qqk(
     batch_id = tl.program_id(1) // KV_HEAD
     head_id = tl.program_id(1) % KV_HEAD
     start_n = tl.program_id(2)
+    cur_seq = tl.load(CUR_SEQ + batch_id) if CUR_SEQ_IS_TENSOR else CUR_SEQ
 
     # load pack tensor
     packbit_tensor = tl.load(packbit_tensor_ptr + tl.arange(0, CHUNK_SIZE))
@@ -458,7 +463,7 @@ def _decode_multi_hash_encode_qqk(
 
         K_output_block_ptr = tl.make_block_ptr(
             base=key_code_output_ptr + batch_id * key_code_output_stride0 +
-            CUR_SEQ * KV_HEAD * NUM_CHUNK + head_id * NUM_CHUNK,
+            cur_seq * KV_HEAD * NUM_CHUNK + head_id * NUM_CHUNK,
             shape=(1, NUM_CHUNK),
             strides=(KV_HEAD * NUM_CHUNK, 1),
             offsets=(start_m * BLOCK_M, start_n),
@@ -528,6 +533,7 @@ def decode_multi_hash_encode_qqk(
             query_code_output2,
             query_code_output2.stride(0),
             cur_seq,
+            isinstance(cur_seq, torch.Tensor),
             BSZ,
             NUM_KV_HEAD,
             NUM_HEAD,
@@ -548,6 +554,7 @@ def _decode_multi_hash_encode_k(
     key_code_output_ptr,
     key_code_output_stride0,
     CUR_SEQ,
+    CUR_SEQ_IS_TENSOR: tl.constexpr,
     BSZ,
     KV_HEAD,
     RBIT: tl.constexpr,
@@ -562,6 +569,7 @@ def _decode_multi_hash_encode_k(
     batch_id = tl.program_id(1) // KV_HEAD
     head_id = tl.program_id(1) % KV_HEAD
     start_n = tl.program_id(2)
+    cur_seq = tl.load(CUR_SEQ + batch_id) if CUR_SEQ_IS_TENSOR else CUR_SEQ
 
     Weight_ptr = tl.make_block_ptr(
         base=hash_weight_ptr + head_id * HEAD_DIM * RBIT,
@@ -588,7 +596,7 @@ def _decode_multi_hash_encode_k(
 
     K_output_block_ptr = tl.make_block_ptr(
         base=key_code_output_ptr + batch_id * key_code_output_stride0 +
-        CUR_SEQ * KV_HEAD * NUM_CHUNK + head_id * NUM_CHUNK,
+        cur_seq * KV_HEAD * NUM_CHUNK + head_id * NUM_CHUNK,
         shape=(1, NUM_CHUNK),
         strides=(KV_HEAD * NUM_CHUNK, 1),
         offsets=(start_m * BLOCK_M, start_n),
@@ -640,6 +648,7 @@ def decode_multi_hash_encode_k(key_data: torch.Tensor,
             key_code_output,
             key_code_output.stride(0),
             cur_seq,
+            isinstance(cur_seq, torch.Tensor),
             BSZ,
             NUM_KV_HEAD,
             RBIT,
@@ -760,4 +769,3 @@ def decode_multi_hash_encode_q(query_data: torch.Tensor,
             num_warps=4,
             num_stages=1,
         )
-

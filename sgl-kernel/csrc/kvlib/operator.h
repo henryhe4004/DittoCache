@@ -92,9 +92,9 @@ void StaticHammingScoreMaskCUDA(
 );
 void StaticLaunchPrefetching(torch::Tensor& gpu_indices,  // [b * h, max_topk + sink + recent + 1]
                              torch::Tensor& gpu_gather_mask,  // [b * h]
-                             torch::Tensor& gpu_index_length,  // [1, ]
+                             torch::Tensor& gpu_index_length,  // [b, ]
                              torch::Tensor& cpu_indices,  // [b * h, max_topk]
-                             torch::Tensor& cpu_gather_flag,  // [6, ]
+                             torch::Tensor& cpu_gather_flag,  // [6 + b * h, ]
                              torch::Tensor& cpu_ready_mask,  // [b * h]
                              int64_t batch_size, int64_t max_cache_seqlen,
                              int64_t num_heads, int64_t layer_idx);

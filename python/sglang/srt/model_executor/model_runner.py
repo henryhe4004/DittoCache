@@ -2303,6 +2303,8 @@ class ModelRunner(ModelRunnerKVCacheMixin):
         skip_attn_backend_init: bool = False,
         pp_proxy_tensors=None,
     ) -> Union[LogitsProcessorOutput, PPProxyTensors]:
+        if getattr(self, "_is_litecache_model", lambda: False)():
+            skip_attn_backend_init = True
         if not skip_attn_backend_init:
             if self.server_args.enable_pdmux:
                 self.decode_attn_backend.init_forward_metadata(forward_batch)
@@ -2328,6 +2330,8 @@ class ModelRunner(ModelRunnerKVCacheMixin):
     ) -> Tuple[
         Union[LogitsProcessorOutput, PPProxyTensors, EmbeddingPoolerOutput], bool
     ]:
+        if getattr(self, "_is_litecache_model", lambda: False)():
+            skip_attn_backend_init = True
         kwargs = {}
         if self.support_pp:
             kwargs["pp_proxy_tensors"] = pp_proxy_tensors

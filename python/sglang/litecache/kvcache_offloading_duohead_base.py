@@ -74,14 +74,14 @@ class OffloadingCache(_BaseOffloadingCache):
             key_cache,
             value_cache,
             topk_index,
-            _topk_count,
+            topk_count,
             _key_buffer,
             _value_buffer,
             _buffer_count,
             _mask,
             _mixed_head_ids,
         ) = self.get_attention_data(layer_idx, device_idx)
-        return key_cache, value_cache, topk_index
+        return key_cache, value_cache, topk_index, topk_count[: self.curr_batch_size]
 
     def decode_get_attn_data_full_cpu(self, layer_idx: int):
         device_idx = self.layer_devices[layer_idx]
@@ -97,11 +97,12 @@ class OffloadingCache(_BaseOffloadingCache):
             _mixed_head_ids,
         ) = self.get_attention_data(layer_idx, device_idx)
         if buffer_count is None:
-            return key_buffer, value_buffer
-        buffer_len = int(buffer_count.item())
+            return key_buffer, value_buffer, None
+        active_count = buffer_count[: self.curr_batch_size]
+        buffer_len = int(active_count.max().item())
         key_states = key_buffer[:, :buffer_len]
         value_states = value_buffer[:, :buffer_len]
-        return key_states, value_states
+        return key_states, value_states, active_count
 
     def decode_get_attn_data_mixed(self, layer_idx: int):
         device_idx = self.layer_devices[layer_idx]
@@ -116,7 +117,7 @@ class OffloadingCache(_BaseOffloadingCache):
             mask,
             mixed_head_ids,
         ) = self.get_attention_data(layer_idx, device_idx)
-        buffer_len = 0 if buffer_count is None else int(buffer_count.item())
+        buffer_len = None if buffer_count is None else buffer_count[: self.curr_batch_size]
         return (
             key_cache,
             value_cache,
@@ -127,4 +128,3 @@ class OffloadingCache(_BaseOffloadingCache):
             mixed_head_ids,
             buffer_len,
         )
-

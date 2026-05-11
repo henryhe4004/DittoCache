@@ -59,9 +59,16 @@ void CPUGatherEngineV3::_work_loop() {
       _num_total_requests += curr_batch_size * _num_heads;
       _num_processed_requests += num_gather_heads;
       if (num_gather_heads == 0) continue;
+      if (gather_length <= 0) {
+        for (int i = 0; i < num_gather_heads; ++i) {
+          this->_ready_flags[layer_idx][_gather_hids[i]] = true;
+        }
+        continue;
+      }
 
       const int num_threads = this->_num_omp_threads;
       const int selected_numel = num_gather_heads * gather_length;
+      const volatile int32_t *per_head_lengths = _launch_flag + 6;
 
       // 预计算常用值
       const int num_heads = this->_num_heads;
@@ -94,6 +101,13 @@ void CPUGatherEngineV3::_work_loop() {
           int bid = total_hid / num_heads;
           int hid = total_hid % num_heads;
           int dst_hid = this->_dst_head_index[layer_idx][hid];
+          int head_gather_length = per_head_lengths[total_hid];
+          if (head_gather_length < 0) {
+            head_gather_length = 0;
+          }
+          if (head_gather_length > gather_length) {
+            head_gather_length = gather_length;
+          }
 
           size_t cur_dst_offset = bid * gpu_batch_stride +
                                   dst_hid * vector_size +
@@ -106,7 +120,12 @@ void CPUGatherEngineV3::_work_loop() {
 
           // 确定当前块的起始位置和长度
           int sid = (j == 0) ? start_sid : 0;
-          int block_remaining = std::min(gather_length - sid, remaining - j);
+          int slots_remaining =
+              std::min(gather_length - sid, remaining - j);
+          int block_remaining =
+              sid < head_gather_length
+                  ? std::min(head_gather_length - sid, slots_remaining)
+                  : 0;
           const int end_k = block_remaining;
 
           // 处理当前块
@@ -130,7 +149,7 @@ void CPUGatherEngineV3::_work_loop() {
                    vector_size);
           }
 
-          j += block_remaining;
+          j += slots_remaining;
           ++tot_hid_idx;
         }
         _mm_sfence();

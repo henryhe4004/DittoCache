@@ -31,6 +31,10 @@ from sglang.srt.models.transformers import replace_linear_class
 logger = logging.getLogger(__name__)
 
 
+def _debug_batch_enabled() -> bool:
+    return os.environ.get("LITECACHE_DEBUG_BATCH", "0") == "1"
+
+
 def _finalize_litecache_awq_modules(root: nn.Module) -> int:
     finalized = 0
     for module in root.modules():
@@ -211,6 +215,211 @@ def _ensure_llama_compatible_config(config: PretrainedConfig) -> None:
         setattr(config, "head_dim", hidden_size // num_heads)
 
 
+def _prepare_litecache_forward_inputs(
+    input_ids: torch.Tensor,
+    positions: torch.Tensor,
+    forward_batch: ForwardBatch,
+) -> tuple[torch.Tensor, torch.Tensor, Optional[list[int]]]:
+    """Convert SGLang's flat batch tensors to LiteCache's [bsz, q_len] layout."""
+
+    batch_size = int(forward_batch.batch_size)
+    if batch_size <= 0:
+        raise ValueError(f"LiteCache batch_size must be positive, got {batch_size}.")
+
+    if batch_size == 1:
+        return input_ids[None, ...], positions[None, ...], None
+
+    if forward_batch.forward_mode.is_decode():
+        if input_ids.numel() != batch_size or positions.numel() != batch_size:
+            raise NotImplementedError(
+                "LiteCache static batching expects one decode token per request. "
+                f"Got input_tokens={input_ids.numel()}, positions={positions.numel()}, "
+                f"batch_size={batch_size}."
+            )
+        return input_ids.view(batch_size, 1), positions.view(batch_size, 1), None
+
+    if forward_batch.forward_mode.is_extend():
+        extend_seq_lens = forward_batch.extend_seq_lens_cpu
+        if extend_seq_lens is None or len(extend_seq_lens) != batch_size:
+            raise NotImplementedError(
+                "LiteCache static batching requires per-request extend lengths. "
+                f"Got extend_seq_lens_cpu={extend_seq_lens}, batch_size={batch_size}."
+            )
+
+        extend_seq_lens = [int(x) for x in extend_seq_lens]
+        q_len = max(extend_seq_lens)
+        if q_len <= 0:
+            raise NotImplementedError(
+                "LiteCache batching requires positive extend lengths. "
+                f"Got extend_seq_lens={extend_seq_lens}."
+            )
+
+        expected_tokens = sum(extend_seq_lens)
+        if input_ids.numel() != expected_tokens or positions.numel() != expected_tokens:
+            raise NotImplementedError(
+                "LiteCache batching received inconsistent extend metadata. "
+                f"Expected {expected_tokens} tokens from extend_seq_lens={extend_seq_lens}; "
+                f"got input_tokens={input_ids.numel()}, "
+                f"positions={positions.numel()}."
+            )
+        if all(x == q_len for x in extend_seq_lens):
+            return input_ids.view(batch_size, q_len), positions.view(batch_size, q_len), None
+
+        padded_input_ids = input_ids.new_zeros((batch_size, q_len))
+        padded_positions = positions.new_zeros((batch_size, q_len))
+        token_start = 0
+        for row, row_len in enumerate(extend_seq_lens):
+            token_end = token_start + row_len
+            padded_input_ids[row, :row_len] = input_ids[token_start:token_end]
+            padded_positions[row, :row_len] = positions[token_start:token_end]
+            if row_len < q_len:
+                pad_count = q_len - row_len
+                pad_start = int(padded_positions[row, row_len - 1].item()) + 1
+                padded_positions[row, row_len:] = torch.arange(
+                    pad_start,
+                    pad_start + pad_count,
+                    dtype=positions.dtype,
+                    device=positions.device,
+                )
+            token_start = token_end
+        return padded_input_ids, padded_positions, extend_seq_lens
+
+    raise NotImplementedError(
+        f"LiteCache static batching does not support forward_mode={forward_batch.forward_mode}."
+    )
+
+
+def _flatten_litecache_hidden_states(
+    model_outputs,
+    extend_seq_lens: Optional[list[int]] = None,
+) -> torch.Tensor:
+    hidden_states = model_outputs.last_hidden_state
+    if hidden_states.dim() == 3:
+        if extend_seq_lens is None or hidden_states.shape[1] == 1:
+            hidden_states = hidden_states[:, -1, :]
+        else:
+            row_ids = torch.arange(
+                hidden_states.shape[0],
+                dtype=torch.long,
+                device=hidden_states.device,
+            )
+            token_ids = torch.tensor(
+                [x - 1 for x in extend_seq_lens],
+                dtype=torch.long,
+                device=hidden_states.device,
+            )
+            hidden_states = hidden_states[row_ids, token_ids, :]
+    return hidden_states.reshape(-1, hidden_states.shape[-1])
+
+
+def _sync_litecache_cache_rows(
+    owner,
+    rids: list[str],
+    reset_cache: bool,
+    max_cache_batch_size: int,
+    prune_absent_rids: bool,
+) -> None:
+    """Keep LiteCache cache rows aligned with SGLang's current forward rows.
+
+    SGLang can run a prefill batch that only contains new requests while other
+    requests are still decoding. That prefill batch starts at row 0, so blindly
+    resetting row 0 can erase a still-live decode request. Move such occupants
+    to free rows before resetting rows for new requests.
+    """
+
+    current_rids = set(rids)
+    if len(rids) > max_cache_batch_size:
+        raise RuntimeError(
+            "LiteCache forward batch exceeds configured cache batch size: "
+            f"batch_rids={rids}, max_batch_size={max_cache_batch_size}."
+        )
+
+    if reset_cache:
+        owner._cache.reset(max_cache_batch_size)
+        owner._clear_decode_cuda_graphs()
+        owner._cache_batch_size = max_cache_batch_size
+        owner._active_rids = current_rids
+        owner._active_rid_to_row = {rid: idx for idx, rid in enumerate(rids)}
+        return
+
+    if not rids:
+        if prune_absent_rids:
+            owner._active_rids = set()
+            owner._active_rid_to_row = {}
+        return
+
+    target_by_rid = {rid: idx for idx, rid in enumerate(rids)}
+    target_rows = set(target_by_rid.values())
+    active_map = dict(owner._active_rid_to_row)
+    row_remap: dict[int, int] = {}
+
+    for rid, target_row in target_by_rid.items():
+        old_row = active_map.get(rid)
+        if old_row is not None and old_row != target_row:
+            row_remap[int(old_row)] = int(target_row)
+
+    victim_rids = [
+        rid
+        for rid, old_row in active_map.items()
+        if rid not in target_by_rid and int(old_row) in target_rows
+    ]
+    occupied_static_rows = {
+        int(old_row)
+        for rid, old_row in active_map.items()
+        if rid not in target_by_rid and rid not in victim_rids
+    }
+    available_rows = [
+        row
+        for row in range(max_cache_batch_size)
+        if row not in target_rows and row not in occupied_static_rows
+    ]
+    if len(available_rows) < len(victim_rids):
+        raise RuntimeError(
+            "LiteCache has no free cache rows for dynamic batching. "
+            f"rids={rids}, active_rid_to_row={active_map}, "
+            f"max_batch_size={max_cache_batch_size}. "
+            "Set SGLANG_MAX_RUNNING_REQUESTS <= LITECACHE_MAX_BATCH_SIZE and "
+            "LITECACHE_MAX_TOKENS >= max_prompt_tokens * LITECACHE_MAX_BATCH_SIZE."
+        )
+
+    for rid, new_row in zip(victim_rids, available_rows):
+        row_remap[int(active_map[rid])] = int(new_row)
+
+    if _debug_batch_enabled() and (row_remap or victim_rids):
+        logger.info(
+            "LiteCache row sync: rids=%s target_by_rid=%s victims=%s "
+            "row_remap=%s active_before=%s prune_absent=%s",
+            rids,
+            target_by_rid,
+            victim_rids,
+            row_remap,
+            active_map,
+            prune_absent_rids,
+        )
+
+    if row_remap and hasattr(owner._cache, "move_batch_rows"):
+        owner._cache.move_batch_rows(row_remap)
+
+    if hasattr(owner._cache, "reset_batch_rows"):
+        new_rows = [
+            target_row
+            for rid, target_row in target_by_rid.items()
+            if rid not in owner._active_rids
+        ]
+        owner._cache.reset_batch_rows(new_rows)
+
+    updated_map: dict[str, int] = {}
+    for rid, old_row in owner._active_rid_to_row.items():
+        if prune_absent_rids and rid not in current_rids:
+            continue
+        updated_map[rid] = int(row_remap.get(int(old_row), int(old_row)))
+    for rid, target_row in target_by_rid.items():
+        updated_map[rid] = int(target_row)
+
+    owner._active_rid_to_row = updated_map
+    owner._active_rids = set(updated_map)
+
+
 class LiteCacheLlamaForCausalLM(nn.Module):
     """
     SGLang model entry that delegates execution+cache to internal LiteCache
@@ -310,6 +519,8 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             self._custom_config.enable_cuda_graph = False
         self._cache = None
         self._cache_batch_size: Optional[int] = None
+        self._active_rids: set[str] = set()
+        self._active_rid_to_row: dict[str, int] = {}
 
     def _ensure_cache(self, device: torch.device) -> None:
         if self._cache is not None:
@@ -344,21 +555,71 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             raise RuntimeError("LiteCache cache is not initialized.")
 
         batch_size = int(forward_batch.batch_size)
-        if batch_size != 1:
-            raise NotImplementedError(
-                "LiteCache SGLang bridge currently supports batch_size=1 only. "
-                f"Got batch_size={batch_size}."
-            )
-
+        max_cache_batch_size = int(
+            self._custom_config.kvcache_manager_config.max_batch_size
+        )
         is_new_sequence = bool(
             forward_batch.forward_mode.is_extend()
             and positions.numel() > 0
             and int(torch.min(positions).item()) == 0
         )
+        rids = [str(rid) for rid in list(forward_batch.rids or [])]
+        current_rids = set(rids)
+        reset_cache = self._cache_batch_size is None or (
+            is_new_sequence and not self._active_rids
+        )
 
-        if self._cache_batch_size != batch_size or is_new_sequence:
-            self._cache.reset(batch_size)
-            self._cache_batch_size = batch_size
+        if _debug_batch_enabled():
+            pos_min = int(torch.min(positions).item()) if positions.numel() > 0 else None
+            pos_max = int(torch.max(positions).item()) if positions.numel() > 0 else None
+            logger.info(
+                "LiteCache batch bridge: mode=%s batch=%d max_cache_batch=%d "
+                "is_new=%s reset=%s rids=%s active_rids=%s pos=[%s,%s]",
+                forward_batch.forward_mode,
+                batch_size,
+                max_cache_batch_size,
+                is_new_sequence,
+                reset_cache,
+                rids,
+                sorted(self._active_rids),
+                pos_min,
+                pos_max,
+            )
+
+        _sync_litecache_cache_rows(
+            self,
+            rids,
+            reset_cache,
+            max_cache_batch_size,
+            prune_absent_rids=forward_batch.forward_mode.is_decode(),
+        )
+        self._cache.curr_batch_size = batch_size
+        if "gather_engine_metadata" in getattr(self._cache, "metadata_tensors", {}):
+            self._cache.metadata_tensors["gather_engine_metadata"][2] = batch_size
+        if _debug_batch_enabled():
+            logger.info(
+                "LiteCache cache view: active_batch=%d cache_batch=%s "
+                "max_seq_len=%s max_buffer_len=%s gather_meta=%s",
+                batch_size,
+                self._cache_batch_size,
+                getattr(self._cache, "max_seq_len", None),
+                getattr(self._cache, "max_buffer_len", None),
+                tuple(
+                    int(x)
+                    for x in getattr(self._cache, "metadata_tensors", {})
+                    .get("gather_engine_metadata", torch.empty(0, dtype=torch.int32))[:6]
+                    .detach()
+                    .cpu()
+                    .tolist()
+                ),
+            )
+
+    def _clear_decode_cuda_graphs(self) -> None:
+        """Drop LiteCache decode graphs captured for a previous request."""
+        for module in self.model.modules():
+            graphs = getattr(module, "_graphs", None)
+            if isinstance(graphs, dict) and graphs:
+                graphs.clear()
 
     @torch.no_grad()
     def forward(
@@ -377,16 +638,39 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             )
 
         self._ensure_cache(input_ids.device)
-        self._maybe_reset_cache(positions, forward_batch)
-
-        model_outputs = self.model.model(
-            input_ids=input_ids[None, ...],
-            position_ids=positions[None, ...],
-            past_key_values=self._cache,
-            use_cache=True,
-            return_dict=True,
+        model_input_ids, model_positions, extend_seq_lens = _prepare_litecache_forward_inputs(
+            input_ids,
+            positions,
+            forward_batch,
         )
-        hidden_states = model_outputs.last_hidden_state[0, ...]
+        if _debug_batch_enabled():
+            logger.info(
+                "LiteCache forward input: batch=%d input_shape=%s pos_shape=%s "
+                "extend_seq_lens=%s",
+                int(forward_batch.batch_size),
+                tuple(model_input_ids.shape),
+                tuple(model_positions.shape),
+                extend_seq_lens,
+            )
+        self._maybe_reset_cache(model_positions, forward_batch)
+
+        self._cache._current_extend_seq_lens = extend_seq_lens
+        try:
+            model_outputs = self.model.model(
+                input_ids=model_input_ids,
+                position_ids=model_positions,
+                past_key_values=self._cache,
+                use_cache=True,
+                return_dict=True,
+            )
+        finally:
+            self._cache._current_extend_seq_lens = None
+        if extend_seq_lens is not None and hasattr(self._cache, "trim_prefill_padding"):
+            self._cache.trim_prefill_padding(
+                extend_seq_lens,
+                padded_q_len=model_input_ids.shape[1],
+            )
+        hidden_states = _flatten_litecache_hidden_states(model_outputs, extend_seq_lens)
 
         return self.logits_processor(
             input_ids,
@@ -529,6 +813,8 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             self._custom_config.enable_cuda_graph = False
         self._cache = None
         self._cache_batch_size: Optional[int] = None
+        self._active_rids: set[str] = set()
+        self._active_rid_to_row: dict[str, int] = {}
 
     def _ensure_cache(self, device: torch.device) -> None:
         if self._cache is not None:
@@ -563,21 +849,71 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             raise RuntimeError("LiteCache cache is not initialized.")
 
         batch_size = int(forward_batch.batch_size)
-        if batch_size != 1:
-            raise NotImplementedError(
-                "LiteCache SGLang bridge currently supports batch_size=1 only. "
-                f"Got batch_size={batch_size}."
-            )
-
+        max_cache_batch_size = int(
+            self._custom_config.kvcache_manager_config.max_batch_size
+        )
         is_new_sequence = bool(
             forward_batch.forward_mode.is_extend()
             and positions.numel() > 0
             and int(torch.min(positions).item()) == 0
         )
+        rids = [str(rid) for rid in list(forward_batch.rids or [])]
+        current_rids = set(rids)
+        reset_cache = self._cache_batch_size is None or (
+            is_new_sequence and not self._active_rids
+        )
 
-        if self._cache_batch_size != batch_size or is_new_sequence:
-            self._cache.reset(batch_size)
-            self._cache_batch_size = batch_size
+        if _debug_batch_enabled():
+            pos_min = int(torch.min(positions).item()) if positions.numel() > 0 else None
+            pos_max = int(torch.max(positions).item()) if positions.numel() > 0 else None
+            logger.info(
+                "LiteCache batch bridge: mode=%s batch=%d max_cache_batch=%d "
+                "is_new=%s reset=%s rids=%s active_rids=%s pos=[%s,%s]",
+                forward_batch.forward_mode,
+                batch_size,
+                max_cache_batch_size,
+                is_new_sequence,
+                reset_cache,
+                rids,
+                sorted(self._active_rids),
+                pos_min,
+                pos_max,
+            )
+
+        _sync_litecache_cache_rows(
+            self,
+            rids,
+            reset_cache,
+            max_cache_batch_size,
+            prune_absent_rids=forward_batch.forward_mode.is_decode(),
+        )
+        self._cache.curr_batch_size = batch_size
+        if "gather_engine_metadata" in getattr(self._cache, "metadata_tensors", {}):
+            self._cache.metadata_tensors["gather_engine_metadata"][2] = batch_size
+        if _debug_batch_enabled():
+            logger.info(
+                "LiteCache cache view: active_batch=%d cache_batch=%s "
+                "max_seq_len=%s max_buffer_len=%s gather_meta=%s",
+                batch_size,
+                self._cache_batch_size,
+                getattr(self._cache, "max_seq_len", None),
+                getattr(self._cache, "max_buffer_len", None),
+                tuple(
+                    int(x)
+                    for x in getattr(self._cache, "metadata_tensors", {})
+                    .get("gather_engine_metadata", torch.empty(0, dtype=torch.int32))[:6]
+                    .detach()
+                    .cpu()
+                    .tolist()
+                ),
+            )
+
+    def _clear_decode_cuda_graphs(self) -> None:
+        """Drop LiteCache decode graphs captured for a previous request."""
+        for module in self.model.modules():
+            graphs = getattr(module, "_graphs", None)
+            if isinstance(graphs, dict) and graphs:
+                graphs.clear()
 
     @torch.no_grad()
     def forward(
@@ -596,16 +932,39 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             )
 
         self._ensure_cache(input_ids.device)
-        self._maybe_reset_cache(positions, forward_batch)
-
-        model_outputs = self.model.model(
-            input_ids=input_ids[None, ...],
-            position_ids=positions[None, ...],
-            past_key_values=self._cache,
-            use_cache=True,
-            return_dict=True,
+        model_input_ids, model_positions, extend_seq_lens = _prepare_litecache_forward_inputs(
+            input_ids,
+            positions,
+            forward_batch,
         )
-        hidden_states = model_outputs.last_hidden_state[0, ...]
+        if _debug_batch_enabled():
+            logger.info(
+                "LiteCache forward input: batch=%d input_shape=%s pos_shape=%s "
+                "extend_seq_lens=%s",
+                int(forward_batch.batch_size),
+                tuple(model_input_ids.shape),
+                tuple(model_positions.shape),
+                extend_seq_lens,
+            )
+        self._maybe_reset_cache(model_positions, forward_batch)
+
+        self._cache._current_extend_seq_lens = extend_seq_lens
+        try:
+            model_outputs = self.model.model(
+                input_ids=model_input_ids,
+                position_ids=model_positions,
+                past_key_values=self._cache,
+                use_cache=True,
+                return_dict=True,
+            )
+        finally:
+            self._cache._current_extend_seq_lens = None
+        if extend_seq_lens is not None and hasattr(self._cache, "trim_prefill_padding"):
+            self._cache.trim_prefill_padding(
+                extend_seq_lens,
+                padded_q_len=model_input_ids.shape[1],
+            )
+        hidden_states = _flatten_litecache_hidden_states(model_outputs, extend_seq_lens)
 
         return self.logits_processor(
             input_ids,

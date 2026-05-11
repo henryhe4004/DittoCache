@@ -186,6 +186,7 @@ template <typename T, const int32_t kElemPerThread>
 __global__ void kvcache_append_tensor_pos_kernel(
     T* __restrict__ dst, T* __restrict__ key, T* __restrict__ value,
     int32_t *insert_pos, const int32_t head_dim,
+    const int32_t insert_pos_numel,
     const int32_t dst_kv_stride, const int32_t dst_bsz_stride,
     const int32_t dst_seq_stride, const int32_t dst_head_stride,
     const int32_t src_bsz_stride, const int32_t src_head_stride) {
@@ -196,9 +197,10 @@ __global__ void kvcache_append_tensor_pos_kernel(
   uint32_t offset = tid * kElemPerThread;
   uint32_t data_type = offset / head_dim;
   uint32_t col_offset = offset % head_dim;
+  const int32_t dst_pos = insert_pos[insert_pos_numel == 1 ? 0 : bib];
 
   T* dst_ptr = dst + data_type * dst_kv_stride + bib * dst_bsz_stride +
-               (*insert_pos) * dst_seq_stride + bih * dst_head_stride + col_offset;
+               dst_pos * dst_seq_stride + bih * dst_head_stride + col_offset;
   T* src_ptr;
   if (data_type == 0) {
     src_ptr = key + bib * src_bsz_stride + bih * src_head_stride + col_offset;
@@ -225,6 +227,10 @@ void KVCacheAppendTensorPos(torch::Tensor kv_cache_tensor, torch::Tensor key_ten
 
   int32_t src_bsz_stride = key_tensor.stride(0);
   int32_t src_head_stride = key_tensor.stride(2);
+  int32_t insert_pos_numel = insert_pos.numel();
+  TORCH_CHECK(insert_pos_numel == 1 || insert_pos_numel >= bsz,
+              "insert_pos must have 1 element or at least batch_size elements, got ",
+              insert_pos_numel, " for batch_size ", bsz);
 
   // begin execute kernel
   constexpr int32_t thread_per_block = 32;
@@ -241,6 +247,7 @@ void KVCacheAppendTensorPos(torch::Tensor kv_cache_tensor, torch::Tensor key_ten
       value_tensor.data_ptr<at::Half>(), 
       insert_pos.data_ptr<int32_t>(), 
       head_dim, 
+      insert_pos_numel,
       dst_kv_stride,
       dst_bsz_stride, 
       dst_seq_stride, 
@@ -255,6 +262,7 @@ void KVCacheAppendTensorPos(torch::Tensor kv_cache_tensor, torch::Tensor key_ten
       value_tensor.data_ptr<at::BFloat16>(), 
       insert_pos.data_ptr<int32_t>(), 
       head_dim, 
+      insert_pos_numel,
       dst_kv_stride,
       dst_bsz_stride, 
       dst_seq_stride, 
@@ -272,6 +280,7 @@ __global__ void kvcache_append_tensor_pos_head_sparse_kernel(
     T* __restrict__ dst, T* __restrict__ key, T* __restrict__ value,
     int64_t *hids, int32_t *insert_pos,
     const int32_t head_dim,
+    const int32_t insert_pos_numel,
     const int32_t dst_kv_stride, const int32_t dst_bsz_stride,
     const int32_t dst_seq_stride, const int32_t dst_head_stride,
     const int32_t src_bsz_stride, const int32_t src_head_stride) {
@@ -283,9 +292,10 @@ __global__ void kvcache_append_tensor_pos_head_sparse_kernel(
   uint32_t offset = tid * kElemPerThread;
   uint32_t data_type = offset / head_dim;
   uint32_t col_offset = offset % head_dim;
+  const int32_t dst_pos = insert_pos[insert_pos_numel == 1 ? 0 : bib];
 
   T* dst_ptr = dst + data_type * dst_kv_stride + bib * dst_bsz_stride +
-               (*insert_pos) * dst_seq_stride + bih_offset * dst_head_stride + col_offset;
+               dst_pos * dst_seq_stride + bih_offset * dst_head_stride + col_offset;
   T* src_ptr;
   if (data_type == 0) {
     src_ptr = key + bib * src_bsz_stride + bih * src_head_stride + col_offset;
@@ -314,6 +324,10 @@ void KVCacheAppendTensorPosHeadSparse(
 
   int32_t src_bsz_stride = key_tensor.stride(0);
   int32_t src_head_stride = key_tensor.stride(2);
+  int32_t insert_pos_numel = insert_pos.numel();
+  TORCH_CHECK(insert_pos_numel == 1 || insert_pos_numel >= bsz,
+              "insert_pos must have 1 element or at least batch_size elements, got ",
+              insert_pos_numel, " for batch_size ", bsz);
 
   // begin execute kernel
   constexpr int32_t thread_per_block = 32;
@@ -332,6 +346,7 @@ void KVCacheAppendTensorPosHeadSparse(
       head_ids.data_ptr<int64_t>(),
       insert_pos.data_ptr<int32_t>(), 
       head_dim, 
+      insert_pos_numel,
       dst_kv_stride,
       dst_bsz_stride, 
       dst_seq_stride, 
@@ -348,6 +363,7 @@ void KVCacheAppendTensorPosHeadSparse(
       head_ids.data_ptr<int64_t>(),
       insert_pos.data_ptr<int32_t>(), 
       head_dim, 
+      insert_pos_numel,
       dst_kv_stride,
       dst_bsz_stride, 
       dst_seq_stride, 

@@ -73,12 +73,14 @@ def _flash_attn_with_kvcache(
     k_cache: torch.Tensor,
     v_cache: torch.Tensor,
     causal: bool = True,
+    cache_seqlens: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     if _flash_attn is not None:
         return _flash_attn.flash_attn_with_kvcache(
             query_states,
             k_cache=k_cache,
             v_cache=v_cache,
+            cache_seqlens=cache_seqlens,
             causal=causal,
         )
 
@@ -97,14 +99,29 @@ def _flash_attn_with_kvcache(
     q = query_states.transpose(1, 2)
     k = k_cache.transpose(1, 2)
     v = v_cache.transpose(1, 2)
-    out = F.scaled_dot_product_attention(
-        q,
-        k,
-        v,
-        attn_mask=None,
-        dropout_p=0.0,
-        is_causal=causal,
-    )
+    if cache_seqlens is None:
+        out = F.scaled_dot_product_attention(
+            q,
+            k,
+            v,
+            attn_mask=None,
+            dropout_p=0.0,
+            is_causal=causal,
+        )
+    else:
+        out_rows = []
+        for row, seq_len in enumerate(cache_seqlens.detach().cpu().tolist()):
+            out_rows.append(
+                F.scaled_dot_product_attention(
+                    q[row:row + 1],
+                    k[row:row + 1, :, : int(seq_len), :],
+                    v[row:row + 1, :, : int(seq_len), :],
+                    attn_mask=None,
+                    dropout_p=0.0,
+                    is_causal=causal,
+                )
+            )
+        out = torch.cat(out_rows, dim=0)
     return out.transpose(1, 2).contiguous()
 
 
@@ -252,18 +269,26 @@ class CustomQwen2Attention(_Qwen2FlashAttention2):
                         self.scale,
                     )
                 else:
-                    key_states, value_states = past_key_value.decode_get_attn_data_full_cpu(
+                    key_states, value_states, cache_seqlens = past_key_value.decode_get_attn_data_full_cpu(
                         self.layer_idx
                     )
                     attn_output = _flash_attn_with_kvcache(
-                        query_states, k_cache=key_states, v_cache=value_states
+                        query_states,
+                        k_cache=key_states,
+                        v_cache=value_states,
+                        cache_seqlens=cache_seqlens,
                     )
             else:
-                key_states, value_states, topk_indices = past_key_value.decode_get_attn_data_full_gpu(
+                key_states, value_states, topk_indices, topk_count = past_key_value.decode_get_attn_data_full_gpu(
                     self.layer_idx
                 )
                 attn_output, _ = KVLib.flash_index_decode(
-                    query_states, key_states, value_states, topk_indices, self.scale
+                    query_states,
+                    key_states,
+                    value_states,
+                    topk_indices,
+                    topk_count,
+                    self.scale,
                 )
 
         attn_output = attn_output.view(-1, local_attn_hidden_size)

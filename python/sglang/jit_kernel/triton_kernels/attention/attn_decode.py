@@ -43,7 +43,7 @@ def _fwd_grouped_kernel(
     offs_d = tl.arange(0, BLOCK_DIM)
     mask_d = offs_d < HEAD_DIM
 
-    cur_batch_seq_len = tl.load(kv_seq_len)
+    cur_batch_seq_len = tl.load(kv_seq_len + cur_batch)
     offs_q = cur_batch * stride_qbs + cur_head[:, None] * stride_qh + offs_d[None, :] # [16, BLOCK_DIM]
 
     e_max = tl.zeros([BLOCK_HGROUP], dtype=tl.float32) - float("inf")
@@ -106,7 +106,7 @@ def decode_attention_fwd_grouped(
     k_buffer,        # [b, s, h, d]
     v_buffer,        # [b, s, h, d]
     attn_output,     # [b, 1, hq, d]
-    kv_seq_len,      # [1]
+    kv_seq_len,      # [b]
     sm_scale,        # const
 ):
     HEAD_DIM = k_buffer.shape[-1]

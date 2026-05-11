@@ -41,7 +41,7 @@ def _hash_encode_append_decode_qqk(
     head_id = tl.program_id(1) % KV_HEAD
     start_n = tl.program_id(2)
 
-    cur_k_len = tl.load(seqlen_ptr)
+    cur_k_len = tl.load(seqlen_ptr + batch_id)
 
     # load pack tensor
     packbit_tensor = tl.load(packbit_tensor_ptr + tl.arange(0, CHUNK_SIZE))
@@ -266,7 +266,7 @@ def _hash_encode_append_decode_qk(
     head_id = tl.program_id(1) % KV_HEAD
     start_n = tl.program_id(2)
 
-    cur_k_len = tl.load(seqlen_ptr)
+    cur_k_len = tl.load(seqlen_ptr + batch_id)
 
     # load pack tensor
     packbit_tensor = tl.load(packbit_tensor_ptr + tl.arange(0, CHUNK_SIZE))
@@ -435,7 +435,7 @@ def _hash_encode_append_decode_k(
     head_id = tl.program_id(1) % KV_HEAD
     start_n = tl.program_id(2)
 
-    cur_k_len = tl.load(seqlen_ptr)
+    cur_k_len = tl.load(seqlen_ptr + batch_id)
 
     Weight_ptr = tl.make_block_ptr(
         base=hash_weight_ptr + head_id * HEAD_DIM * RBIT,
