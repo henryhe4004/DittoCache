@@ -406,6 +406,15 @@ def _sync_litecache_cache_rows(
             for rid, target_row in target_by_rid.items()
             if rid not in owner._active_rids
         ]
+        if _debug_batch_enabled() and new_rows:
+            logger.info(
+                "LiteCache new rows detected: rids=%s new_rows=%s "
+                "active_before=%s available_rows=%s",
+                rids,
+                new_rows,
+                active_map,
+                available_rows,
+            )
         owner._cache.reset_batch_rows(new_rows)
 
     updated_map: dict[str, int] = {}
@@ -418,6 +427,38 @@ def _sync_litecache_cache_rows(
 
     owner._active_rid_to_row = updated_map
     owner._active_rids = set(updated_map)
+
+
+def _release_litecache_finished_rid(owner, rid: str) -> None:
+    """Logically release a finished request's LiteCache row immediately.
+
+    Without this, LiteCache only prunes stale rids on a later decode batch via
+    `prune_absent_rids=True`. Under high-concurrency serving, a new prefill can
+    arrive in that gap and observe a full `_active_rid_to_row`, even though the
+    finished requests have already returned 200 to the client.
+
+    Keep this logical-only: free the row in the active map right away, but do
+    not eagerly reset cache storage or clear decode graphs here. The next
+    `_sync_litecache_cache_rows()` call already treats rows whose rid is absent
+    from `_active_rids` as new/free rows and will reset them before reuse.
+    Eagerly zeroing cache state here can perturb the in-flight dynamic-batching
+    transition and was observed to regress follow-up requests.
+    """
+
+    rid = str(rid)
+    row = owner._active_rid_to_row.pop(rid, None)
+    if row is None:
+        return
+
+    owner._active_rids.discard(rid)
+
+    if _debug_batch_enabled():
+        logger.info(
+            "LiteCache logically released finished rid=%s row=%s active_after=%s",
+            rid,
+            row,
+            sorted(owner._active_rids),
+        )
 
 
 class LiteCacheLlamaForCausalLM(nn.Module):
@@ -620,6 +661,9 @@ class LiteCacheLlamaForCausalLM(nn.Module):
             graphs = getattr(module, "_graphs", None)
             if isinstance(graphs, dict) and graphs:
                 graphs.clear()
+
+    def release_finished_rid(self, rid: str) -> None:
+        _release_litecache_finished_rid(self, rid)
 
     @torch.no_grad()
     def forward(
@@ -914,6 +958,9 @@ class LiteCacheQwen2ForCausalLM(nn.Module):
             graphs = getattr(module, "_graphs", None)
             if isinstance(graphs, dict) and graphs:
                 graphs.clear()
+
+    def release_finished_rid(self, rid: str) -> None:
+        _release_litecache_finished_rid(self, rid)
 
     @torch.no_grad()
     def forward(

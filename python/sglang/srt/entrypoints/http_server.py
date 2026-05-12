@@ -177,6 +177,35 @@ from sglang.utils import _prebind_listening_socket, get_exception_traceback
 from sglang.version import __version__
 
 logger = logging.getLogger(__name__)
+
+
+def _generate_trace_enabled() -> bool:
+    return os.environ.get("SGLANG_DEBUG_GENERATE_TRACE", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _log_generate_trace(message: str, *args: Any) -> None:
+    if _generate_trace_enabled():
+        logger.info("[generate-trace] " + message, *args)
+
+
+def _infer_request_input_len(obj: Any) -> Optional[int]:
+    input_ids = getattr(obj, "input_ids", None)
+    if isinstance(input_ids, list):
+        if input_ids and isinstance(input_ids[0], list):
+            return len(input_ids[0])
+        return len(input_ids)
+
+    text = getattr(obj, "text", None)
+    if isinstance(text, str):
+        return len(text)
+    if isinstance(text, list) and text and isinstance(text[0], str):
+        return len(text[0])
+    return None
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # Global constants
@@ -669,10 +698,19 @@ if os.environ.get("DUMPER_SERVER_PORT") == "reuse":
 @app.api_route("/generate", methods=["POST", "PUT"])
 async def generate_request(obj: GenerateReqInput, request: Request):
     """Handle a generate request."""
+    client_host = request.client.host if request.client else None
+    _log_generate_trace(
+        "http enter rid=%s stream=%s client=%s input_len=%s",
+        obj.rid,
+        obj.stream,
+        client_host,
+        _infer_request_input_len(obj),
+    )
     if obj.stream:
 
         async def stream_results() -> AsyncIterator[bytes]:
             try:
+                _log_generate_trace("http dispatch rid=%s stream=%s", obj.rid, obj.stream)
                 async for out in _global_state.tokenizer_manager.generate_request(
                     obj, request
                 ):
@@ -682,9 +720,11 @@ async def generate_request(obj: GenerateReqInput, request: Request):
             except ValueError as e:
                 out = {"error": {"message": str(e)}}
                 logger.error(f"[http_server] Error: {e}")
+                _log_generate_trace("http error rid=%s error=%s", obj.rid, str(e))
                 yield b"data: " + orjson.dumps(
                     out, option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SERIALIZE_NUMPY
                 ) + b"\n\n"
+            _log_generate_trace("http done rid=%s stream=%s", obj.rid, obj.stream)
             yield b"data: [DONE]\n\n"
 
         return StreamingResponse(
@@ -694,9 +734,23 @@ async def generate_request(obj: GenerateReqInput, request: Request):
         )
     else:
         try:
+            _log_generate_trace("http dispatch rid=%s stream=%s", obj.rid, obj.stream)
             ret = await _global_state.tokenizer_manager.generate_request(
                 obj, request
             ).__anext__()
+            meta_info = ret.get("meta_info") if isinstance(ret, dict) else None
+            completion_tokens = (
+                meta_info.get("completion_tokens") if isinstance(meta_info, dict) else None
+            )
+            finish_reason = (
+                meta_info.get("finish_reason") if isinstance(meta_info, dict) else None
+            )
+            _log_generate_trace(
+                "http response rid=%s completion_tokens=%s finish_reason=%s",
+                obj.rid,
+                completion_tokens,
+                finish_reason,
+            )
             return Response(
                 content=orjson.dumps(
                     ret, option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SERIALIZE_NUMPY
@@ -705,6 +759,7 @@ async def generate_request(obj: GenerateReqInput, request: Request):
             )
         except ValueError as e:
             logger.error(f"[http_server] Error: {e}")
+            _log_generate_trace("http error rid=%s error=%s", obj.rid, str(e))
             return _create_error_response(e)
 
 

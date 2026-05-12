@@ -878,6 +878,16 @@ class OffloadingCache(CustomStaticCache):
     def reset_batch_rows(self, row_indices: list[int]) -> None:
         if not row_indices:
             return
+        if self.debug_batch:
+            before_cache = [self.cache_length_host[0][row] for row in row_indices]
+            before_cpu = [self.cpu_cache_length_host[0][row] for row in row_indices]
+            logger.info(
+                "LiteCache reset_batch_rows enter: rows=%s "
+                "layer0_cache_length_before=%s layer0_cpu_cache_length_before=%s",
+                row_indices,
+                before_cache,
+                before_cpu,
+            )
         rows = torch.tensor(row_indices, dtype=torch.long)
         sink_recent = (
             self.config.sparse_attention_config.sink_budget
@@ -902,6 +912,16 @@ class OffloadingCache(CustomStaticCache):
                 self.metadata_tensors['gather_mask'][l][start:end] = True
                 self.metadata_tensors['reuse_count'][l][start:end] = 0
                 self.metadata_tensors['cached_query'][l][row].zero_()
+        if self.debug_batch:
+            after_cache = [self.cache_length_host[0][row] for row in row_indices]
+            after_cpu = [self.cpu_cache_length_host[0][row] for row in row_indices]
+            logger.info(
+                "LiteCache reset_batch_rows exit: rows=%s "
+                "layer0_cache_length_after=%s layer0_cpu_cache_length_after=%s",
+                row_indices,
+                after_cache,
+                after_cpu,
+            )
 
     def move_batch_rows(self, old_to_new_rows: dict[int, int]) -> None:
         if not old_to_new_rows:

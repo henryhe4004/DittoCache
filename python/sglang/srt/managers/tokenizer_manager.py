@@ -124,6 +124,20 @@ _REQUEST_STATE_WAIT_TIMEOUT = envs.SGLANG_REQUEST_STATE_WAIT_TIMEOUT.get()
 logger = logging.getLogger(__name__)
 
 
+def _generate_trace_enabled() -> bool:
+    return os.environ.get("SGLANG_DEBUG_GENERATE_TRACE", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _log_generate_trace(message: str, *args: Any) -> None:
+    if _generate_trace_enabled():
+        logger.info("[generate-trace] " + message, *args)
+
+
 @dataclasses.dataclass
 class ReqState:
     """Store the state a request."""
@@ -488,6 +502,12 @@ class TokenizerManager(TokenizerCommunicatorMixin, TokenizerManagerMultiItemMixi
         obj.normalize_batch_and_arguments()
         self._set_default_priority(obj)
         self._validate_rid(obj)
+        _log_generate_trace(
+            "tm enter rid=%s is_single=%s stream=%s",
+            getattr(obj, "rid", None),
+            getattr(obj, "is_single", None),
+            getattr(obj, "stream", None),
+        )
 
         if isinstance(obj, GenerateReqInput) and obj.routed_dp_rank is not None:
             dp_size = self.server_args.dp_size
@@ -519,10 +539,44 @@ class TokenizerManager(TokenizerCommunicatorMixin, TokenizerManagerMultiItemMixi
             if obj.is_single:
                 tokenized_obj = await self._tokenize_one_request(obj)
                 state = self.rid_to_state[obj.rid]
+                prompt_tokens = (
+                    len(tokenized_obj.input_ids)
+                    if hasattr(tokenized_obj, "input_ids")
+                    and isinstance(tokenized_obj.input_ids, list)
+                    else None
+                )
+                _log_generate_trace(
+                    "tm send rid=%s prompt_tokens=%s",
+                    obj.rid,
+                    prompt_tokens,
+                )
                 self._send_one_request(tokenized_obj)
                 async for response in self._wait_one_response(obj, state, request):
+                    meta_info = response.get("meta_info") if isinstance(response, dict) else None
+                    completion_tokens = (
+                        meta_info.get("completion_tokens")
+                        if isinstance(meta_info, dict)
+                        else None
+                    )
+                    finish_reason = (
+                        meta_info.get("finish_reason")
+                        if isinstance(meta_info, dict)
+                        else None
+                    )
+                    _log_generate_trace(
+                        "tm yield rid=%s completion_tokens=%s finish_reason=%s",
+                        obj.rid,
+                        completion_tokens,
+                        finish_reason,
+                    )
                     yield response
             else:
+                rid_count = len(obj.rid) if isinstance(obj.rid, list) else None
+                _log_generate_trace(
+                    "tm batch rid_count=%s stream=%s",
+                    rid_count,
+                    getattr(obj, "stream", None),
+                )
                 async for response in self._handle_batch_request(obj, request):
                     yield response
 

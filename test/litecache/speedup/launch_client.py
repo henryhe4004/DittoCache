@@ -6,6 +6,12 @@ import sys
 
 from transformers import AutoTokenizer
 
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+except Exception:
+    pass
+
 THIS_DIR = Path(__file__).resolve().parent
 LITECACHE_TEST_DIR = THIS_DIR.parent
 if str(LITECACHE_TEST_DIR) not in sys.path:
@@ -88,7 +94,19 @@ parser.add_argument(
 )
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--concurrency", type=int, default=CONCURRENCY)
-parser.add_argument("--total-requests", type=int, default=TOTAL_REQUESTS)
+parser.add_argument(
+    "--total-requests",
+    type=int,
+    default=TOTAL_REQUESTS,
+    help="Total request count. When --duration-sec > 0, use 0 for no count cap.",
+)
+parser.add_argument(
+    "--duration-sec",
+    type=float,
+    default=0.0,
+    help="Keep refilling requests until this many seconds elapse. "
+    "Useful for holding active req near the target concurrency.",
+)
 parser.add_argument(
     "--ordered",
     action="store_true",
@@ -118,6 +136,11 @@ parser.add_argument(
 )
 args = parser.parse_args()
 random.seed(args.seed)
+
+if args.total_requests < 0:
+    raise ValueError("--total-requests must be >= 0")
+if args.duration_sec < 0:
+    raise ValueError("--duration-sec must be >= 0")
 
 if args.data_file is not None:
     DATA_FILE = args.data_file
@@ -306,7 +329,15 @@ def one_line(text, max_chars=500):
         return text
     return text[:max_chars] + "..."
 
-async def one(i, session, log_lock):
+
+def request_goal_text():
+    if args.total_requests > 0:
+        return str(args.total_requests)
+    if args.duration_sec > 0:
+        return f"duration={args.duration_sec:.1f}s"
+    return "unbounded"
+
+async def one(i, session, log_lock, progress):
     sample = samples[i % len(samples)] if args.ordered else random.choice(samples)
     prompt = sample["prompt"]
     expected_outputs = sample["outputs"]
@@ -338,8 +369,9 @@ async def one(i, session, log_lock):
             "stream": False,
         }
     t0 = time.perf_counter()
+    send_time_unix = time.time()
     print(
-        f"[send] request_id={i} rid={rid} endpoint={BASE_URL} task={sample.get('task')} "
+        f"[dispatch] request_id={i} rid={rid} endpoint={BASE_URL} task={sample.get('task')} "
         f"prompt_tokens={sample.get('prompt_tokens')} send={'text' if args.send_text else 'input_ids'} "
         f"prompt_len_chars={len(prompt)}"
     )
@@ -359,6 +391,7 @@ async def one(i, session, log_lock):
         "prompt_truncated": sample.get("prompt_truncated"),
         "used_chat_template": sample.get("used_chat_template"),
         "expected_outputs": expected_outputs,
+        "send_time_unix": send_time_unix,
     }
     try:
         async with session.post(
@@ -366,8 +399,13 @@ async def one(i, session, log_lock):
             json=payload,
             timeout=aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SEC),
         ) as r:
+            print(
+                f"[accepted] request_id={i} rid={rid} status={r.status} "
+                f"content_length={r.content_length}"
+            )
             txt = await r.text()
             latency_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+            done_time_unix = time.time()
             try:
                 response_json = json.loads(txt)
             except json.JSONDecodeError:
@@ -391,6 +429,7 @@ async def one(i, session, log_lock):
                     "ok": True,
                     "status": r.status,
                     "latency_ms": latency_ms,
+                    "done_time_unix": done_time_unix,
                     "generated_text": generated_text,
                     "exact_match": exact_match,
                     "response_text": txt,
@@ -398,6 +437,7 @@ async def one(i, session, log_lock):
             )
     except Exception as e:
         latency_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+        done_time_unix = time.time()
         err = f"{type(e).__name__}: {e}"
         print(f"[fail] request_id={i} latency_ms={latency_ms} error={err}")
         row.update(
@@ -405,6 +445,7 @@ async def one(i, session, log_lock):
                 "ok": False,
                 "status": None,
                 "latency_ms": latency_ms,
+                "done_time_unix": done_time_unix,
                 "error": err,
                 "traceback": traceback.format_exc(),
             }
@@ -412,10 +453,26 @@ async def one(i, session, log_lock):
     async with log_lock:
         with LOG_FILE.open("a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    async with progress["lock"]:
+        progress["completed"] += 1
+        completed = progress["completed"]
+        inflight = progress["launched"] - progress["completed"]
+        print(
+            f"[progress] completed={completed}/{request_goal_text()} "
+            f"in_flight={inflight}"
+        )
 
 async def main():
-    sem = asyncio.Semaphore(args.concurrency)
     log_lock = asyncio.Lock()
+    progress = {
+        "launched": 0,
+        "completed": 0,
+        "lock": asyncio.Lock(),
+        "next_request_id": 0,
+    }
+    deadline = time.monotonic() + args.duration_sec if args.duration_sec > 0 else None
+    total_cap = args.total_requests if args.total_requests > 0 else None
+    goal_text = request_goal_text()
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     LOG_FILE.write_text("", encoding="utf-8")
     print(f"logging to: {LOG_FILE}")
@@ -423,7 +480,7 @@ async def main():
         f"dataset={args.dataset} data_file={DATA_FILE} task={TASK_NAME} "
         f"max_new_tokens={MAX_NEW_TOKENS} encode_max_len={ENCODE_MAX_LEN} "
         f"total_requests={args.total_requests} concurrency={args.concurrency} "
-        f"ordered={args.ordered}"
+        f"ordered={args.ordered} duration_sec={args.duration_sec}"
     )
     if args.dry_run:
         for i, sample in enumerate(samples[: max(1, min(args.total_requests, len(samples)))]):
@@ -440,11 +497,32 @@ async def main():
     connector = aiohttp.TCPConnector(limit=0)
     timeout = aiohttp.ClientTimeout(total=None, connect=30, sock_read=REQUEST_TIMEOUT_SEC)
     async with aiohttp.ClientSession(connector=connector, timeout=timeout, trust_env=False) as session:
-        async def run(i):
-            async with sem:
-                await one(i, session, log_lock)
+        async def reserve_request_id():
+            async with progress["lock"]:
+                if deadline is not None and time.monotonic() >= deadline:
+                    return None
+                next_request_id = progress["next_request_id"]
+                if total_cap is not None and next_request_id >= total_cap:
+                    return None
+                progress["next_request_id"] = next_request_id + 1
+                progress["launched"] += 1
+                launched = progress["launched"]
+                inflight = progress["launched"] - progress["completed"]
+                print(
+                    f"[launch] launched={launched}/{goal_text} "
+                    f"in_flight={inflight}"
+                )
+                return next_request_id
+
+        async def worker(_worker_id):
+            while True:
+                request_id = await reserve_request_id()
+                if request_id is None:
+                    return
+                await one(request_id, session, log_lock, progress)
+
         await asyncio.gather(
-            *(run(i) for i in range(args.total_requests)),
+            *(worker(worker_id) for worker_id in range(args.concurrency)),
             return_exceptions=True,
         )
 
