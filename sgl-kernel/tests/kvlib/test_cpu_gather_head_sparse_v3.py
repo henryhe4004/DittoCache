@@ -1,15 +1,17 @@
 import torch
 import time
+import os
 import sgl_kernel.kvlib as capi
 from sglang.litecache.kvcache_offloading import create_aligned_cuda_tensor
 
 B = 16
-S = 8000
+S = 128000
 K = int(S * 0.1)
 R = 69
 H = 8
 D = 128
 layer = 2
+num_iters = int(os.getenv("KVLIB_GDR_ITERS", "200"))
 
 
 def torch_gather(cpu_data, real_indices):
@@ -44,11 +46,15 @@ cpu_indices_buffer = torch.full((B * H, K),
                                 dtype=torch.int64,
                                 device="cpu",
                                 pin_memory=True)
-launch_flags = torch.full((3, ),
+launch_flags = torch.full((6 + B * H, ),
                           -1,
                           dtype=torch.int32,
                           device="cpu",
                           pin_memory=True)
+launch_flags[3] = S
+launch_flags[4] = R + K
+launch_flags[5] = K
+launch_flags[6:] = K
 ready_flags = [
     torch.full((B * H, ), 0, dtype=torch.bool, device="cpu", pin_memory=True)
     for _ in range(layer)
@@ -91,7 +97,7 @@ cpu_gather_engine = capi.CPUGatherEngineV3(4,
                                                          D,
                                                          debug=False)
 
-for _ in range(200):
+for _ in range(num_iters):
     for layer_idx in range(layer):
         gpu_gather_mask = torch.zeros((B * H, ),
                                       dtype=torch.bool,
@@ -110,31 +116,22 @@ for _ in range(200):
                                     dtype=torch.int32,
                                     device=device)
 
+        launch_flags[3] = S
+        launch_flags[4] = R + K
+        launch_flags[5] = K
+        launch_flags[6:] = K
+
+        torch.cuda.synchronize()
+        tic = time.perf_counter()
         capi.real_indices_and_launch_prefetch(
             gpu_indices, gpu_gather_mask, cpu_indices_buffer, launch_flags,
             ready_flags[layer_idx], S, B, H, layer_idx)
-
-        torch.cuda.synchronize()
-        tic = time.time()
         capi.wait_kv_data(ready_flags[layer_idx], B, H)
         torch.cuda.synchronize()
-        toc = time.time()
+        toc = time.perf_counter()
         duration = toc - tic
 
-        torch_output = torch_gather(
-            cpu_data[layer_idx],
-            torch_real_indices(gpu_indices, gpu_gather_hid, H, S * H, H, 1))
-
-        my_gpu_output = gpu_buffer[layer_idx].view(2, B, R + K, H // 2,
-                                                   D)[:, :, R:]
-
-        for i in range(torch_output.shape[1]):
-            total_hid = gpu_gather_hid[i].item()
-            b, h = total_hid // H, total_hid % H
-            torch_out = torch_output[:, i, :, :]
-            my_gpu_out = my_gpu_output[:, b, :,
-                                       mixed_head_index[layer_idx][h], :]
-
+        moved_bytes = gpu_gather_hid.numel() * K * 2 * D * dtype.itemsize
         print(
-            f"Layer {layer_idx} Equivalent Bandwidth: {torch_output.numel() * dtype.itemsize / 1024 / 1024 / 1024 / duration} GB/s"
+            f"Layer {layer_idx} Equivalent Bandwidth: {moved_bytes / 1024 / 1024 / 1024 / duration} GB/s"
         )

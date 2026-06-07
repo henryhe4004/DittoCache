@@ -37,7 +37,7 @@ from sglang.srt.observability.trace import (
 from sglang.srt.utils import get_bool_env_var
 
 try:
-    from sglang.litecache.transfer_stats import (
+    from sglang.ditto.transfer_stats import (
         get_transfer_stats_snapshot,
         summarize_transfer_stats,
         transfer_stats_enabled,
@@ -1137,7 +1137,7 @@ class SchedulerReqTimeStats(ReqTimeStatsBase):
         ):
             transfer_steps = get_transfer_stats_snapshot()
             if transfer_steps:
-                meta_data["litecache_decode_transfer_stats"] = (
+                meta_data["ditto_decode_transfer_stats"] = (
                     summarize_transfer_stats(transfer_steps)
                 )
         return meta_data

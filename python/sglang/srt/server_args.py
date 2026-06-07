@@ -2197,12 +2197,12 @@ class ServerArgs:
                 self.page_size = 128
 
         # Dual chunk flash attention backend
-        # NOTE: LiteCache/myTransformer integration has its own attention/cache path.
+        # NOTE: Ditto/internal prototype integration has its own attention/cache path.
         # For this architecture, skip dual-chunk backend gating in SGLang server args.
         model_archs = getattr(model_config.hf_config, "architectures", []) or []
-        is_litecache_arch = any(str(arch).startswith("LiteCache") for arch in model_archs)
+        is_ditto_arch = any(str(arch).startswith("Ditto") for arch in model_archs)
         if (
-            not is_litecache_arch
+            not is_ditto_arch
             and getattr(model_config.hf_config, "dual_chunk_attention_config", None)
             is not None
         ):

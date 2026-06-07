@@ -1,0 +1,36 @@
+{
+  "architectures": [
+    "DittoLlamaForCausalLM"
+  ],
+  "ditto_variant": "loki",
+  "custom_config": {
+    "enable_cuda_graph": false,
+    "new_config": true,
+    "is_profiling": false,
+    "num_channels": 32,
+    "rbits": 32,
+    "block_size": 64,
+    "aux_data_path": null,
+    "kvcache_manager_config": {
+      "max_tokens": 4096,
+      "max_batch_size": 1,
+      "gpu_memory_budget": 16.0
+    },
+    "sparse_attention_config": {
+      "token_budget": 0.2,
+      "sink_budget": 4,
+      "recent_budget": 128
+    },
+    "offload_config": {
+      "attn_pattern_path": "",
+      "reuse_threshold_upper": 0.95,
+      "reuse_threshold_lower": 0.7,
+      "decay_p": 2.0,
+      "cosine_padding": 0.02,
+      "max_reuse_count": 10,
+      "num_skip_layers": 0,
+      "num_overlapped_heads": 0,
+      "num_omp_threads": 4
+    }
+  }
+}

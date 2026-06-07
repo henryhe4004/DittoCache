@@ -1,0 +1,235 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
+RUN_PRED_PY="${RUN_PRED_PY:-${SCRIPT_DIR}/run_pred.py}"
+EVAL_PY="${EVAL_PY:-${SCRIPT_DIR}/eval_longbench_infinitebench.py}"
+SUMMARIZE_PY="${SUMMARIZE_PY:-${SCRIPT_DIR}/summarize_accuracy.py}"
+
+[[ -f "${RUN_PRED_PY}" ]] || { echo "[ERROR] missing run_pred: ${RUN_PRED_PY}" >&2; exit 1; }
+[[ -f "${EVAL_PY}" ]] || { echo "[ERROR] missing eval script: ${EVAL_PY}" >&2; exit 1; }
+[[ -f "${SUMMARIZE_PY}" ]] || { echo "[ERROR] missing summarize script: ${SUMMARIZE_PY}" >&2; exit 1; }
+
+DATASET_NAME="${DATASET_NAME:-longbench}"
+TARGET_TASK="multi_news_e"
+
+MODEL_PATH="${MODEL_PATH:-/models/Qwen2.5-14B-Instruct-1M}"
+MODEL_NAME="$(basename "${MODEL_PATH}")"
+METHOD="${METHOD:-offloading}"
+TOPK="${TOPK:-0.10}"
+CONFIG_SUFFIX="${CONFIG_SUFFIX:-64K}"
+SELECTIVE_START_LEN="${SELECTIVE_START_LEN:-2048}"
+
+MAX_SEQ_LEN="${MAX_SEQ_LEN:-65536}"
+ENGINE_CONTEXT_LENGTH="${ENGINE_CONTEXT_LENGTH:-65536}"
+MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-65536}"
+BATCH_SIZE="${BATCH_SIZE:-1}"
+HEARTBEAT_SEC="${HEARTBEAT_SEC:-10}"
+DECODE_LOG_INTERVAL="${DECODE_LOG_INTERVAL:-20}"
+
+FIXED_NUM_SKIP_LAYERS="${FIXED_NUM_SKIP_LAYERS:-48}"
+FIXED_REUSE_THRESHOLD_UPPER="${FIXED_REUSE_THRESHOLD_UPPER:-1}"
+FIXED_REUSE_THRESHOLD_LOWER="${FIXED_REUSE_THRESHOLD_LOWER:-${FIXED_REUSE_THRESHOLD_UPPER}}"
+
+DATASET_PATH="${DATASET_PATH:-/datasets/LongBench}"
+if [[ ! -d "${DATASET_PATH}" && -d "/datasets/LongBench" ]]; then
+    DATASET_PATH="/datasets/LongBench"
+fi
+[[ -d "${DATASET_PATH}" ]] || { echo "[ERROR] missing dataset dir: ${DATASET_PATH}" >&2; exit 1; }
+
+resolve_longbench_task_root() {
+    local base="${1:-}"
+    if [[ -f "${base}/${TARGET_TASK}.jsonl" ]]; then
+        echo "${base}"
+    elif [[ -f "${base}/data/${TARGET_TASK}.jsonl" ]]; then
+        echo "${base}/data"
+    else
+        echo "${base}"
+    fi
+}
+DATASET_TASK_ROOT="$(resolve_longbench_task_root "${DATASET_PATH}")"
+DATASET_FILE="${DATASET_TASK_ROOT}/${TARGET_TASK}.jsonl"
+[[ -f "${DATASET_FILE}" ]] || { echo "[ERROR] missing dataset file: ${DATASET_FILE}" >&2; exit 1; }
+
+METHOD_PATH_KEY="${METHOD}"
+case "${METHOD}" in
+    flash_attn|flash-attn) METHOD_PATH_KEY="flashattn" ;;
+esac
+
+OUTPUT_ROOT="${OUTPUT_ROOT:-${SCRIPT_DIR}/preds_nway}"
+WORKER_ROOT="${OUTPUT_ROOT}/workers"
+RUN_TAG_BASE="${RUN_TAG_BASE:-${MODEL_NAME}-longbench-top${TOPK}-${TARGET_TASK}-nway-data}"
+FINAL_OUTPUT_DIR="${OUTPUT_ROOT}/${METHOD_PATH_KEY}/${RUN_TAG_BASE}"
+
+BASE_SEED_TAG="${BASE_SEED_TAG:-${MODEL_NAME}-longbench-top${TOPK}-nway-w04}"
+SEED_FILE_DEFAULT="${WORKER_ROOT}/${METHOD_PATH_KEY}/${BASE_SEED_TAG}/${TARGET_TASK}.jsonl"
+SEED_FILE="${SEED_FILE:-${SEED_FILE_DEFAULT}}"
+if [[ ! -f "${SEED_FILE}" ]]; then
+    SEED_FILE=""
+fi
+
+CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/config/.generated/${MODEL_NAME}-${CONFIG_SUFFIX}-longbench-thup1-thlo1-skip${FIXED_NUM_SKIP_LAYERS}-decaykeep-reusekeep.yaml}"
+[[ -f "${CONFIG_FILE}" ]] || { echo "[ERROR] missing config file: ${CONFIG_FILE}" >&2; exit 1; }
+
+RESUME="${RESUME:-1}"
+DRY_RUN="${DRY_RUN:-0}"
+CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-5,6,7}"
+
+BASELINE_RESULT="${BASELINE_RESULT:-}"
+MAX_AVG_DROP="${MAX_AVG_DROP:-3.0}"
+MAX_SINGLE_DROP="${MAX_SINGLE_DROP:-8.0}"
+
+IFS=',' read -r -a GPUS <<< "${CUDA_VISIBLE_DEVICES}"
+GPU_COUNT="${#GPUS[@]}"
+if (( GPU_COUNT <= 0 )); then
+    echo "[ERROR] no GPUs parsed from CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}" >&2
+    exit 1
+fi
+
+TOTAL_LINES="$(wc -l < "${DATASET_FILE}")"
+if [[ -n "${START_INDEX:-}" ]]; then
+    DONE_LINES="${START_INDEX}"
+elif [[ -n "${SEED_FILE}" ]]; then
+    DONE_LINES="$(wc -l < "${SEED_FILE}")"
+else
+    DONE_LINES=0
+fi
+if (( DONE_LINES < 0 )); then DONE_LINES=0; fi
+if (( DONE_LINES > TOTAL_LINES )); then DONE_LINES="${TOTAL_LINES}"; fi
+
+REMAINING=$(( TOTAL_LINES - DONE_LINES ))
+if (( REMAINING <= 0 )); then
+    echo "[INFO] ${TARGET_TASK} already complete: done=${DONE_LINES} total=${TOTAL_LINES}"
+    exit 0
+fi
+
+N_WAY="${N_WAY:-${GPU_COUNT}}"
+if ! [[ "${N_WAY}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "[ERROR] N_WAY must be a positive integer, got: ${N_WAY}" >&2
+    exit 1
+fi
+if (( N_WAY > GPU_COUNT )); then
+    echo "[ERROR] N_WAY=${N_WAY} exceeds visible GPU count=${GPU_COUNT}" >&2
+    exit 1
+fi
+
+mkdir -p "${WORKER_ROOT}/${METHOD_PATH_KEY}"
+mkdir -p "${FINAL_OUTPUT_DIR}"
+
+echo "[INFO] dataset=${TARGET_TASK} total=${TOTAL_LINES} done=${DONE_LINES} remaining=${REMAINING}"
+echo "[INFO] method=${METHOD} config=${CONFIG_FILE}"
+echo "[INFO] gpus=${CUDA_VISIBLE_DEVICES} n_way=${N_WAY}"
+if [[ -n "${SEED_FILE}" ]]; then
+    echo "[INFO] seed_file=${SEED_FILE}"
+fi
+
+Q=$(( REMAINING / N_WAY ))
+R=$(( REMAINING % N_WAY ))
+CUR="${DONE_LINES}"
+
+declare -a PIDS=()
+declare -a SHARD_OUTS=()
+
+for ((i=0; i<N_WAY; i++)); do
+    LEN="${Q}"
+    if (( i < R )); then LEN=$(( LEN + 1 )); fi
+    if (( LEN <= 0 )); then
+        continue
+    fi
+    START="${CUR}"
+    END=$(( CUR + LEN ))
+    CUR="${END}"
+
+    GPU="${GPUS[$i]}"
+    WORKER_TAG="${RUN_TAG_BASE}-w$(printf "%02d" "${i}")"
+    WORKER_OUT="${WORKER_ROOT}/${METHOD_PATH_KEY}/${WORKER_TAG}"
+    WORKER_LOG="${WORKER_ROOT}/${METHOD_PATH_KEY}/${WORKER_TAG}.log"
+    mkdir -p "${WORKER_OUT}"
+
+    SHARD_OUTS+=("${WORKER_OUT}")
+
+    echo "[INFO] shard=${i} gpu=${GPU} range=[${START},${END}) out=${WORKER_OUT}"
+    if [[ "${DRY_RUN}" == "1" ]]; then
+        echo "[DRY_RUN] CUDA_VISIBLE_DEVICES=${GPU} python3 ${RUN_PRED_PY} ... --start-index ${START} --end-index ${END}"
+        continue
+    fi
+
+    (
+        export CUDA_VISIBLE_DEVICES="${GPU}"
+        export PYTHONUNBUFFERED=1
+        export DITTO_ROOT="${SCRIPT_DIR}"
+        export DITTO_RECORD_TRANSFER_STATS=1
+        export DITTO_RECORD_OVERLAP_STATS=1
+        export DITTO_TRANSFER_STATS_FILE="${WORKER_OUT}/ditto_decode_transfer_stats.json"
+        CMD=(
+            python3 "${RUN_PRED_PY}"
+            --model "${MODEL_PATH}"
+            --dataset_name "${DATASET_NAME}"
+            --dataset_path "${DATASET_PATH}"
+            --tasks "${TARGET_TASK}"
+            --output_dir "${WORKER_OUT}"
+            --method "${METHOD}"
+            --config_file "${CONFIG_FILE}"
+            --write_in_time
+            --mp_num 1
+            --pp_num 1
+            --max_seq_len "${MAX_SEQ_LEN}"
+            --context-length "${ENGINE_CONTEXT_LENGTH}"
+            --batch_size "${BATCH_SIZE}"
+            --topk "${TOPK}"
+            --selective-start-len "${SELECTIVE_START_LEN}"
+            --heartbeat-sec "${HEARTBEAT_SEC}"
+            --decode-log-interval "${DECODE_LOG_INTERVAL}"
+            --max-total-tokens "${MAX_TOTAL_TOKENS}"
+            --e
+            --start-index "${START}"
+            --end-index "${END}"
+        )
+        if [[ "${RESUME}" == "1" ]]; then
+            CMD+=(--resume)
+        fi
+        "${CMD[@]}" > "${WORKER_LOG}" 2>&1
+    ) &
+    PIDS+=("$!")
+done
+
+if [[ "${DRY_RUN}" == "1" ]]; then
+    exit 0
+fi
+
+FAIL=0
+for pid in "${PIDS[@]}"; do
+    if ! wait "${pid}"; then
+        FAIL=1
+    fi
+done
+if (( FAIL != 0 )); then
+    echo "[ERROR] one or more workers failed; check logs under ${WORKER_ROOT}/${METHOD_PATH_KEY}/*.log" >&2
+    exit 1
+fi
+
+FINAL_FILE="${FINAL_OUTPUT_DIR}/${TARGET_TASK}.jsonl"
+: > "${FINAL_FILE}"
+if [[ -n "${SEED_FILE}" ]]; then
+    cat "${SEED_FILE}" >> "${FINAL_FILE}"
+fi
+for out in "${SHARD_OUTS[@]}"; do
+    part="${out}/${TARGET_TASK}.jsonl"
+    [[ -f "${part}" ]] || { echo "[ERROR] missing shard output: ${part}" >&2; exit 1; }
+    cat "${part}" >> "${FINAL_FILE}"
+done
+
+python3 "${EVAL_PY}" --model "${FINAL_OUTPUT_DIR}" --e | tee -a "${FINAL_OUTPUT_DIR}/eval.log"
+RESULT_JSON="${FINAL_OUTPUT_DIR}/result.json"
+[[ -f "${RESULT_JSON}" ]] || { echo "[ERROR] missing result json: ${RESULT_JSON}" >&2; exit 1; }
+
+python3 "${SUMMARIZE_PY}" \
+    "${RESULT_JSON}" \
+    "${BASELINE_RESULT}" \
+    "${MAX_AVG_DROP}" \
+    "${MAX_SINGLE_DROP}"
+
+echo "[DONE] data-parallel ${TARGET_TASK} finished. result=${RESULT_JSON}"

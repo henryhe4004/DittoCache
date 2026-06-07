@@ -43,11 +43,11 @@ logger = logging.getLogger(__name__)
 _is_npu = is_npu()
 
 
-class LiteCacheTokenToKVPoolPlaceholder:
+class DittoTokenToKVPoolPlaceholder:
     """
-    Lightweight token pool holder for LiteCache models.
+    Lightweight token pool holder for Ditto models.
 
-    LiteCache keeps KV tensors in its model-local cache implementation, while
+    Ditto keeps KV tensors in its model-local cache implementation, while
     SGLang still needs token index allocation for scheduling.
     """
 
@@ -371,7 +371,7 @@ class ModelRunnerKVCacheMixin:
         )
     
     @staticmethod
-    def _litecache_cfg_get(obj, key, default):
+    def _ditto_cfg_get(obj, key, default):
         if obj is None:
             return default
         if isinstance(obj, dict):
@@ -379,7 +379,7 @@ class ModelRunnerKVCacheMixin:
         return getattr(obj, key, default)
 
     @staticmethod
-    def _litecache_cfg_set(obj, key, value):
+    def _ditto_cfg_set(obj, key, value):
         if obj is None:
             return False
         if isinstance(obj, dict):
@@ -388,22 +388,22 @@ class ModelRunnerKVCacheMixin:
         setattr(obj, key, value)
         return True
 
-    def _is_litecache_model(self: ModelRunner):
+    def _is_ditto_model(self: ModelRunner):
         archs = getattr(self.model_config.hf_config, "architectures", None) or []
-        return any(str(arch).startswith("LiteCache") for arch in archs)
+        return any(str(arch).startswith("Ditto") for arch in archs)
 
-    def _get_litecache_cfg_max_tokens(self: ModelRunner, fallback: int):
+    def _get_ditto_cfg_max_tokens(self: ModelRunner, fallback: int):
         custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
-        kmc = self._litecache_cfg_get(custom_cfg, "kvcache_manager_config", None)
-        raw = self._litecache_cfg_get(kmc, "max_tokens", fallback)
+        kmc = self._ditto_cfg_get(custom_cfg, "kvcache_manager_config", None)
+        raw = self._ditto_cfg_get(kmc, "max_tokens", fallback)
         try:
             value = int(raw)
         except (TypeError, ValueError):
             value = int(fallback)
         return max(value, self.server_args.page_size)
 
-    def _sync_litecache_max_tokens_to_runtime_cap(self: ModelRunner):
-        if not self._is_litecache_model():
+    def _sync_ditto_max_tokens_to_runtime_cap(self: ModelRunner):
+        if not self._is_ditto_model():
             return
 
         runtime_cap = int(self.max_total_num_tokens)
@@ -415,84 +415,84 @@ class ModelRunnerKVCacheMixin:
 
         custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
         if custom_cfg is not None:
-            kmc = self._litecache_cfg_get(custom_cfg, "kvcache_manager_config", None)
+            kmc = self._ditto_cfg_get(custom_cfg, "kvcache_manager_config", None)
             if kmc is not None:
-                current = self._litecache_cfg_get(kmc, "max_tokens", None)
+                current = self._ditto_cfg_get(kmc, "max_tokens", None)
                 if current is not None:
                     current = int(current)
                     old_values.append(current)
                     if current > runtime_cap:
-                        self._litecache_cfg_set(kmc, "max_tokens", runtime_cap)
+                        self._ditto_cfg_set(kmc, "max_tokens", runtime_cap)
                         changed = True
 
         model_custom_cfg = getattr(getattr(self, "model", None), "_custom_config", None)
-        model_kmc = self._litecache_cfg_get(model_custom_cfg, "kvcache_manager_config", None)
+        model_kmc = self._ditto_cfg_get(model_custom_cfg, "kvcache_manager_config", None)
         if model_kmc is not None:
-            model_current = self._litecache_cfg_get(model_kmc, "max_tokens", None)
+            model_current = self._ditto_cfg_get(model_kmc, "max_tokens", None)
             if model_current is not None:
                 model_current = int(model_current)
                 old_values.append(model_current)
                 if model_current > runtime_cap:
-                    self._litecache_cfg_set(model_kmc, "max_tokens", runtime_cap)
+                    self._ditto_cfg_set(model_kmc, "max_tokens", runtime_cap)
                     changed = True
 
         if changed:
             old_max = max(old_values) if old_values else None
             logger.warning(
-                "Clamp LiteCache kvcache_manager_config.max_tokens to runtime token cap: "
+                "Clamp Ditto kvcache_manager_config.max_tokens to runtime token cap: "
                 f"{old_max} -> {runtime_cap}"
             )
 
-    def get_litecache_profile_cap(self: ModelRunner, profiled_tokens: int):
-        if not self._is_litecache_model():
+    def get_ditto_profile_cap(self: ModelRunner, profiled_tokens: int):
+        if not self._is_ditto_model():
             return None
 
         custom_cfg = getattr(self.model_config.hf_config, "custom_config", None)
-        kmc = self._litecache_cfg_get(custom_cfg, "kvcache_manager_config", None)
-        litecache_max_tokens = int(
-            self._litecache_cfg_get(kmc, "max_tokens", profiled_tokens)
+        kmc = self._ditto_cfg_get(custom_cfg, "kvcache_manager_config", None)
+        ditto_max_tokens = int(
+            self._ditto_cfg_get(kmc, "max_tokens", profiled_tokens)
         )
         reserve_ratio = float(
-            self._litecache_cfg_get(custom_cfg, "profile_reserve_ratio", 0.85)
+            self._ditto_cfg_get(custom_cfg, "profile_reserve_ratio", 0.85)
         )
         reserve_ratio = max(0.1, min(1.0, reserve_ratio))
-        dedicated_cap = min(litecache_max_tokens, int(profiled_tokens * reserve_ratio))
+        dedicated_cap = min(ditto_max_tokens, int(profiled_tokens * reserve_ratio))
         return max(dedicated_cap, self.server_args.page_size)
 
     def init_memory_pool(self: ModelRunner, total_gpu_memory: int):
         max_num_reqs = self.server_args.max_running_requests
         max_total_tokens = self.server_args.max_total_tokens
-        litecache_enabled = self._is_litecache_model()
-        if litecache_enabled:
-            litecache_cfg_max_tokens = self._get_litecache_cfg_max_tokens(
+        ditto_enabled = self._is_ditto_model()
+        if ditto_enabled:
+            ditto_cfg_max_tokens = self._get_ditto_cfg_max_tokens(
                 self.model_config.context_len
             )
-            litecache_profile_cap = litecache_cfg_max_tokens
+            ditto_profile_cap = ditto_cfg_max_tokens
             if max_total_tokens is not None:
-                litecache_profile_cap = min(litecache_profile_cap, max_total_tokens)
+                ditto_profile_cap = min(ditto_profile_cap, max_total_tokens)
             logger.info(
-                "Use LiteCache dedicated token cap route. "
-                f"litecache_cfg_max_tokens={litecache_cfg_max_tokens}, "
-                f"litecache_token_cap={litecache_profile_cap}, "
+                "Use Ditto dedicated token cap route. "
+                f"ditto_cfg_max_tokens={ditto_cfg_max_tokens}, "
+                f"ditto_token_cap={ditto_profile_cap}, "
                 f"user_max_total_tokens={max_total_tokens}"
             )
-            self.max_total_num_tokens = litecache_profile_cap
+            self.max_total_num_tokens = ditto_profile_cap
         else:
             self.max_total_num_tokens = self.profile_max_num_token(total_gpu_memory)
-            litecache_profile_cap = self.get_litecache_profile_cap(
+            ditto_profile_cap = self.get_ditto_profile_cap(
                 self.max_total_num_tokens
             )
-            if litecache_profile_cap is not None:
+            if ditto_profile_cap is not None:
                 raw_profiled_tokens = self.max_total_num_tokens
                 if max_total_tokens is not None:
-                    litecache_profile_cap = min(litecache_profile_cap, max_total_tokens)
+                    ditto_profile_cap = min(ditto_profile_cap, max_total_tokens)
                 logger.info(
-                    "Use LiteCache-specific profile route. "
+                    "Use Ditto-specific profile route. "
                     f"raw_profiled_tokens={raw_profiled_tokens}, "
-                    f"litecache_token_cap={litecache_profile_cap}, "
+                    f"ditto_token_cap={ditto_profile_cap}, "
                     f"user_max_total_tokens={max_total_tokens}"
                 )
-                self.max_total_num_tokens = litecache_profile_cap
+                self.max_total_num_tokens = ditto_profile_cap
 
         if max_num_reqs is None:
             max_num_reqs = min(
@@ -528,7 +528,7 @@ class ModelRunnerKVCacheMixin:
                     max_num_reqs, self.server_args.max_running_requests // self.dp_size
                 )
 
-        if litecache_profile_cap is None and max_total_tokens is not None:
+        if ditto_profile_cap is None and max_total_tokens is not None:
             if max_total_tokens > self.max_total_num_tokens:
                 logging.warning(
                     f"max_total_tokens={max_total_tokens} is larger than the profiled value "
@@ -565,9 +565,9 @@ class ModelRunnerKVCacheMixin:
             self.server_args.draft_runner_cache_size = self.max_total_num_tokens
             self.server_args.max_num_reqs = max_num_reqs
 
-        # Keep LiteCache local max_tokens in sync with runtime token capacity.
+        # Keep Ditto local max_tokens in sync with runtime token capacity.
         # This avoids metadata/buffer handshake drift in CPUGather+prefetch path.
-        self._sync_litecache_max_tokens_to_runtime_cap()
+        self._sync_ditto_max_tokens_to_runtime_cap()
 
         if self.max_total_num_tokens <= 0:
             raise RuntimeError(
@@ -642,8 +642,8 @@ class ModelRunnerKVCacheMixin:
 
         # Initialize token_to_kv_pool
         is_nsa_model = is_deepseek_nsa(self.model_config.hf_config)
-        if litecache_enabled:
-            self.token_to_kv_pool = LiteCacheTokenToKVPoolPlaceholder(
+        if ditto_enabled:
+            self.token_to_kv_pool = DittoTokenToKVPoolPlaceholder(
                 size=self.max_total_num_tokens,
                 page_size=self.page_size,
                 dtype=self.kv_cache_dtype,
@@ -652,7 +652,7 @@ class ModelRunnerKVCacheMixin:
                 end_layer=self.end_layer,
             )
             logger.info(
-                "Use LiteCache token pool placeholder. size=%d, page_size=%d",
+                "Use Ditto token pool placeholder. size=%d, page_size=%d",
                 self.max_total_num_tokens,
                 self.page_size,
             )

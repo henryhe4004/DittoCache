@@ -1,0 +1,1114 @@
+import argparse
+import json
+import os
+import random
+import sys
+import threading
+import time
+from datetime import datetime
+from functools import partial
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+SGLANG_PY_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", "..", "python"))
+if os.path.isdir(SGLANG_PY_ROOT) and SGLANG_PY_ROOT not in sys.path:
+    sys.path.insert(0, SGLANG_PY_ROOT)
+
+import numpy as np
+import torch
+import yaml
+from tqdm import tqdm
+from transformers import AutoConfig, AutoTokenizer
+
+from sglang import Engine
+
+from dataloader import (
+    AIME24Manager,
+    AIME25Manager,
+    ARCManager,
+    GPQAManager,
+    HumanEvalManager,
+    LiveCodeBenchManager,
+    InfiniteBenchManager,
+    LongBenchManager,
+    LongBenchV2Manager,
+    MathManager,
+    Math500Manager,
+    MMLUProManager,
+    NIAHManager,
+    RULERManager,
+)
+
+
+def log(msg: str):
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{ts}] {msg}", flush=True)
+
+
+def bridge_ditto_env_to_ditto():
+    for key, value in list(os.environ.items()):
+        if key.startswith("DITTO_"):
+            os.environ.setdefault("DITTO_" + key[len("DITTO_") :], value)
+
+
+def normalize_longbench_task_name(task_name: str) -> str:
+    """Map known LongBench aliases/typos to canonical task names."""
+    if not isinstance(task_name, str):
+        return task_name
+    t = task_name.strip()
+    alias_map = {
+        "multinews": "multi_news",
+        "mulitinews": "multi_news",
+        "multinews_e": "multi_news_e",
+        "mulitinews_e": "multi_news_e",
+    }
+    return alias_map.get(t, t)
+
+
+def _iter_asset_roots():
+    seen = set()
+    for raw_root in (
+        os.environ.get("DITTO_ROOT"),
+        THIS_DIR,
+    ):
+        if not raw_root:
+            continue
+        root = os.path.abspath(raw_root)
+        if root in seen:
+            continue
+        seen.add(root)
+        yield root
+
+
+def seed_everything(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.cuda.manual_seed_all(seed)
+
+
+def load_tokenizer(model_path):
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        use_fast=True,
+    )
+    if tokenizer.pad_token is None and tokenizer.eos_token is not None:
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+
+    def apply_chat_template(prompt, tok):
+        messages = [{"role": "user", "content": prompt}]
+        if hasattr(tok, "apply_chat_template"):
+            prompt_text = tok.apply_chat_template(
+                messages,
+                add_generation_prompt=True,
+                tokenize=False,
+            )
+            encoded = tok(prompt_text)
+        else:
+            encoded = tok(prompt)
+        return encoded
+
+    return tokenizer, apply_chat_template
+
+
+def get_dataset(args):
+    if args.dataset_name == "longbench":
+        dataset_manager = LongBenchManager(
+            args.dataset_path,
+            args.dataset_path,
+            "test",
+            args.e,
+        )
+        raw_tasks = (
+            dataset_manager.get_dataset_names(with_e=args.e)
+            if args.tasks is None
+            else args.tasks.split(",")
+        )
+        tasks = [normalize_longbench_task_name(t) for t in raw_tasks]
+    elif args.dataset_name == "infinitebench":
+        dataset_manager = InfiniteBenchManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "niah":
+        dataset_manager = NIAHManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "ruler":
+        dataset_manager = RULERManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "longbench-v2":
+        dataset_manager = LongBenchV2Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "math":
+        dataset_manager = MathManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "aime25":
+        dataset_manager = AIME25Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "aime24":
+        dataset_manager = AIME24Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "gpqa":
+        dataset_manager = GPQAManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "math500":
+        dataset_manager = Math500Manager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "mmlu_pro":
+        dataset_manager = MMLUProManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "humaneval":
+        dataset_manager = HumanEvalManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names()
+    elif args.dataset_name == "livecodebench":
+        dataset_manager = LiveCodeBenchManager(
+            args.dataset_path,
+            args.dataset_path,
+            release_version=args.release_version,
+            not_fast=args.not_fast,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            max_new_tokens=args.lcb_max_new_tokens,
+        )
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    elif args.dataset_name == "arc":
+        dataset_manager = ARCManager(args.dataset_path, args.dataset_path)
+        tasks = dataset_manager.get_dataset_names() if args.tasks is None else args.tasks.split(",")
+    else:
+        raise ValueError(f"Unsupported dataset_name: {args.dataset_name}")
+
+    log(f"Datasets: {tasks}")
+    return dataset_manager, tasks
+
+
+def resolve_ditto_architecture(model_path: str) -> str:
+    cfg = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+    model_type = str(getattr(cfg, "model_type", "")).lower()
+    archs = [str(x).lower() for x in (getattr(cfg, "architectures", None) or [])]
+
+    if "qwen2" in model_type or any("qwen2" in a for a in archs):
+        return "DittoQwen2ForCausalLM"
+    if "llama" in model_type or any("llama" in a for a in archs):
+        return "DittoLlamaForCausalLM"
+
+    log(
+        "[WARN] Cannot infer Ditto architecture from model config "
+        f"(model_type={model_type}, archs={archs}). "
+        "Fallback to DittoLlamaForCausalLM."
+    )
+    return "DittoLlamaForCausalLM"
+
+
+def _parse_offloading_method_name(name: str | None) -> str | None:
+    if not name:
+        return None
+    raw = str(name).strip().lower()
+    if raw == "offloading":
+        return None
+
+    if raw.startswith("offloading-"):
+        method = raw[len("offloading-") :]
+    elif raw.endswith("-offloading"):
+        method = raw[: -len("-offloading")]
+    else:
+        return None
+
+    if method in {"hash", "loki", "infinigen", "quest"}:
+        return method
+    return None
+
+
+def resolve_offloading_method(method: str, resolved_cfg_key: str | None = None) -> str:
+    for candidate in (resolved_cfg_key, method):
+        parsed = _parse_offloading_method_name(candidate)
+        if parsed is not None:
+            return parsed
+    return "hash"
+
+
+def method_to_variant(method: str, resolved_cfg_key: str | None = None) -> str:
+    """
+    Resolve runtime variant from (in priority order):
+    1) resolved config key (if any)
+    2) method string
+
+    Any method name shaped like `offloading-*` or `*-offloading` should run
+    the non-duohead offloading framework.
+    """
+    candidates = []
+    if resolved_cfg_key:
+        candidates.append(resolved_cfg_key.lower())
+    candidates.append(method.lower())
+
+    for candidate in candidates:
+        if candidate == "offloading" or _parse_offloading_method_name(candidate) is not None:
+            return "offloading"
+        if candidate == "hash" or "hash" in candidate:
+            return "hash"
+        if candidate == "loki" or "loki" in candidate:
+            return "loki"
+        if candidate == "infinigen" or "infinigen" in candidate:
+            return "infinigen"
+        if candidate == "quest" or "quest" in candidate:
+            return "quest"
+
+    log(
+        f"[WARN] Cannot map method={method} resolved_cfg_key={resolved_cfg_key} "
+        "to a Ditto variant. Fallback to offloading."
+    )
+    return "offloading"
+
+
+def resolve_path(path_value: str | None, config_file: str) -> str | None:
+    if not path_value:
+        return None
+    if os.path.isabs(path_value):
+        return path_value
+
+    config_dir = os.path.dirname(os.path.abspath(config_file))
+    candidates = [os.path.normpath(os.path.join(config_dir, path_value))]
+    for asset_root in _iter_asset_roots():
+        if path_value.startswith("../"):
+            candidates.append(
+                os.path.normpath(os.path.join(asset_root, path_value[3:]))
+            )
+        candidates.append(os.path.normpath(os.path.join(asset_root, path_value)))
+
+    for cand in candidates:
+        if os.path.exists(cand):
+            return cand
+
+    return candidates[0]
+
+
+def load_config_file(config_file: str):
+    with open(config_file, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    suffix = os.path.splitext(config_file)[1].lower()
+    if suffix in {".yaml", ".yml"}:
+        return yaml.safe_load(text)
+    if suffix == ".json":
+        return json.loads(text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return yaml.safe_load(text)
+
+
+def yaml_cfg_to_runtime(raw_cfg: dict, config_file: str) -> dict:
+    km = raw_cfg.get("kvcache_manager", {}) if isinstance(raw_cfg, dict) else {}
+    sparse = raw_cfg.get("sparse_attention", {}) if isinstance(raw_cfg, dict) else {}
+    offload = raw_cfg.get("offload", {}) if isinstance(raw_cfg, dict) else {}
+    method_cfg = sparse.get("method_config", {}) if isinstance(sparse, dict) else {}
+
+    cfg = {}
+
+    def set_if(key: str, value):
+        if value is not None:
+            cfg[key] = value
+
+    set_if("max_num_tokens", km.get("max_tokens"))
+    set_if("max_batch_size", km.get("max_batch_size"))
+    set_if("max_gpu_memory_size", km.get("gpu_memory_budget"))
+    set_if("topk", sparse.get("token_budget"))
+    set_if("sink_budget", sparse.get("sink_budget"))
+    set_if("recent_budget", sparse.get("recent_budget"))
+    set_if("selective_start_len", sparse.get("selective_start_len"))
+    set_if("reuse_threshold_lower", offload.get("reuse_threshold_lower"))
+    set_if("reuse_threshold_upper", offload.get("reuse_threshold_upper"))
+    set_if("decay_p", offload.get("decay_p"))
+    set_if("cosine_padding", offload.get("cosine_padding"))
+    set_if("num_omp_threads", offload.get("num_omp_threads"))
+    set_if("num_overlapped_heads", offload.get("num_overlapped_heads"))
+    set_if("num_skip_layers", offload.get("num_skip_layers"))
+    set_if("chunk_prefill_size", raw_cfg.get("chunk_prefill_size"))
+    set_if("_yaml_enable_cuda_graph", raw_cfg.get("enable_cuda_graph"))
+    set_if("_yaml_sparse_method", sparse.get("method"))
+    set_if("rbits", method_cfg.get("rbit", method_cfg.get("rbits")))
+    set_if("num_channels", method_cfg.get("num_channels"))
+    set_if("block_size", method_cfg.get("block_size"))
+
+    cfg["attn_pattern_path"] = resolve_path(offload.get("attn_pattern_path"), config_file)
+    cfg["aux_data_path"] = resolve_path(method_cfg.get("aux_data_path"), config_file)
+    return cfg
+
+
+def load_method_cfg(args):
+    if not args.config_file:
+        return {}, None
+
+    raw_cfg = load_config_file(args.config_file)
+    if not isinstance(raw_cfg, dict):
+        raise ValueError(f"config_file={args.config_file} should contain a mapping object.")
+
+    if "kvcache_manager" in raw_cfg or os.path.splitext(args.config_file)[1].lower() in {".yaml", ".yml"}:
+        cfg = yaml_cfg_to_runtime(raw_cfg, args.config_file)
+        if args.topk is not None:
+            cfg["topk"] = args.topk
+        if args.selective_start_len is not None:
+            cfg["selective_start_len"] = args.selective_start_len
+        return cfg, "yaml"
+
+    key = args.method.lower()
+
+    candidates = [key]
+    parsed = _parse_offloading_method_name(key)
+    if parsed is not None:
+        candidates.extend([
+            f"offloading-{parsed}",
+            f"{parsed}-offloading",
+            parsed,
+        ])
+    elif key == "offloading":
+        candidates.extend([
+            "offloading-hash",
+            "hash-offloading",
+            "offloading-loki",
+            "loki-offloading",
+            "offloading-quest",
+            "quest-offloading",
+            "offloading-infinigen",
+            "infinigen-offloading",
+        ])
+    elif key.endswith("-offloading"):
+        base = key[: -len("-offloading")]
+        candidates.extend([f"offloading-{base}", base])
+
+    method_cfg = None
+    resolved_key = None
+    seen = set()
+    for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        method_cfg = raw_cfg.get(candidate)
+        if method_cfg is not None:
+            resolved_key = candidate
+            break
+    if method_cfg is None:
+        available = ", ".join(sorted(raw_cfg.keys()))
+        raise ValueError(
+            f"method={args.method} not found in config_file={args.config_file}. "
+            f"Available keys: {available}"
+        )
+
+    method_cfg = dict(method_cfg)
+    if args.topk is not None:
+        method_cfg["topk"] = args.topk
+    if args.selective_start_len is not None:
+        method_cfg["selective_start_len"] = args.selective_start_len
+
+    method_cfg["attn_pattern_path"] = resolve_path(
+        method_cfg.get("attn_pattern_path"), args.config_file
+    )
+    method_cfg["aux_data_path"] = resolve_path(
+        method_cfg.get("aux_data_path"), args.config_file
+    )
+
+    return method_cfg, resolved_key
+
+
+def build_sampling_params(
+    tokenizer,
+    dataset_name: str,
+    dataset_maxlen: int,
+    dataset_category,
+    temperature: float = 0.0,
+    top_p: float = 1.0,
+):
+    sampling_params = {
+        "temperature": float(temperature),
+        "top_p": float(top_p),
+        "max_new_tokens": dataset_maxlen,
+    }
+
+    task_name = dataset_name[:-2] if dataset_name.endswith("_e") else dataset_name
+    qa_newline_stop_tasks = {
+        "2wikimqa",
+        "hotpotqa",
+        "musique",
+        "multifieldqa_en",
+        "qasper",
+        "narrativeqa",
+        "samsum",
+    }
+    if task_name in qa_newline_stop_tasks and dataset_category is not None and "QA" in dataset_category:
+        newline_ids = tokenizer.encode("\n", add_special_tokens=False)
+        if newline_ids:
+            sampling_params["stop_token_ids"] = [newline_ids[-1]]
+
+    return sampling_params
+
+
+def build_engine(args):
+    method = args.method.lower()
+    ditto_enabled = (
+        ("offloading" in method)
+        or ("hash" in method)
+        or ("loki" in method)
+        or ("infinigen" in method)
+        or ("quest" in method)
+    )
+
+    model_override = None
+    cfg = {}
+    cfg_key = None
+    if ditto_enabled:
+        cfg, cfg_key = load_method_cfg(args)
+
+    if args.max_total_tokens is not None:
+        max_total_tokens = int(args.max_total_tokens)
+        log(f"[Engine] max_total_tokens={max_total_tokens} (from --max-total-tokens)")
+    else:
+        max_total_tokens = None
+        log("[Engine] max_total_tokens=<auto-profiled by available GPU memory>")
+
+    # flash-attn with PP on long contexts can OOM on first prefill even when KV
+    # cache allocation succeeds. Keep a small headroom unless user explicitly
+    # disables it via FLASH_ATTN_PP_SAFE_MARGIN_TOKENS=0.
+    if (
+        method in {"flashattn", "flash-attn"}
+        and int(args.pp_num) > 1
+        and os.environ.get("DITTO_ALLOW_FLASHATTN_PP", "0") == "1"
+    ):
+        safe_margin = int(os.environ.get("FLASH_ATTN_PP_SAFE_MARGIN_TOKENS", "32768"))
+        if safe_margin > 0:
+            safe_cap = max(1, int(args.context_length) - safe_margin)
+            if max_total_tokens is None:
+                max_total_tokens = safe_cap
+                log(
+                    "[Engine] auto-set max_total_tokens for flashattn+PP safety: "
+                    f"{max_total_tokens} (context_length={args.context_length}, margin={safe_margin})"
+                )
+            elif max_total_tokens > safe_cap:
+                log(
+                    "[Engine] lower max_total_tokens for flashattn+PP safety: "
+                    f"{max_total_tokens} -> {safe_cap} "
+                    f"(context_length={args.context_length}, margin={safe_margin})"
+                )
+                max_total_tokens = safe_cap
+
+    # Ditto cache tensors are sized by per-request context length.
+    # Keep it bounded by max_seq_len, max_total_tokens, and engine context_length.
+    if max_total_tokens is None:
+        ditto_kvcache_max_tokens = int(args.max_seq_len)
+    else:
+        ditto_kvcache_max_tokens = min(int(args.max_seq_len), max_total_tokens)
+    ditto_kvcache_max_tokens = min(
+        ditto_kvcache_max_tokens, int(args.context_length)
+    )
+    if int(args.max_seq_len) > int(args.context_length):
+        log(
+            f"[WARN] max_seq_len={args.max_seq_len} > context_length={args.context_length}: "
+            "prompts longer than context_length will fail tokenizer validation; "
+            "lower MAX_SEQ_LEN or raise ENGINE_CONTEXT_LENGTH."
+        )
+    if ditto_kvcache_max_tokens <= 0:
+        raise ValueError(
+            "ditto_kvcache_max_tokens must be positive. "
+            f"Got {ditto_kvcache_max_tokens}."
+        )
+
+    if ditto_enabled:
+        variant = method_to_variant(method, cfg_key)
+        offloading_method = (
+            resolve_offloading_method(method, cfg_key)
+            if variant == "offloading"
+            else None
+        )
+        decay_p = cfg.get("decay_p", cfg.get("deacy_p", 2.0))
+        log(
+            f"[Ditto] method={args.method} resolved_cfg_key={cfg_key} "
+            f"variant={variant} "
+            f"offloading_method={offloading_method}"
+        )
+
+        architecture = resolve_ditto_architecture(args.model)
+        model_override = {
+            "architectures": [architecture],
+            "ditto_variant": variant,
+            "custom_config": {
+                "enable_cuda_graph": False,
+                "new_config": True,
+                "is_profiling": False,
+                "profile_reserve_ratio": float(cfg.get("profile_reserve_ratio", 0.85)),
+                "offloading_method": offloading_method,
+                "num_channels": int(cfg.get("num_channels", 32)),
+                "rbits": int(cfg.get("rbits", 32)),
+                "block_size": int(cfg.get("block_size", 64)),
+                "aux_data_path": cfg.get("aux_data_path"),
+                "kvcache_manager_config": {
+                    "max_tokens": ditto_kvcache_max_tokens,
+                    "max_batch_size": int(args.batch_size),
+                    "gpu_memory_budget": float(cfg.get("max_gpu_memory_size", 16.0)),
+                },
+                "sparse_attention_config": {
+                    "token_budget": float(cfg.get("topk", 0.2)),
+                    "sink_budget": int(cfg.get("sink_budget", 4)),
+                    "recent_budget": int(cfg.get("recent_budget", 128)),
+                    "selective_start_len": int(cfg.get("selective_start_len", 0)),
+                },
+                "offload_config": {
+                    "attn_pattern_path": cfg.get("attn_pattern_path") or "",
+                    "reuse_threshold_upper": float(cfg.get("reuse_threshold_upper", 0.95)),
+                    "reuse_threshold_lower": float(cfg.get("reuse_threshold_lower", 0.7)),
+                    "decay_p": float(decay_p),
+                    "cosine_padding": float(cfg.get("cosine_padding", 0.02)),
+                    "num_skip_layers": int(cfg.get("num_skip_layers", 0)),
+                    "num_overlapped_heads": int(cfg.get("num_overlapped_heads", 0)),
+                    "num_omp_threads": int(cfg.get("num_omp_threads", 4)),
+                },
+            },
+        }
+
+        log(
+            "[Ditto] "
+            f"architecture={model_override['architectures'][0]} "
+            f"variant={variant} "
+            f"attn_pattern_path={model_override['custom_config']['offload_config']['attn_pattern_path']} "
+            f"token_budget={model_override['custom_config']['sparse_attention_config']['token_budget']} "
+            f"selective_start_len={model_override['custom_config']['sparse_attention_config']['selective_start_len']} "
+            f"kvcache_max_tokens={model_override['custom_config']['kvcache_manager_config']['max_tokens']} "
+            f"profile_reserve_ratio={model_override['custom_config']['profile_reserve_ratio']}"
+        )
+
+    if ditto_enabled and args.batch_size != 1:
+        raise ValueError(
+            "Ditto SGLang bridge currently supports batch_size=1. "
+            f"Got batch_size={args.batch_size}."
+        )
+
+    if args.mp_num <= 0 or args.pp_num <= 0:
+        raise ValueError(
+            f"mp_num and pp_num must be positive integers. "
+            f"Got mp_num={args.mp_num}, pp_num={args.pp_num}."
+        )
+    effective_tp_size = int(args.mp_num)
+    effective_pp_size = int(args.pp_num)
+    allow_flashattn_pp = os.environ.get("DITTO_ALLOW_FLASHATTN_PP", "0") == "1"
+    if (
+        method in {"flashattn", "flash-attn"}
+        and effective_pp_size > 1
+        and not allow_flashattn_pp
+    ):
+        # Current Ditto flash-attn path with PP can stall after the first prefill
+        # chunk. Prefer TP-only topology by default for stability.
+        log(
+            "[Engine] remap flashattn parallelism for stability: "
+            f"(mp={effective_tp_size}, pp={effective_pp_size}) -> "
+            f"(tp={effective_tp_size * effective_pp_size}, pp=1). "
+            "Set DITTO_ALLOW_FLASHATTN_PP=1 to force PP."
+        )
+        effective_tp_size = effective_tp_size * effective_pp_size
+        effective_pp_size = 1
+    # In Ditto flashattn mode, multi-stage PP with the auto-selected backend
+    # can hang indefinitely on long-context first-sample prefill. Keep explicit
+    # user choice untouched; otherwise pick a conservative backend for PP.
+    attention_backend = args.attention_backend
+    if (
+        attention_backend is None
+        and method in {"flashattn", "flash-attn"}
+        and effective_pp_size > 1
+    ):
+        attention_backend = "triton"
+        log(
+            "[Engine] auto-set attention_backend=triton for "
+            "flashattn + pp_num>1 to avoid backend hang"
+        )
+
+    chunked_prefill_size = 4096
+    max_prefill_tokens = None
+    if method in {"flashattn", "flash-attn"} and effective_pp_size > 1:
+        # Keep PP prefill peak memory bounded for long-context flash-attn runs.
+        chunked_prefill_size = min(8192, int(args.context_length))
+        if max_total_tokens is None:
+            max_prefill_tokens = min(32768, int(args.context_length))
+        else:
+            max_prefill_tokens = min(32768, int(max_total_tokens))
+        log(
+            f"[Engine] auto-set prefill limits for flashattn+PP: "
+            f"chunked_prefill_size={chunked_prefill_size}, "
+            f"max_prefill_tokens={max_prefill_tokens}"
+        )
+
+    engine_kwargs = {
+        "model_path": args.model,
+        "model_impl": "auto",
+        "trust_remote_code": True,
+        "log_level": "info",
+        "device": args.device,
+        "tp_size": effective_tp_size,
+        "pp_size": effective_pp_size,
+        "attention_backend": attention_backend,
+        # SGLang tokenizer/scheduler limit (can exceed HF max_position_embeddings with
+        # SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN). Defaults to 64K; override with --context-length.
+        "context_length": int(args.context_length),
+        "chunked_prefill_size": chunked_prefill_size,
+        "disable_radix_cache": True,
+        "enable_mixed_chunk": False,
+        "schedule_policy": "fcfs",
+        "mem_fraction_static": args.mem_fraction_static,
+        "max_total_tokens": max_total_tokens,
+        "max_running_requests": args.max_running_requests,
+        "page_size": args.page_size,
+        "disable_cuda_graph": args.disable_cuda_graph,
+        "disable_piecewise_cuda_graph": True,
+        "decode_log_interval": args.decode_log_interval,
+    }
+    if max_prefill_tokens is not None:
+        engine_kwargs["max_prefill_tokens"] = max_prefill_tokens
+    if args.quantization is not None:
+        engine_kwargs["quantization"] = args.quantization
+        log(f"[Engine] quantization={args.quantization}")
+    if model_override is not None:
+        engine_kwargs["json_model_override_args"] = json.dumps(model_override)
+
+    log(
+        f"[Engine] context_length={int(args.context_length)} "
+        f"(from --context-length; max_seq_len={int(args.max_seq_len)})"
+    )
+    log(
+        f"[Engine] parallelism tp_size={effective_tp_size} "
+        f"pp_size={effective_pp_size}"
+    )
+    # SGLang ModelConfig rejects context_length above HF-derived max (e.g. 32K) unless opted in.
+    os.environ.setdefault("SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN", "1")
+
+    engine = Engine(**engine_kwargs)
+
+    return engine
+
+
+
+def _heartbeat_loop(stop_event, dataset_name, sample_id, input_len, heartbeat_sec, start_t):
+    while not stop_event.wait(timeout=heartbeat_sec):
+        elapsed = time.time() - start_t
+        log(
+            f"[HEARTBEAT] dataset={dataset_name} sample={sample_id} "
+            f"waiting_engine_generate elapsed={elapsed:.1f}s input_tokens={input_len}"
+        )
+
+
+def get_resume_start_index(out_file: str) -> int:
+    if not os.path.exists(out_file):
+        return 0
+
+    completed = 0
+    invalid_lines = 0
+    with open(out_file, "r", encoding="utf-8") as f:
+        for line_no, raw_line in enumerate(f, start=1):
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                invalid_lines += 1
+                log(
+                    f"[RESUME] ignore invalid json line at {out_file}:{line_no}; "
+                    "will resume from the last valid sample"
+                )
+                continue
+
+            index = row.get("index")
+            if isinstance(index, int):
+                completed = max(completed, index + 1)
+            else:
+                completed += 1
+
+    log(
+        f"[RESUME] found {completed} completed samples in {out_file}"
+        + (f" ({invalid_lines} invalid trailing lines ignored)" if invalid_lines else "")
+    )
+    return completed
+
+
+def _encode_prompt_max_length(args, dataset_maxlen: int) -> int:
+    """
+    Cap tokenized prompt length so input_ids stay under SGLang's per-request limit.
+
+    When --max-total-tokens is set (e.g. test_accuracy.sh default 65536), the engine
+    rejects prompts with len(input_ids) >= max_req_input_len (~that budget). Dataset
+    code otherwise truncates only by max_seq_len, which can be 131072 while the
+    engine still caps at 64K — causing ValueError on LongBench-v2-length contexts.
+    """
+    budget = int(args.max_seq_len) - int(dataset_maxlen)
+    if budget <= 0:
+        raise ValueError(
+            f"max_seq_len={args.max_seq_len} must exceed dataset max_new_tokens={dataset_maxlen}."
+        )
+    if args.max_total_tokens is None:
+        return budget
+    # Reserve a few tokens inside the total budget for scheduler / rounding.
+    total_cap = int(args.max_total_tokens) - int(dataset_maxlen) - 16
+    if total_cap <= 0:
+        raise ValueError(
+            f"max_total_tokens={args.max_total_tokens} too small for max_new_tokens={dataset_maxlen}."
+        )
+    capped = min(budget, total_cap)
+    if capped < budget:
+        log(
+            f"[DATASET] capping prompt encode length {budget} -> {capped} "
+            f"to fit max_total_tokens={args.max_total_tokens} (max_new_tokens={dataset_maxlen})"
+        )
+    return capped
+
+
+def _request_total_token_cap(args) -> int:
+    caps = [int(args.context_length), int(args.max_seq_len)]
+    if args.max_total_tokens is not None:
+        caps.append(int(args.max_total_tokens))
+    return min(caps)
+
+
+def _strict_fit_input_ids(args, input_ids, sampling_params, dataset_name: str, sample_id: int):
+    """Hard-truncate input ids to guarantee input+output stays within configured cap."""
+    input_ids = list(input_ids)
+    max_new_tokens = int(sampling_params.get("max_new_tokens", 0))
+    total_cap = _request_total_token_cap(args)
+    # TokenizerManager validates with `input + max_new_tokens < max_req_len` (strictly
+    # less-than). Keep a small safety margin to avoid exact-boundary failures after
+    # chat-template/special-token handling.
+    safety_margin = 16
+    max_input_tokens = total_cap - max_new_tokens - safety_margin
+    if max_input_tokens <= 0:
+        raise ValueError(
+            f"Invalid request budget: total_cap={total_cap} <= max_new_tokens={max_new_tokens} + "
+            f"safety_margin={safety_margin} "
+            f"(dataset={dataset_name}, sample={sample_id})."
+        )
+
+    input_len = len(input_ids)
+    if input_len <= max_input_tokens:
+        return input_ids
+
+    # Preserve both prefix and suffix context like the dataset-level middle truncation path.
+    keep_head = max_input_tokens // 2
+    keep_tail = max_input_tokens - keep_head
+    truncated = input_ids[:keep_head] + input_ids[-keep_tail:]
+    log(
+        f"[TRUNCATE-HARD] dataset={dataset_name} sample={sample_id} "
+        f"input_tokens={input_len}->{len(truncated)} total_cap={total_cap} "
+        f"max_new_tokens={max_new_tokens} safety_margin={safety_margin}"
+    )
+    return truncated
+
+
+def run_dataset(args, dataset_manager, tokenizer, apply_chat_template, engine, dataset_name):
+    raw_data = dataset_manager.get_data(dataset_name)
+    if args.dataset_limit > 0:
+        raw_data = raw_data.select(range(min(args.dataset_limit, len(raw_data))))
+
+    _, dataset_maxlen, dataset_category = dataset_manager.get_dataset_info(dataset_name)
+    encode_max_len = _encode_prompt_max_length(args, dataset_maxlen)
+    log(
+        f"[DATASET] {dataset_name} samples={len(raw_data)} "
+        f"max_new_tokens={dataset_maxlen} max_seq_len={args.max_seq_len} "
+        f"encode_max_len={encode_max_len}"
+    )
+
+    process_fn = partial(
+        dataset_manager.process_raw_data,
+        tokenizer=tokenizer,
+        apply_chat_template=apply_chat_template,
+        task=dataset_name,
+        max_length=encode_max_len,
+        truncate_from_middle=True,
+    )
+
+    remove_columns = []
+    for key in raw_data[0]:
+        if key not in [
+            "length",
+            "all_classes",
+            "answers",
+            "depth_percent",
+            "difficulty",
+            "domain",
+            "sub_domain",
+            "answer",
+            "choice_A",
+            "choice_B",
+            "choice_C",
+            "choice_D",
+            "canonical_solution",
+            "test",
+            "entry_point",
+            "answerKey",
+            "question_id",
+        ]:
+            remove_columns.append(key)
+
+    map_t0 = time.time()
+    encoded_data = raw_data.map(
+        process_fn,
+        batched=True,
+        num_proc=1,
+        batch_size=10,
+        with_indices=True,
+        remove_columns=remove_columns,
+    )
+    log(f"[DATASET] {dataset_name} tokenization done in {time.time() - map_t0:.1f}s")
+
+    out_file = os.path.join(args.output_dir, f"{dataset_name}.jsonl")
+    resume_start = 0
+    if args.resume:
+        resume_start = get_resume_start_index(out_file)
+    elif os.path.exists(out_file):
+        os.remove(out_file)
+
+    sampling_params = build_sampling_params(
+        tokenizer,
+        dataset_name,
+        dataset_maxlen,
+        dataset_category,
+        temperature=args.sampling_temperature,
+        top_p=args.sampling_top_p,
+    )
+
+    task_name = dataset_name[:-2] if dataset_name.endswith("_e") else dataset_name
+    is_code_completion_task = task_name in {"lcc", "repobench-p", "livecodebench"}
+
+    limit = args.dataset_limit if args.dataset_limit > 0 else len(encoded_data)
+    total = min(limit, len(encoded_data))
+    run_start = resume_start
+    if args.start_index is not None:
+        run_start = max(run_start, int(args.start_index))
+    run_end = total
+    if args.end_index is not None:
+        run_end = min(run_end, int(args.end_index))
+
+    if run_start >= total:
+        log(
+            f"[RESUME] dataset={dataset_name} already complete: "
+            f"start={run_start} total={total}"
+        )
+        return
+    if run_start >= run_end:
+        log(
+            f"[RUN] dataset={dataset_name} empty shard: "
+            f"start={run_start} end={run_end} total={total}"
+        )
+        return
+
+    log(
+        f"[RUN] dataset={dataset_name} start_index={run_start} "
+        f"end_index={run_end} total_samples={total}"
+    )
+    for i in tqdm(
+        range(run_start, run_end),
+        desc=f"Run {dataset_name}",
+        initial=run_start,
+        total=run_end,
+    ):
+        row = encoded_data[i]
+        input_ids = row["input_ids"]
+        input_ids = _strict_fit_input_ids(
+            args,
+            input_ids,
+            sampling_params,
+            dataset_name=dataset_name,
+            sample_id=i,
+        )
+        sample_id = i
+        input_len = len(input_ids)
+
+        log(
+            f"[SAMPLE-START] dataset={dataset_name} sample={sample_id} "
+            f"input_tokens={input_len} max_new_tokens={dataset_maxlen}"
+        )
+
+        start_t = time.time()
+        stop_event = threading.Event()
+        hb_thread = threading.Thread(
+            target=_heartbeat_loop,
+            args=(
+                stop_event,
+                dataset_name,
+                sample_id,
+                input_len,
+                max(1, int(args.heartbeat_sec)),
+                start_t,
+            ),
+            daemon=True,
+        )
+        hb_thread.start()
+
+        try:
+            out = engine.generate(input_ids=input_ids, sampling_params=sampling_params)
+        finally:
+            stop_event.set()
+            hb_thread.join(timeout=1)
+
+        pred = out["text"] if isinstance(out, dict) else ""
+        meta_info = out.get("meta_info", {}) if isinstance(out, dict) else {}
+        completion_tokens = meta_info.get("completion_tokens", None)
+
+        retry_reason = None
+        if is_code_completion_task:
+            if not str(pred).strip():
+                retry_reason = "empty_pred"
+            elif completion_tokens is not None and int(completion_tokens) <= 1:
+                retry_reason = f"completion_tokens={completion_tokens}"
+
+        if retry_reason is not None:
+            retry_sampling_params = dict(sampling_params)
+            retry_sampling_params["min_new_tokens"] = min(16, dataset_maxlen)
+            retry_sampling_params["ignore_eos"] = True
+            log(
+                f"[RETRY] dataset={dataset_name} sample={sample_id} "
+                f"reason={retry_reason} sampling={retry_sampling_params}"
+            )
+            out_retry = engine.generate(
+                input_ids=input_ids,
+                sampling_params=retry_sampling_params,
+            )
+            retry_pred = out_retry["text"] if isinstance(out_retry, dict) else ""
+            if str(retry_pred).strip():
+                out = out_retry
+                pred = retry_pred
+                meta_info = out_retry.get("meta_info", {}) if isinstance(out_retry, dict) else {}
+                completion_tokens = meta_info.get("completion_tokens", None)
+
+        elapsed = time.time() - start_t
+        finish_reason = meta_info.get("finish_reason", None)
+        pred_preview = str(pred).replace("\n", "\\n")[:120]
+        log(
+            f"[SAMPLE-END] dataset={dataset_name} sample={sample_id} "
+            f"elapsed={elapsed:.2f}s completion_tokens={completion_tokens} "
+            f"finish_reason={finish_reason} pred_chars={len(str(pred))} "
+            f"pred_preview='{pred_preview}'"
+        )
+
+        out_info = {}
+        for k, v in row.items():
+            if k in ["input_ids", "attention_mask"]:
+                continue
+            out_info[k] = [v]
+
+        dataset_manager.write_one_result_v3(
+            args.output_dir,
+            pred,
+            0,
+            out_info,
+            dataset_name,
+        )
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--dataset_path", type=str, required=True)
+    parser.add_argument("--dataset_name", type=str, required=True)
+    parser.add_argument("--e", action="store_true", help="Evaluate on LongBench-E")
+    parser.add_argument("--tasks", type=str, default=None)
+    parser.add_argument("--output_dir", type=str, required=True)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--method", type=str, default="offloading")
+    parser.add_argument("--config_file", type=str, required=True)
+    parser.add_argument("--write_in_time", action="store_true")
+    parser.add_argument("--mp_num", default=1, type=int)
+    parser.add_argument("--pp_num", default=1, type=int)
+    parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--max_seq_len", type=int, default=131072)
+    parser.add_argument(
+        "--context-length",
+        type=int,
+        default=65536,
+        dest="context_length",
+        help=(
+            "SGLang ServerArgs.context_length (tokenizer max input length). "
+            "Default 65536 (64K). Must be >= longest prompt; set >= --max_seq_len if you use very long prompts."
+        ),
+    )
+    parser.add_argument("--topk", type=float, default=None)
+    parser.add_argument("--selective-start-len", type=int, default=None)
+    parser.add_argument("--dataset_limit", type=int, default=0)
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from an existing output jsonl instead of restarting from sample 0.",
+    )
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        default=None,
+        help="Optional inclusive start index for data sharding.",
+    )
+    parser.add_argument(
+        "--end-index",
+        type=int,
+        default=None,
+        help="Optional exclusive end index for data sharding.",
+    )
+    parser.add_argument("--sampling-temperature", type=float, default=0.0)
+    parser.add_argument("--sampling-top-p", type=float, default=1.0)
+    parser.add_argument("--release-version", type=str, default="release_latest")
+    parser.add_argument("--start-date", type=str, default=None)
+    parser.add_argument("--end-date", type=str, default=None)
+    parser.add_argument("--not-fast", action="store_true")
+    parser.add_argument("--lcb-max-new-tokens", type=int, default=2000)
+
+    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--attention-backend", type=str, default=None)
+    parser.add_argument("--mem-fraction-static", type=float, default=0.92)
+    parser.add_argument("--max-total-tokens", type=int, default=None)
+    parser.add_argument(
+        "--quantization",
+        type=str,
+        default=None,
+        help="SGLang ServerArgs.quantization, e.g. 'awq' for plain AWQ (skip awq_marlin repack).",
+    )
+    parser.add_argument("--max-running-requests", type=int, default=1)
+    parser.add_argument("--page-size", type=int, default=1)
+    parser.add_argument("--decode-log-interval", type=int, default=40)
+    parser.add_argument("--heartbeat-sec", type=int, default=30)
+    parser.add_argument(
+        "--disable-cuda-graph",
+        dest="disable_cuda_graph",
+        action="store_true",
+        default=True,
+        help="Disable CUDA graph capture (recommended for Ditto debug).",
+    )
+    parser.add_argument(
+        "--enable-cuda-graph",
+        dest="disable_cuda_graph",
+        action="store_false",
+        help="Enable CUDA graph capture.",
+    )
+
+    args = parser.parse_args()
+    log(f"Args: {args}")
+
+    seed_everything(args.seed)
+
+    dataset_manager, tasks = get_dataset(args)
+    tokenizer, apply_chat_template = load_tokenizer(args.model)
+
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    if args.device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available.")
+
+    engine = build_engine(args)
+    try:
+        for dataset_name in tasks:
+            run_dataset(
+                args,
+                dataset_manager,
+                tokenizer,
+                apply_chat_template,
+                engine,
+                dataset_name,
+            )
+    finally:
+        engine.shutdown()
+
+
+if __name__ == "__main__":
+    bridge_ditto_env_to_ditto()
+    main()

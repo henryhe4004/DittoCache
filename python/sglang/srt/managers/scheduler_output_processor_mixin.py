@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_FORCE_STREAM_INTERVAL = 50
 
 
-def _litecache_debug_enabled() -> bool:
-    return os.environ.get("LITECACHE_DEBUG_BATCH", "0") == "1"
+def _ditto_debug_enabled() -> bool:
+    return os.environ.get("DITTO_DEBUG_BATCH", "0") == "1"
 
 
 class SchedulerOutputProcessorMixin:
@@ -368,7 +368,7 @@ class SchedulerOutputProcessorMixin:
             result.copy_done.synchronize()
 
         # Record decode-step forward completion immediately after model output is ready.
-        # This keeps benchmark timing closer to myTransformer's timer scope
+        # This keeps benchmark timing closer to internal prototype's timer scope
         # (around model forward), instead of including Python post-processing below.
         for req in batch.reqs:
             if self.enable_overlap and (req.finished() or req.is_retracted):
@@ -439,17 +439,17 @@ class SchedulerOutputProcessorMixin:
                 else:
                     release_kv_cache(req, self.tree_cache)
 
-                litecache_model = getattr(self.tp_worker.model_runner, "model", None)
+                ditto_model = getattr(self.tp_worker.model_runner, "model", None)
                 release_finished_rid = getattr(
-                    litecache_model, "release_finished_rid", None
+                    ditto_model, "release_finished_rid", None
                 )
                 if callable(release_finished_rid):
-                    if _litecache_debug_enabled():
+                    if _ditto_debug_enabled():
                         active_map = getattr(
-                            litecache_model, "_active_rid_to_row", None
+                            ditto_model, "_active_rid_to_row", None
                         )
                         logger.info(
-                            "LiteCache scheduler releasing finished rid=%s "
+                            "Ditto scheduler releasing finished rid=%s "
                             "active_before=%s",
                             req.rid,
                             dict(active_map) if isinstance(active_map, dict) else None,

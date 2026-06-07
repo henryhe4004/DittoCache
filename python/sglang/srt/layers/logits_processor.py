@@ -424,7 +424,7 @@ class LogitsProcessor(nn.Module):
             and not logits_metadata.extend_return_logprob
         ):
             # Prefill without input logprobs.
-            # Some model paths (e.g. LiteCache offloading prefill) can return a compact
+            # Some model paths (e.g. Ditto offloading prefill) can return a compact
             # tensor with one row per sequence (only the last token hidden state).
             # In that case, directly use the compact rows and skip token-level indexing.
             num_seqs = int(len(logits_metadata.extend_seq_lens))

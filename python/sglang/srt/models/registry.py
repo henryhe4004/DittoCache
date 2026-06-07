@@ -97,7 +97,7 @@ def import_model_classes(package_name: str, strict: bool = False):
         module_candidates = []
         if ispkg:
             # Support package-scoped model entries, e.g.
-            # sglang.srt.models.litecache/litecache.py
+            # sglang.srt.models.ditto/ditto.py
             leaf = name.split(".")[-1]
             module_candidates.append(f"{name}.{leaf}")
         else:
