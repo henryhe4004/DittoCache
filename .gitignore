@@ -323,7 +323,6 @@ test/ditto/auxiliary/hash_weights/dataset_smoke_awq_64k_hook2
 test/ditto/auxiliary/hash_weights/dataset_smoke_awq_64k_hook
 test/ditto/auxiliary/hash_weights/dataset/Qwen2.5-14B-Instruct-AWQ
 test/ditto/auxiliary/hash_weights/dataset_smoke_awq3
-test/ditto/auxiliary/hash_weights/**/*.pt
 test/ditto/auxiliary/infinigen_skewing/**/*.pt
 test/ditto/auxiliary/loki_pca/**/*.pt
 test/ditto/config/.generated

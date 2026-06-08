@@ -136,6 +136,11 @@ else()
 endif()
 
 option(ENABLE_BELOW_SM90 "Enable gencode below SM90" ${DEFAULT_ENABLE_BELOW_SM90})
+set(SGL_KERNEL_COMMON_ARCH "86" CACHE STRING "Primary CUDA arch for common_ops, e.g. 86 for A40 or 90 for H100/H200")
+if (NOT SGL_KERNEL_COMMON_ARCH MATCHES "^[0-9]+a?$")
+    message(FATAL_ERROR "SGL_KERNEL_COMMON_ARCH must be a CUDA arch suffix like 86 or 90, but was set to '${SGL_KERNEL_COMMON_ARCH}'.")
+endif()
+message(STATUS "SGL_KERNEL_COMMON_ARCH=${SGL_KERNEL_COMMON_ARCH}")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
@@ -148,7 +153,7 @@ set(SGL_KERNEL_CUDA_FLAGS
     "-O3"
     "-Xcompiler"
     "-fPIC"
-    "-gencode=arch=compute_86,code=sm_86" # 手动修改成只编译sm86(a40)
+    "-gencode=arch=compute_${SGL_KERNEL_COMMON_ARCH},code=sm_${SGL_KERNEL_COMMON_ARCH}"
     "-std=c++17"
     "-DFLASHINFER_ENABLE_F16"
     "-DCUTE_USE_PACKED_TUPLE=1"

@@ -2194,6 +2194,15 @@ def direct_register_custom_op(
         # Operator doesn't exist, proceed with registration
         pass
 
+    # PyTorch 2.4's custom-op schema inference cannot handle stringified
+    # annotations from `from __future__ import annotations`.
+    if any(isinstance(annotation, str) for annotation in op_func.__annotations__.values()):
+        import typing
+
+        op_func.__annotations__ = typing.get_type_hints(op_func)
+        if op_func.__annotations__.get("return") is type(None):
+            op_func.__annotations__["return"] = None
+
     if hasattr(torch.library, "infer_schema"):
         schema_str = torch.library.infer_schema(op_func, mutates_args=mutates_args)
     else:
