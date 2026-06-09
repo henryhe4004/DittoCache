@@ -89,69 +89,7 @@ PY
 
 ```
 
-* **Others**
-
-  ```shell
-  pip install -r requirements.txt
-  pip install flashinfer -i https://flashinfer.ai/whl/cu124/torch2.4
-  cd 3rdparty
-  bash download.sh
-  cd ..
-  git submodule update --init --recursive
-  ```
-
-### Build
-
-```shell
-bash install.sh
-```
-
-## Preparations for Running
-
-```shell
-cd config
-bash run_profile_bandwidth.sh
-run_profile_prefetch.sh
-```
-
-## Performance
-
-### End-to-End Performance
-
-```shell
-cd speedup
-bash run_n2n_*.sh
-```
-
-For latency breakdown, try to run these scripts with `nsys profile`.
-
-### Ablation Study
-
-```shell
-cd speedup
-bash run_ablation_*.sh
-```
-
-## Accuracy
 
 ### Build RULER Dataset
 
 Please refer to the [official reposity](https://github.com/NVIDIA/RULER) of RULER.
-
-### Main Results
-
-```shell
-cd accuracy
-bash run_hash_offloading_*
-bash run_fullattn_*
-bash run_hash_original_*
-```
-
-Here, `hash_offloading`, `hash_original`, `fullattn` means our system + HATA, original HATA and dense attention with full KVCache in GPU HBM, respectively.
-
-### Ablation Study
-
-```shell
-cd accuracy
-bash run_ablation_*
-```
