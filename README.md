@@ -27,8 +27,6 @@ python3.13
 
 ```shell
 
-# Enter the repository
-cd DittoCache
 
 # Python 3.13 venv
 uv python install 3.13
