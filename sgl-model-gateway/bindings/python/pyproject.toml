@@ -6,12 +6,7 @@ build-backend = "maturin"
 name = "sglang-router"
 version = "0.3.2"
 description = "High-performance Rust-based load balancer for SGLang with multiple routing algorithms and prefill-decode disaggregation support"
-authors = [
-    {name = "Simo Lin", email = "linsimo.mark@gmail.com"},
-    {name = "Chang Su", email = "mckvtl@gmail.com"},
-    {name = "Keyang Ru", email = "rukeyang@gmail.com"},
-    {name = "Byron Hsu", email = "byronhsu1230@gmail.com"}
-]
+authors = []
 requires-python = ">=3.8"
 readme = "../../README.md"
 license = { text = "Apache-2.0" }
