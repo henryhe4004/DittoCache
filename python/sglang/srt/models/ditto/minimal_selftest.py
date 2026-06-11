@@ -233,7 +233,7 @@ def main():
         raise RuntimeError(
             "CUDA is not available in current environment. "
             "Run this script inside a GPU-enabled container/session "
-            "(e.g. your `jhe_sglang_lite` docker with NVIDIA runtime)."
+            "(e.g. a GPU-enabled docker image with NVIDIA runtime)."
         )
 
     if args.ditto_custom_config_path:
