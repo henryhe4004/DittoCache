@@ -13,8 +13,6 @@ python3.13
 
 ```shell
 
-# From repo root
-cd sglang-litecache
 
 # Python 3.13 venv
 uv python install 3.13
@@ -34,7 +32,7 @@ uv pip install torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1
 uv pip install -U pip setuptools wheel scikit-build-core cmake ninja setuptools-rust setuptools-scm
 
 # Build sgl-kernel
-cd sglang-litecache/sgl-kernel
+cd sgl-kernel
 export CMAKE_ARGS="
   -DSGL_KERNEL_USE_RAFT=ON
   -DSGL_KERNEL_DISABLE_BLACKWELL=ON
