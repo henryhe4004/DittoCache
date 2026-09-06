@@ -74,6 +74,7 @@ class HashOffloadingCache(OffloadingCache):
                 )
                 hash_weight = self._slice_local_kv_head_tensor(
                     hash_weight,
+                    layer_idx=layer,
                     tensor_name=f"hash_weight_layer_{layer:02d}",
                     head_dim=0,
                 )

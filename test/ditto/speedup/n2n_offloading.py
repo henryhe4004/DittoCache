@@ -115,6 +115,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mem-fraction-static", type=float, default=0.92)
     parser.add_argument("--max-total-tokens", type=int, default=None)
     parser.add_argument("--max-running-requests", type=int, default=None)
+    parser.add_argument("--tp-size", type=int, default=1)
+    parser.add_argument("--pp-size", type=int, default=1)
     parser.add_argument("--page-size", type=int, default=1)
     parser.add_argument("--decode-log-interval", type=int, default=40)
     parser.add_argument(
@@ -128,7 +130,7 @@ def parse_args() -> argparse.Namespace:
         dest="disable_cuda_graph",
         action="store_false",
     )
-    parser.add_argument("--chunked-prefill-size", type=int, default=8192)
+    parser.add_argument("--chunked-prefill-size", type=int, default=None)
     parser.add_argument(
         "--allow-auto-truncate",
         action="store_true",
@@ -775,10 +777,23 @@ def build_engine_for_bench(
         max_total_tokens = int(args.max_total_tokens)
         log(f"[Engine] max_total_tokens={max_total_tokens} (from --max-total-tokens)")
     else:
-        max_total_tokens = None
-        log("[Engine] max_total_tokens=<auto-profiled by available GPU memory>")
+        cfg_max_tokens = _as_int(cfg.get("max_num_tokens"))
+        if cfg_max_tokens is not None and cfg_max_tokens > 0:
+            max_total_tokens = cfg_max_tokens
+            log(
+                f"[Engine] max_total_tokens={max_total_tokens} "
+                "(from config kvcache_manager.max_tokens)"
+            )
+        else:
+            max_total_tokens = None
+            log("[Engine] max_total_tokens=<auto-profiled by available GPU memory>")
 
-    chunked_prefill_size = int(cfg.get("chunk_prefill_size", args.chunked_prefill_size))
+    chunked_prefill_size_value = (
+        args.chunked_prefill_size
+        if args.chunked_prefill_size is not None
+        else cfg.get("chunk_prefill_size", 8192)
+    )
+    chunked_prefill_size = int(chunked_prefill_size_value)
     max_running_requests = (
         int(args.max_running_requests)
         if args.max_running_requests is not None
@@ -902,6 +917,8 @@ def build_engine_for_bench(
         "allow_auto_truncate": args.allow_auto_truncate,
         "decode_log_interval": decode_log_interval,
         "enable_metrics": True,
+        "tp_size": int(args.tp_size),
+        "pp_size": int(args.pp_size),
     }
     if model_override is not None:
         engine_kwargs["json_model_override_args"] = json.dumps(model_override)
@@ -915,6 +932,8 @@ def build_engine_for_bench(
         "sglang_cuda_graph_enabled": not bool(args.disable_cuda_graph),
         "ditto_cuda_graph_enabled": ditto_enable_cuda_graph_value,
         "transfer_stats_enabled": bool(args.record_transfer_stats),
+        "tp_size": int(args.tp_size),
+        "pp_size": int(args.pp_size),
     }
     return engine, runtime_meta
 

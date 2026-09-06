@@ -17,7 +17,14 @@ WARMUP="${WARMUP:-1}"
 EPOCH="${EPOCH:-3}"
 CPUSET="${CPUSET:-0-95}"
 CUDA_DEVICE="${CUDA_DEVICE:-6}"
+TP_SIZE="${TP_SIZE:-1}"
+PP_SIZE="${PP_SIZE:-1}"
+ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
 MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-}"
+MEM_FRACTION_STATIC="${MEM_FRACTION_STATIC:-0.92}"
+CHUNKED_PREFILL_SIZE="${CHUNKED_PREFILL_SIZE:-}"
+SGLANG_CUDA_GRAPH="${SGLANG_CUDA_GRAPH:-0}"
+KV_CACHE_DTYPE="${KV_CACHE_DTYPE:-}"
 
 mkdir -p "${LOG_DIR}"
 
@@ -53,10 +60,29 @@ for method in ${METHODS}; do
       --batch_size "${BSZ}"
       --max_seq_len "${seq}"
       --max-running-requests "${BSZ}"
+      --tp-size "${TP_SIZE}"
+      --pp-size "${PP_SIZE}"
+      --mem-fraction-static "${MEM_FRACTION_STATIC}"
       --result-json "${result_json}"
+      # --ditto_enable_cuda_graph
+      --enable-cuda-graph
     )
     if [[ -n "${MAX_TOTAL_TOKENS}" ]]; then
       cmd+=(--max-total-tokens "${MAX_TOTAL_TOKENS}")
+    fi
+    if [[ -n "${KV_CACHE_DTYPE}" ]]; then
+      cmd+=(--kv-cache-dtype "${KV_CACHE_DTYPE}")
+    fi
+    if [[ -n "${CHUNKED_PREFILL_SIZE}" ]]; then
+      cmd+=(--chunked-prefill-size "${CHUNKED_PREFILL_SIZE}")
+    fi
+    if [[ -n "${ATTENTION_BACKEND}" ]]; then
+      cmd+=(--attention-backend "${ATTENTION_BACKEND}")
+    fi
+    if [[ "${SGLANG_CUDA_GRAPH}" == "1" ]]; then
+      cmd+=(--enable-cuda-graph)
+    else
+      cmd+=(--disable-cuda-graph)
     fi
 
     echo "[RUN] ${run_name}"

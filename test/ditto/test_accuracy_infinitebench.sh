@@ -21,9 +21,8 @@ if [[ -n "${NUM_GPUS}" ]]; then
     fi
 
     if [[ -z "${MP_NUM:-}" && -z "${PP_NUM:-}" ]]; then
-        # Ditto offloading requires MP_NUM=1; scale multi-GPU via PP_NUM by default.
-        export MP_NUM=1
-        export PP_NUM="${NUM_GPUS}"
+        export MP_NUM="${NUM_GPUS}"
+        export PP_NUM=1
     elif [[ -n "${MP_NUM:-}" && -z "${PP_NUM:-}" ]]; then
         if (( NUM_GPUS % MP_NUM != 0 )); then
             echo "[ERROR] NUM_GPUS=${NUM_GPUS} is not divisible by MP_NUM=${MP_NUM}" >&2

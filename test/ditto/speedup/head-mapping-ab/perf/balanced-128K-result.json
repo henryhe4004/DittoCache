@@ -1,0 +1,54 @@
+{
+  "status": "ok",
+  "method": "offloading",
+  "config_file": "/workspace/sglang-litecache/test/ditto/config/hata_offloading/Qwen2.5-14B-Instruct-1M-128K.yaml",
+  "data": "/workspace/sglang-litecache/test/ditto/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-128K.jsonl",
+  "batch_size": 1,
+  "max_seq_len": 128000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 127707,
+  "avg_elapsed_s": 70.76537476976712,
+  "p50_elapsed_s": 70.76033286005259,
+  "avg_tokens_per_s": 0.7206915063358643,
+  "overall_tokens_per_s": 0.7206914421908577,
+  "epoch_elapsed_s": [
+    70.76033286005259,
+    70.79338243138045,
+    70.74240901786834
+  ],
+  "epoch_tokens_per_s": [
+    0.7207427938597475,
+    0.7204063183368016,
+    0.720925406811044
+  ],
+  "avg_prefill_latency_s": 69.07743368220206,
+  "avg_decode_latency_ms_per_step": 42.19852718912686,
+  "avg_decode_tokens_per_s": 23.697526807944328,
+  "epoch_prefill_latency_s": [
+    69.07322470610961,
+    69.10341293225065,
+    69.05566340824589
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    42.17770384857431,
+    42.24923747824505,
+    42.16864024056122
+  ],
+  "epoch_decode_tokens_per_s": [
+    23.70920910228265,
+    23.669066229063173,
+    23.714305092487162
+  ],
+  "runtime_meta": {
+    "ditto_enabled": true,
+    "variant": "offloading",
+    "offloading_method": "hash",
+    "max_total_tokens": 131072,
+    "sglang_cuda_graph_enabled": false,
+    "ditto_cuda_graph_enabled": true,
+    "transfer_stats_enabled": false,
+    "tp_size": 2,
+    "pp_size": 1
+  }
+}

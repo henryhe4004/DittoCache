@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import nullcontext
 from typing import Optional, Tuple, Union
 
 import torch
@@ -747,15 +748,23 @@ def llm_sparse_offloading_decode_forward(
             self._graphs[bsz] = torch.cuda.CUDAGraph()
             self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
 
-            with torch.cuda.graph(self._graphs[bsz]):
-                input_buffer = self._graph_buffers[bsz]["input_hidden_states"]
-                for decoder_layer in self.layers:
-                    input_buffer = decoder_layer(
-                        input_buffer,
-                        past_key_value=past_key_values,
-                    )
-                hidden_states = self.norm(input_buffer, is_prefill=False)
-                self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
+            distributed_capture = nullcontext()
+            if int(getattr(past_key_values, "attn_tp_size", 1)) > 1:
+                # Register TP collective buffers before the graph is replayed.
+                from sglang.srt.distributed.parallel_state import graph_capture
+
+                distributed_capture = graph_capture()
+
+            with distributed_capture:
+                with torch.cuda.graph(self._graphs[bsz]):
+                    input_buffer = self._graph_buffers[bsz]["input_hidden_states"]
+                    for decoder_layer in self.layers:
+                        input_buffer = decoder_layer(
+                            input_buffer,
+                            past_key_value=past_key_values,
+                        )
+                    hidden_states = self.norm(input_buffer, is_prefill=False)
+                    self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
 
         else:
             graph_path = "replay"

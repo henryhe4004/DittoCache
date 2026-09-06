@@ -1387,6 +1387,7 @@ def is_multimodal_chunked_prefill_supported(model_architectures: List[str]):
 def is_piecewise_cuda_graph_disabled_model(model_architectures: List[str]):
     return any(
         arch in piecewise_cuda_graph_disabled_model_archs
+        or str(arch).startswith("Ditto")
         for arch in model_architectures
     )
 

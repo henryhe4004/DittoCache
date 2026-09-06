@@ -77,6 +77,7 @@ class LokiOffloadingCache(OffloadingCache):
                 pca = pca.view(-1, self.head_dim, self.head_dim)
                 pca = self._slice_local_kv_head_tensor(
                     pca,
+                    layer_idx=layer,
                     tensor_name=f"pca_components_layer_{layer:02d}",
                     head_dim=0,
                 )

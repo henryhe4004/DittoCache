@@ -15,8 +15,10 @@ TOPK="${TOPK:-0.10}"
 DECODE_STEPS="${DECODE_STEPS:-50}"
 WARMUP="${WARMUP:-1}"
 EPOCH="${EPOCH:-3}"
-CPUSET="${CPUSET:-96-143}"
+CPUSET="${CPUSET-96-143}"
 CUDA_DEVICE="${CUDA_DEVICE:-5}"
+TP_SIZE="${TP_SIZE:-1}"
+PP_SIZE="${PP_SIZE:-1}"
 MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-}"
 MEM_FRACTION_STATIC="${MEM_FRACTION_STATIC:-0.92}"
 SGLANG_LOG_LEVEL="${SGLANG_LOG_LEVEL:-warning}"
@@ -25,6 +27,10 @@ DISABLE_SGLANG_BATCH_LOG="${DISABLE_SGLANG_BATCH_LOG:-1}"
 # while keeping Ditto cuda graph on to match internal prototype configs.
 SGLANG_CUDA_GRAPH="${SGLANG_CUDA_GRAPH:-0}"
 DITTO_CUDA_GRAPH="${DITTO_CUDA_GRAPH:-1}"
+# TP uses an explicit safety gate in the Ditto model implementation. Keep the
+# benchmark's graph switch authoritative while allowing an explicit opt-out.
+DITTO_TP_ENABLE_CUDA_GRAPH="${DITTO_TP_ENABLE_CUDA_GRAPH:-${DITTO_CUDA_GRAPH}}"
+export DITTO_TP_ENABLE_CUDA_GRAPH
 RECORD_MAX_GPU_MEMORY="${RECORD_MAX_GPU_MEMORY:-1}"
 GPU_MEM_MONITOR_INTERVAL_SEC="${GPU_MEM_MONITOR_INTERVAL_SEC:-0.2}"
 
@@ -173,6 +179,8 @@ for method in ${METHODS}; do
       --max_seq_len "${seq}"
       --max-running-requests "${BSZ}"
       --mem-fraction-static "${MEM_FRACTION_STATIC}"
+      --tp-size "${TP_SIZE}"
+      --pp-size "${PP_SIZE}"
       --result-json "${result_json}"
     )
     if [[ -n "${MAX_TOTAL_TOKENS}" ]]; then

@@ -214,7 +214,7 @@ if [[ "${METHOD}" == offloading* || "${METHOD}" == *-offloading ]]; then
             PP_NUM=1
         fi
     else
-        [[ "${MP_NUM}" == "1" ]] || die "Ditto offloading currently requires MP_NUM=1 (unless offloading is fully disabled)."
+        [[ "${PP_NUM}" == "1" ]] || die "Ditto offloading supports tensor parallelism, but pipeline parallelism is not supported yet."
     fi
 fi
 
