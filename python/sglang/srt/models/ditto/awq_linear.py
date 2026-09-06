@@ -131,7 +131,8 @@ def replace_ditto_linears_with_awq(model: nn.Module, quant_config) -> int:
         return 0
 
     replaced = 0
-    named_modules = list(model.named_modules())
+    named_modules = list(model.named_modules(remove_duplicate=False))
+    module_index = dict(named_modules)
     for full_name, module in named_modules:
         if not isinstance(module, nn.Linear):
             continue
@@ -140,11 +141,13 @@ def replace_ditto_linears_with_awq(model: nn.Module, quant_config) -> int:
             continue
         if full_name.endswith("lm_head"):
             continue
+        if ".next_" in full_name:
+            continue
         if "." not in full_name:
             continue
 
         parent_name, attr_name = full_name.rsplit(".", 1)
-        parent = dict(model.named_modules()).get(parent_name)
+        parent = module_index.get(parent_name)
         if parent is None:
             continue
 

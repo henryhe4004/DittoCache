@@ -192,7 +192,7 @@ OUTPUT_DIR="${OUTPUT_ROOT}/${METHOD}/${RUN_TAG}"
 [[ -f "${CONFIG_FILE}" ]] || die "missing config: ${CONFIG_FILE}"
 
 if [[ "${METHOD}" == offloading* || "${METHOD}" == *-offloading ]]; then
-    [[ "${MP_NUM}" == "1" ]] || die "Ditto offloading currently requires MP_NUM=1."
+    [[ "${PP_NUM}" == "1" ]] || die "Ditto offloading supports tensor parallelism, but pipeline parallelism is not supported yet."
 fi
 
 REQUESTED_GPU_COUNT=$(( MP_NUM * PP_NUM ))

@@ -10,14 +10,23 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Iterable, Optional, Tuple, Type
+import re
+from typing import Iterable, NamedTuple, Optional, Tuple, Type
 
 import torch
 from torch import nn
 from transformers import PretrainedConfig
 
 from sglang.ditto.config_utils import ensure_ditto_custom_config
-from sglang.srt.distributed import get_tensor_model_parallel_world_size
+from sglang.ditto.tp_head_mapping import (
+    query_head_order,
+    reorder_head_axis,
+    resolve_tp_kv_head_orders,
+)
+from sglang.srt.distributed import (
+    get_tensor_model_parallel_rank,
+    get_tensor_model_parallel_world_size,
+)
 from sglang.srt.layers.logits_processor import LogitsProcessor, LogitsProcessorOutput
 from sglang.srt.layers.quantization.base_config import QuantizationConfig
 from sglang.srt.model_executor.forward_batch_info import ForwardBatch
@@ -47,10 +56,315 @@ def _finalize_ditto_awq_modules(root: nn.Module) -> int:
     return finalized
 
 
-def _replace_ditto_linears_with_tp(model: nn.Module, quant_config) -> int:
-    tp_size = get_tensor_model_parallel_world_size()
+class _DittoTPHeadLayout(NamedTuple):
+    tp_rank: int
+    tp_size: int
+    attn_tp_rank: int
+    attn_tp_size: int
+    total_num_heads: int
+    total_num_key_value_heads: int
+    local_num_heads: int
+    local_num_key_value_heads: int
+    query_head_start: int
+    kv_head_start: int
+    kv_head_replicas: int
+
+    @property
+    def kv_linear_replicated(self) -> bool:
+        return self.tp_size > 1 and self.total_num_key_value_heads < self.tp_size
+
+    @property
+    def kv_linear_tp_rank(self) -> int:
+        if not self.kv_linear_replicated:
+            return self.tp_rank
+        return self.kv_head_start
+
+    @property
+    def kv_linear_tp_size(self) -> int:
+        if not self.kv_linear_replicated:
+            return self.tp_size
+        return self.total_num_key_value_heads
+
+
+def _get_ditto_text_config(config: PretrainedConfig) -> PretrainedConfig:
+    return config.get_text_config() if hasattr(config, "get_text_config") else config
+
+
+def _get_ditto_total_kv_heads(config: PretrainedConfig) -> int:
+    if hasattr(config, "num_key_value_heads"):
+        return int(config.num_key_value_heads)
+    if hasattr(config, "multi_query_group_num"):
+        return int(config.multi_query_group_num)
+    return int(config.num_attention_heads)
+
+
+def _get_ditto_tensor_parallel_info() -> tuple[int, int]:
+    try:
+        return (
+            int(get_tensor_model_parallel_rank()),
+            int(get_tensor_model_parallel_world_size()),
+        )
+    except Exception:
+        return 0, 1
+
+
+def _get_ditto_attention_parallel_info() -> tuple[int, int, bool, int]:
+    try:
+        from sglang.srt.layers.dp_attention import (  # pylint: disable=import-outside-toplevel
+            get_attention_cp_size,
+            get_attention_tp_rank,
+            get_attention_tp_size,
+            is_dp_attention_enabled,
+        )
+
+        return (
+            int(get_attention_tp_rank()),
+            int(get_attention_tp_size()),
+            bool(is_dp_attention_enabled()),
+            int(get_attention_cp_size()),
+        )
+    except Exception:
+        tp_rank, tp_size = _get_ditto_tensor_parallel_info()
+        return tp_rank, tp_size, False, 1
+
+
+def _maybe_get_global_server_args():
+    try:
+        from sglang.srt.server_args import get_global_server_args  # pylint: disable=import-outside-toplevel
+
+        return get_global_server_args()
+    except Exception:
+        return None
+
+
+def _build_ditto_tp_head_layout(config: PretrainedConfig) -> _DittoTPHeadLayout:
+    text_config = _get_ditto_text_config(config)
+    tp_rank, tp_size = _get_ditto_tensor_parallel_info()
+    attn_tp_rank, attn_tp_size, dp_attention_enabled, attn_cp_size = (
+        _get_ditto_attention_parallel_info()
+    )
+
+    if tp_size <= 0:
+        raise ValueError(f"Invalid tensor parallel size: {tp_size}")
+    if attn_tp_size <= 0:
+        raise ValueError(f"Invalid attention tensor parallel size: {attn_tp_size}")
+
+    if tp_size > 1:
+        if dp_attention_enabled or attn_tp_size != tp_size or attn_tp_rank != tp_rank:
+            raise NotImplementedError(
+                "Ditto TP currently supports pure single-node tensor parallel only. "
+                f"Got tp_rank/size={tp_rank}/{tp_size}, "
+                f"attn_tp_rank/size={attn_tp_rank}/{attn_tp_size}, "
+                f"dp_attention_enabled={dp_attention_enabled}."
+            )
+        if attn_cp_size != 1:
+            raise NotImplementedError(
+                "Ditto TP does not support attention context parallelism yet. "
+                f"Got attn_cp_size={attn_cp_size}."
+            )
+
+        server_args = _maybe_get_global_server_args()
+        if server_args is not None:
+            if int(getattr(server_args, "nnodes", 1)) != 1:
+                raise NotImplementedError(
+                    "Ditto TP currently supports single-node tensor parallel only. "
+                    f"Got nnodes={getattr(server_args, 'nnodes', None)}."
+                )
+            if int(getattr(server_args, "pp_size", 1)) != 1:
+                raise NotImplementedError(
+                    "Ditto TP does not support pipeline parallelism yet. "
+                    f"Got pp_size={getattr(server_args, 'pp_size', None)}."
+                )
+            if bool(getattr(server_args, "enable_attn_tp_input_scattered", False)):
+                raise NotImplementedError(
+                    "Ditto TP bypasses SGLang's standard attention backend and "
+                    "does not support enable_attn_tp_input_scattered yet."
+                )
+
+    total_num_heads = int(text_config.num_attention_heads)
+    total_num_kv_heads = _get_ditto_total_kv_heads(text_config)
+    if total_num_heads <= 0 or total_num_kv_heads <= 0:
+        raise ValueError(
+            "Invalid Ditto attention head config: "
+            f"num_attention_heads={total_num_heads}, "
+            f"num_key_value_heads={total_num_kv_heads}."
+        )
+    if total_num_heads % attn_tp_size != 0:
+        raise ValueError(
+            f"Ditto TP requires num_attention_heads={total_num_heads} to be "
+            f"divisible by attn_tp_size={attn_tp_size}."
+        )
+
+    local_num_heads = total_num_heads // attn_tp_size
+    query_head_start = attn_tp_rank * local_num_heads
+    if attn_tp_size <= 1:
+        local_num_kv_heads = total_num_kv_heads
+        kv_head_start = 0
+        kv_head_replicas = 1
+    elif total_num_kv_heads >= attn_tp_size:
+        if total_num_kv_heads % attn_tp_size != 0:
+            raise ValueError(
+                f"Ditto TP requires num_key_value_heads={total_num_kv_heads} "
+                f"to be divisible by attn_tp_size={attn_tp_size}."
+            )
+        local_num_kv_heads = total_num_kv_heads // attn_tp_size
+        kv_head_start = attn_tp_rank * local_num_kv_heads
+        kv_head_replicas = 1
+    else:
+        if attn_tp_size % total_num_kv_heads != 0:
+            raise ValueError(
+                f"Ditto TP requires attn_tp_size={attn_tp_size} to be "
+                f"divisible by num_key_value_heads={total_num_kv_heads} "
+                "when KV heads are replicated."
+            )
+        local_num_kv_heads = 1
+        kv_head_replicas = attn_tp_size // total_num_kv_heads
+        kv_head_start = attn_tp_rank // kv_head_replicas
+
+    if local_num_heads % local_num_kv_heads != 0:
+        raise ValueError(
+            f"Ditto TP requires local num_heads={local_num_heads} to be "
+            f"divisible by local num_key_value_heads={local_num_kv_heads}."
+        )
+
+    return _DittoTPHeadLayout(
+        tp_rank=tp_rank,
+        tp_size=tp_size,
+        attn_tp_rank=attn_tp_rank,
+        attn_tp_size=attn_tp_size,
+        total_num_heads=total_num_heads,
+        total_num_key_value_heads=total_num_kv_heads,
+        local_num_heads=local_num_heads,
+        local_num_key_value_heads=local_num_kv_heads,
+        query_head_start=query_head_start,
+        kv_head_start=kv_head_start,
+        kv_head_replicas=kv_head_replicas,
+    )
+
+
+def _validate_ditto_tp_runtime(config: PretrainedConfig) -> None:
+    layout = _build_ditto_tp_head_layout(config)
+    if layout.tp_size > 1:
+        logger.info(
+            "Ditto TP layout: tp=%d/%d q_heads=%d:%d kv_heads=%d:%d "
+            "kv_replicas=%d.",
+            layout.tp_rank,
+            layout.tp_size,
+            layout.query_head_start,
+            layout.query_head_start + layout.local_num_heads,
+            layout.kv_head_start,
+            layout.kv_head_start + layout.local_num_key_value_heads,
+            layout.kv_head_replicas,
+        )
+
+
+def _maybe_disable_ditto_cuda_graph_for_tp(custom_config, tp_enabled: bool) -> None:
+    if not tp_enabled or not bool(getattr(custom_config, "enable_cuda_graph", False)):
+        return
+    if os.environ.get("DITTO_TP_ENABLE_CUDA_GRAPH", "0") == "1":
+        logger.warning(
+            "Ditto TP internal CUDA graph is enabled by DITTO_TP_ENABLE_CUDA_GRAPH=1."
+        )
+        return
+    logger.warning(
+        "Ditto TP disables internal Ditto CUDA graph by default. "
+        "Set DITTO_TP_ENABLE_CUDA_GRAPH=1 to opt in after validating NCCL graph replay."
+    )
+    custom_config.enable_cuda_graph = False
+
+
+def _refresh_ditto_prefetch_aliases(model: nn.Module) -> int:
+    backbone = getattr(model, "model", model)
+    layers = getattr(backbone, "layers", None)
+    if layers is None:
+        return 0
+
+    try:
+        num_layers = len(layers)
+    except TypeError:
+        return 0
+    if num_layers <= 0:
+        return 0
+
+    refreshed = 0
+    for idx in range(num_layers):
+        layer = layers[idx]
+        next_layer = layers[(idx + 1) % num_layers]
+        attn = getattr(layer, "self_attn", None)
+        next_attn = getattr(next_layer, "self_attn", None)
+        if attn is None or next_attn is None:
+            continue
+        if not hasattr(attn, "next_q_proj"):
+            continue
+        attn.next_input_layernorm = getattr(next_layer, "input_layernorm", None)
+        attn.next_q_proj = getattr(next_attn, "q_proj", None)
+        attn.next_rotary_emb = getattr(next_attn, "rotary_emb", None)
+        refreshed += 1
+    return refreshed
+
+
+def _ditto_load_params_dict(model: nn.Module) -> dict[str, torch.nn.Parameter]:
+    try:
+        iterator = model.named_parameters(remove_duplicate=False)
+    except TypeError:
+        iterator = model.named_parameters()
+    return {
+        name: param
+        for name, param in iterator
+        if ".next_" not in name
+    }
+
+
+def _maybe_reorder_ditto_attention_weight(
+    name: str,
+    loaded_weight: torch.Tensor,
+    config: PretrainedConfig,
+    kv_orders: tuple[tuple[int, ...], ...],
+) -> torch.Tensor:
+    """Apply the layer's semantic head permutation to attention projections."""
+    layer_match = re.search(r"(?:^|\.)layers\.(\d+)\.", name)
+    if layer_match is None:
+        return loaded_weight
+    layer_idx = int(layer_match.group(1))
+    if layer_idx >= len(kv_orders):
+        raise ValueError(
+            f"Weight {name!r} refers to layer {layer_idx}, but only "
+            f"{len(kv_orders)} Ditto head mappings were configured"
+        )
+    kv_order = kv_orders[layer_idx]
+    if kv_order == tuple(range(len(kv_order))):
+        return loaded_weight
+
+    text_config = _get_ditto_text_config(config)
+    total_q_heads = int(text_config.num_attention_heads)
+    total_kv_heads = _get_ditto_total_kv_heads(text_config)
+    q_order = query_head_order(kv_order, total_q_heads, total_kv_heads)
+
+    if name.endswith((".q_proj.weight", ".q_proj.bias")):
+        return reorder_head_axis(loaded_weight, q_order, axis=0)
+    if name.endswith(
+        (
+            ".k_proj.weight",
+            ".k_proj.bias",
+            ".v_proj.weight",
+            ".v_proj.bias",
+        )
+    ):
+        return reorder_head_axis(loaded_weight, kv_order, axis=0)
+    if name.endswith(".o_proj.weight"):
+        return reorder_head_axis(loaded_weight, q_order, axis=1)
+    return loaded_weight
+
+
+def _replace_ditto_linears_with_tp(
+    model: nn.Module,
+    quant_config,
+    config: PretrainedConfig,
+) -> int:
+    _, tp_size = _get_ditto_tensor_parallel_info()
     if tp_size <= 1:
         return 0
+    layout = _build_ditto_tp_head_layout(config)
 
     style_by_leaf = {
         "q_proj": "colwise",
@@ -63,7 +377,7 @@ def _replace_ditto_linears_with_tp(model: nn.Module, quant_config) -> int:
     }
 
     replaced = 0
-    named_modules = list(model.named_modules())
+    named_modules = list(model.named_modules(remove_duplicate=False))
     module_index = dict(named_modules)
     for full_name, module in named_modules:
         if not isinstance(module, nn.Linear):
@@ -71,6 +385,8 @@ def _replace_ditto_linears_with_tp(model: nn.Module, quant_config) -> int:
         leaf_name = full_name.split(".")[-1]
         style = style_by_leaf.get(leaf_name)
         if style is None:
+            continue
+        if ".next_" in full_name:
             continue
         if "." not in full_name:
             continue
@@ -80,7 +396,14 @@ def _replace_ditto_linears_with_tp(model: nn.Module, quant_config) -> int:
         if parent is None:
             continue
 
-        new_module = replace_linear_class(module, style, quant_config)
+        tp_kwargs = {}
+        if leaf_name in {"k_proj", "v_proj"} and layout.kv_linear_replicated:
+            tp_kwargs = {
+                "tp_rank": layout.kv_linear_tp_rank,
+                "tp_size": layout.kv_linear_tp_size,
+            }
+
+        new_module = replace_linear_class(module, style, quant_config, **tp_kwargs)
         # TP linear biases are loaded later via each parameter's weight_loader.
         # Eagerly copying HF full bias into a sharded TP bias breaks colwise layers.
         setattr(parent, attr_name, new_module)
@@ -88,9 +411,13 @@ def _replace_ditto_linears_with_tp(model: nn.Module, quant_config) -> int:
 
     if replaced > 0:
         logger.info(
-            "Ditto TP enabled: replaced %d linear modules with TP-aware layers (tp_size=%d).",
+            "Ditto TP enabled: replaced %d linear modules with TP-aware layers "
+            "(tp_size=%d, kv_linear_replicated=%s, kv_linear_tp=%d/%d).",
             replaced,
             tp_size,
+            layout.kv_linear_replicated,
+            layout.kv_linear_tp_rank,
+            layout.kv_linear_tp_size,
         )
     return replaced
 
@@ -477,6 +804,7 @@ class DittoLlamaForCausalLM(nn.Module):
         _ = prefix
 
         _ensure_llama_compatible_config(config)
+        _validate_ditto_tp_runtime(config)
 
         variant = _get_variant_name(config)
         logger.info("Using Ditto variant=%s", variant)
@@ -525,13 +853,18 @@ class DittoLlamaForCausalLM(nn.Module):
             )
 
         self.model: nn.Module = variant_to_cls[variant](config)
-        self._tp_enabled = _replace_ditto_linears_with_tp(self.model, quant_config) > 0
+        self._tp_enabled = (
+            _replace_ditto_linears_with_tp(self.model, quant_config, config) > 0
+        )
         self._awq_enabled = False
         if should_enable_ditto_awq(quant_config):
             replaced = replace_ditto_linears_with_awq(self.model, quant_config)
             self._awq_enabled = replaced > 0
             if self._awq_enabled:
                 logger.info("Ditto Llama AWQ route enabled. replaced_linears=%d", replaced)
+        refreshed = _refresh_ditto_prefetch_aliases(self.model)
+        if refreshed:
+            logger.info("Ditto refreshed %d prefetch projection aliases.", refreshed)
         self.logits_processor = LogitsProcessor(config)
 
         self._variant = variant
@@ -558,6 +891,7 @@ class DittoLlamaForCausalLM(nn.Module):
                 "Ditto AWQ path currently disables internal CUDA graph for stability."
             )
             self._custom_config.enable_cuda_graph = False
+        _maybe_disable_ditto_cuda_graph_for_tp(self._custom_config, self._tp_enabled)
         self._cache = None
         self._cache_batch_size: Optional[int] = None
         self._active_rids: set[str] = set()
@@ -725,10 +1059,20 @@ class DittoLlamaForCausalLM(nn.Module):
 
 
     def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]) -> None:
-        params_dict = dict(self.named_parameters())
+        params_dict = _ditto_load_params_dict(self)
+        kv_orders = resolve_tp_kv_head_orders(
+            _get_ditto_total_kv_heads(self._hf_config),
+            int(_get_ditto_text_config(self._hf_config).num_hidden_layers),
+        )
         matched_param_names = set()
         loaded = 0
         for name, loaded_weight in weights:
+            loaded_weight = _maybe_reorder_ditto_attention_weight(
+                name,
+                loaded_weight,
+                self._hf_config,
+                kv_orders,
+            )
             candidate_names = [name, f"model.{name}"]
             if name.startswith("model."):
                 candidate_names.append(f"model.model.{name[6:]}")
@@ -776,6 +1120,7 @@ class DittoQwen2ForCausalLM(nn.Module):
         _ = prefix
 
         variant = _get_variant_name(config)
+        _validate_ditto_tp_runtime(config)
         logger.info("Using Ditto variant=%s (qwen2)", variant)
 
         from sglang.ditto.kvcache_full_attn import CustomStaticCache
@@ -822,13 +1167,18 @@ class DittoQwen2ForCausalLM(nn.Module):
             )
 
         self.model: nn.Module = variant_to_cls[variant](config)
-        self._tp_enabled = _replace_ditto_linears_with_tp(self.model, quant_config) > 0
+        self._tp_enabled = (
+            _replace_ditto_linears_with_tp(self.model, quant_config, config) > 0
+        )
         self._awq_enabled = False
         if should_enable_ditto_awq(quant_config):
             replaced = replace_ditto_linears_with_awq(self.model, quant_config)
             self._awq_enabled = replaced > 0
             if self._awq_enabled:
                 logger.info("Ditto Qwen2 AWQ route enabled. replaced_linears=%d", replaced)
+        refreshed = _refresh_ditto_prefetch_aliases(self.model)
+        if refreshed:
+            logger.info("Ditto refreshed %d prefetch projection aliases.", refreshed)
         self.logits_processor = LogitsProcessor(config)
 
         self._variant = variant
@@ -855,6 +1205,7 @@ class DittoQwen2ForCausalLM(nn.Module):
                 "Ditto AWQ path currently disables internal CUDA graph for stability."
             )
             self._custom_config.enable_cuda_graph = False
+        _maybe_disable_ditto_cuda_graph_for_tp(self._custom_config, self._tp_enabled)
         self._cache = None
         self._cache_batch_size: Optional[int] = None
         self._active_rids: set[str] = set()
@@ -1021,10 +1372,20 @@ class DittoQwen2ForCausalLM(nn.Module):
         )
 
     def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]) -> None:
-        params_dict = dict(self.named_parameters())
+        params_dict = _ditto_load_params_dict(self)
+        kv_orders = resolve_tp_kv_head_orders(
+            _get_ditto_total_kv_heads(self._hf_config),
+            int(_get_ditto_text_config(self._hf_config).num_hidden_layers),
+        )
         matched_param_names = set()
         loaded = 0
         for name, loaded_weight in weights:
+            loaded_weight = _maybe_reorder_ditto_attention_weight(
+                name,
+                loaded_weight,
+                self._hf_config,
+                kv_orders,
+            )
             candidate_names = [name, f"model.{name}"]
             if name.startswith("model."):
                 candidate_names.append(f"model.model.{name[6:]}")

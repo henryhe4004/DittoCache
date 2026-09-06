@@ -9,6 +9,12 @@ from transformers.configuration_utils import PretrainedConfig
 from transformers.generation.configuration_utils import GenerationConfig
 import sgl_kernel.kvlib as KVLib
 
+from sglang.ditto.tp_head_mapping import (
+    local_kv_head_ids,
+    query_head_order,
+    resolve_tp_kv_head_orders,
+)
+
 DEBUG_LOG_PATH = "/tmp/ditto_debug.log"
 DEBUG_SESSION_ID = "9e2373"
 
@@ -82,20 +88,33 @@ class CustomStaticCache(Cache):
 
         total_num_heads = int(self.model_config.num_attention_heads)
         attn_tp_rank, attn_tp_size = _detect_attention_tp_info()
+        if total_num_heads <= 0 or total_num_kv_heads <= 0:
+            raise ValueError(
+                "Invalid Ditto attention head config: "
+                f"num_attention_heads={total_num_heads}, "
+                f"num_key_value_heads={total_num_kv_heads}."
+            )
 
         self.total_num_heads = total_num_heads
         self.total_num_key_value_heads = total_num_kv_heads
         self.attn_tp_rank = attn_tp_rank
         self.attn_tp_size = attn_tp_size
 
-        if attn_tp_size > 1 and total_num_heads % attn_tp_size == 0:
-            self.num_heads = total_num_heads // attn_tp_size
-        else:
-            self.num_heads = total_num_heads
+        if attn_tp_size <= 0:
+            raise ValueError(f"Invalid attn_tp_size={attn_tp_size}")
+        if total_num_heads % attn_tp_size != 0:
+            raise ValueError(
+                f"Ditto TP requires num_attention_heads={total_num_heads} to be "
+                f"divisible by attn_tp_size={attn_tp_size}"
+            )
+
+        self.num_heads = total_num_heads // attn_tp_size
+        self.query_head_start = attn_tp_rank * self.num_heads
 
         if attn_tp_size <= 1:
             self.num_key_value_heads = total_num_kv_heads
             self.kv_head_start = 0
+            self.kv_head_replicas = 1
         elif total_num_kv_heads >= attn_tp_size:
             # Partition KV heads across TP ranks.
             if total_num_kv_heads % attn_tp_size != 0:
@@ -104,6 +123,7 @@ class CustomStaticCache(Cache):
                 )
             self.num_key_value_heads = total_num_kv_heads // attn_tp_size
             self.kv_head_start = attn_tp_rank * self.num_key_value_heads
+            self.kv_head_replicas = 1
         else:
             # Replicate KV heads when tp_size > kv_heads.
             if attn_tp_size % total_num_kv_heads != 0:
@@ -112,7 +132,51 @@ class CustomStaticCache(Cache):
                 )
             self.num_key_value_heads = 1
             replicate = attn_tp_size // total_num_kv_heads
+            self.kv_head_replicas = replicate
             self.kv_head_start = attn_tp_rank // replicate
+
+        if self.num_heads % self.num_key_value_heads != 0:
+            raise ValueError(
+                f"Ditto TP requires local num_heads={self.num_heads} to be "
+                f"divisible by local num_key_value_heads={self.num_key_value_heads}"
+            )
+
+        layer_kv_head_orders = resolve_tp_kv_head_orders(
+            self.total_num_key_value_heads,
+            self.num_layers,
+        )
+        self.local_kv_head_ids_by_layer = tuple(
+            local_kv_head_ids(
+                self.total_num_key_value_heads,
+                self.attn_tp_rank,
+                self.attn_tp_size,
+                layer_idx=layer_idx,
+            )
+            for layer_idx in range(self.num_layers)
+        )
+        if self.total_num_key_value_heads < self.attn_tp_size:
+            replicated_query_heads = tuple(
+                range(self.query_head_start, self.query_head_start + self.num_heads)
+            )
+            self.local_query_head_ids_by_layer = tuple(
+                replicated_query_heads for _ in range(self.num_layers)
+            )
+        else:
+            self.local_query_head_ids_by_layer = tuple(
+                query_head_order(
+                    layer_kv_head_orders[layer_idx][
+                        self.attn_tp_rank
+                        * self.num_key_value_heads : (self.attn_tp_rank + 1)
+                        * self.num_key_value_heads
+                    ],
+                    self.total_num_heads,
+                    self.total_num_key_value_heads,
+                )
+                for layer_idx in range(self.num_layers)
+            )
+        # Kept for compatibility with extensions that only support one layout.
+        self.local_kv_head_ids = self.local_kv_head_ids_by_layer[0]
+        self.local_query_head_ids = self.local_query_head_ids_by_layer[0]
 
         # ==================== set layer devices ====================
         self.layer_devices = []
@@ -144,6 +208,7 @@ class CustomStaticCache(Cache):
         self,
         tensor: torch.Tensor,
         *,
+        layer_idx: int,
         tensor_name: str = "tensor",
         head_dim: int = 0,
     ) -> torch.Tensor:
@@ -164,16 +229,26 @@ class CustomStaticCache(Cache):
                 f"({self.num_key_value_heads}/{self.total_num_key_value_heads})"
             )
 
-        start = int(self.kv_head_start)
-        end = start + int(self.num_key_value_heads)
-        slices = [slice(None)] * tensor.ndim
-        slices[head_dim] = slice(start, end)
-        return tensor[tuple(slices)].contiguous()
+        head_ids = torch.tensor(
+            self.local_kv_head_ids_by_layer[layer_idx],
+            dtype=torch.long,
+            device=tensor.device,
+        )
+        return tensor.index_select(head_dim, head_ids).contiguous()
 
-    def _local_kv_head_ids_to_global(self, head_ids: torch.Tensor) -> torch.Tensor:
+    def _local_kv_head_ids_to_global(
+        self,
+        head_ids: torch.Tensor,
+        layer_idx: int,
+    ) -> torch.Tensor:
         if head_ids is None:
             return head_ids
-        return head_ids + int(self.kv_head_start)
+        mapping = torch.tensor(
+            self.local_kv_head_ids_by_layer[layer_idx],
+            dtype=torch.long,
+            device=head_ids.device,
+        )
+        return mapping.index_select(0, head_ids.to(torch.long))
 
     def build_cache(self):
         self._create_metadata_tensors()

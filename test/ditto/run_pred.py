@@ -625,6 +625,12 @@ def build_engine(args):
         )
     effective_tp_size = int(args.mp_num)
     effective_pp_size = int(args.pp_num)
+    if ditto_enabled and effective_pp_size > 1:
+        raise ValueError(
+            "Ditto SGLang bridge now supports single-node tensor parallelism, "
+            "but pipeline parallelism is not supported yet. "
+            f"Got mp_num={args.mp_num}, pp_num={args.pp_num}."
+        )
     allow_flashattn_pp = os.environ.get("DITTO_ALLOW_FLASHATTN_PP", "0") == "1"
     if (
         method in {"flashattn", "flash-attn"}

@@ -5,12 +5,14 @@ import math
 import time
 import torch
 import logging
+import numpy as np
 import pandas as pd
 
 from transformers.configuration_utils import PretrainedConfig
 from transformers.generation.configuration_utils import GenerationConfig
 
 from .kvcache_full_attn import CustomStaticCache
+from .tp_head_mapping import RESIDENT_KV_HEADS_FILE_ENV, resolve_resident_kv_heads
 from .transfer_stats import (
     record_decode_transfer_step,
     reset_transfer_stats,
@@ -145,6 +147,9 @@ class OffloadingCache(CustomStaticCache):
         self.record_transfer_stats = (
             os.environ.get("DITTO_RECORD_TRANSFER_STATS", "0") == "1"
         ) or self.record_overlap_stats
+        self.record_head_masks = (
+            os.environ.get("DITTO_RECORD_HEAD_MASKS", "0") == "1"
+        )
         set_transfer_stats_enabled(self.record_transfer_stats)
         self._pending_overlap_prefetch = [None for _ in range(self.num_layers)]
         self._pending_overlap_head_mask = [None for _ in range(self.num_layers)]
@@ -201,7 +206,9 @@ class OffloadingCache(CustomStaticCache):
         for layer_idx in range(self.num_layers):
             gpu_mask = self.layers_gpu_head_mask[layer_idx].detach().cpu().to(torch.bool)
             for head_idx in range(self.num_key_value_heads):
-                global_head_idx = int(self.kv_head_start + head_idx)
+                global_head_idx = int(
+                    self.local_kv_head_ids_by_layer[layer_idx][head_idx]
+                )
                 rows.append(
                     {
                         "layer_idx": int(layer_idx),
@@ -322,24 +329,19 @@ class OffloadingCache(CustomStaticCache):
         # Convert them to this TP rank's local head range when needed.
         kv_cols = head_importance.shape[1]
         if kv_cols != self.num_key_value_heads and kv_cols == self.total_num_key_value_heads:
-            kv_start = int(self.kv_head_start)
-            kv_end = kv_start + int(self.num_key_value_heads)
-            head_importance = head_importance[:, kv_start:kv_end]
-            head_cos = head_cos[:, kv_start:kv_end]
+            layer_ids = np.arange(self.num_layers)[:, None]
+            layer_kv_ids = np.asarray(self.local_kv_head_ids_by_layer)
+            head_importance = head_importance[layer_ids, layer_kv_ids]
+            head_cos = head_cos[layer_ids, layer_kv_ids]
 
         q_cols = q_head_importance.shape[1]
         if q_cols != self.num_heads:
-            if q_cols == self.total_num_heads and self.total_num_key_value_heads > 0:
-                # Preferred path: map Q heads by GQA groups aligned to KV head shards.
-                if q_cols % self.total_num_key_value_heads != 0:
-                    raise ValueError(
-                        f"q_heads_importance columns={q_cols} not divisible by total_num_key_value_heads="
-                        f"{self.total_num_key_value_heads}"
-                    )
-                gqa_group = q_cols // self.total_num_key_value_heads
-                q_start = int(self.kv_head_start) * gqa_group
-                q_end = q_start + int(self.num_key_value_heads) * gqa_group
-                q_head_importance = q_head_importance[:, q_start:q_end]
+            if q_cols == self.total_num_heads and self.attn_tp_size > 1:
+                layer_ids = np.arange(self.num_layers)[:, None]
+                layer_q_ids = np.asarray(self.local_query_head_ids_by_layer)
+                q_head_importance = q_head_importance[layer_ids, layer_q_ids]
+            elif q_cols == self.total_num_heads:
+                q_head_importance = q_head_importance[:, : self.num_heads]
             elif self.attn_tp_size > 1 and q_cols % self.attn_tp_size == 0:
                 # Fallback: contiguous split by TP rank.
                 local_q = q_cols // self.attn_tp_size
@@ -408,6 +410,11 @@ class OffloadingCache(CustomStaticCache):
         reuse_difficulty = stacked_reuse_thresholds - head_cos
         print(f"#Hard-to-reuse-heads:{num_hard2reuse_head.sum().item()}")
 
+        explicit_resident_heads = resolve_resident_kv_heads(
+            self.total_num_key_value_heads,
+            self.num_layers,
+        )
+
         # ----> 显存充足的理想情况下，哪些 head 应该被放到 GPU
         layers_gpu_head_mask = []
         num_gpu_heads = 0
@@ -416,7 +423,26 @@ class OffloadingCache(CustomStaticCache):
                                     stable=True,
                                     descending=True)
         for l in range(self.num_layers):
-            if l < self.config.offload_config.num_skip_layers:
+            if explicit_resident_heads is not None:
+                resident = set(explicit_resident_heads[l])
+                head_gpu_mask = torch.tensor(
+                    [
+                        original_head in resident
+                        for original_head in self.local_kv_head_ids_by_layer[l]
+                    ],
+                    dtype=torch.bool,
+                    device="cpu",
+                )
+                if (
+                    l < self.config.offload_config.num_skip_layers
+                    and not bool(head_gpu_mask.all())
+                ):
+                    raise ValueError(
+                        f"{RESIDENT_KV_HEADS_FILE_ENV} must keep every local head "
+                        f"resident in skip layer {l}; local heads are "
+                        f"{list(self.local_kv_head_ids_by_layer[l])}"
+                    )
+            elif l < self.config.offload_config.num_skip_layers:
                 head_gpu_mask = torch.ones((self.num_key_value_heads, ),
                                            dtype=torch.bool,
                                            device="cpu")
@@ -431,6 +457,12 @@ class OffloadingCache(CustomStaticCache):
                     head_gpu_mask[sorted_hids[l, :num_unoverlapped]] = True
             layers_gpu_head_mask.append(head_gpu_mask)
             num_gpu_heads += head_gpu_mask.sum().item()
+
+        if explicit_resident_heads is not None:
+            print(
+                f"Using explicit resident placement from "
+                f"{os.environ[RESIDENT_KV_HEADS_FILE_ENV]}"
+            )
 
         # Calculate GPU memory requirements for skip layers
         numel_one_layer = (2 * self.config.kvcache_manager_config.max_tokens *
@@ -459,6 +491,12 @@ class OffloadingCache(CustomStaticCache):
 
         # Adjust GPU head placement if memory is insufficient
         if remained_layers_mem > self.mem_budget:
+            if explicit_resident_heads is not None:
+                raise ValueError(
+                    f"Explicit resident placement requires "
+                    f"{remained_layers_mem / 1024**3:.2f} GB after skip layers, "
+                    f"but only {self.mem_budget / 1024**3:.2f} GB is available"
+                )
             num_heads_remained = self.num_key_value_heads * (
                 self.num_layers - self.config.offload_config.num_skip_layers)
             # Ensure minimum memory for top-k buffers
@@ -548,8 +586,12 @@ class OffloadingCache(CustomStaticCache):
             self.num_gpu_heads += num_layer_gpu_heads
             self.layers_num_gpu_buffer_heads.append(self.num_key_value_heads -
                                                     num_layer_gpu_heads)
-            gpu_global_head_ids = self._local_kv_head_ids_to_global(gpu_head_ids).cpu().tolist()
-            cpu_global_head_ids = self._local_kv_head_ids_to_global(cpu_head_ids).cpu().tolist()
+            gpu_global_head_ids = self._local_kv_head_ids_to_global(
+                gpu_head_ids, l
+            ).cpu().tolist()
+            cpu_global_head_ids = self._local_kv_head_ids_to_global(
+                cpu_head_ids, l
+            ).cpu().tolist()
             print(
                 f"[TP{self.attn_tp_rank}] Layer {l:02d} on-GPU heads: {gpu_global_head_ids}, "
                 f"offloaded heads: {cpu_global_head_ids}"
@@ -1393,6 +1435,11 @@ class OffloadingCache(CustomStaticCache):
         layer_d2h_bytes = [0] * self.num_layers
         layer_prefetch_heads = [0] * self.num_layers
         layer_offloaded_heads = [0] * self.num_layers
+        layer_prefetch_head_masks = (
+            [[0] * total_heads for _ in range(self.num_layers)]
+            if self.record_head_masks
+            else None
+        )
 
         for layer_idx in range(self.num_layers):
             cpu_heads = int(self.layers_cpu_head_ids[layer_idx].numel())
@@ -1410,6 +1457,10 @@ class OffloadingCache(CustomStaticCache):
             gather_heads = int(gather_mask.to(torch.int32).sum().item())
             layer_prefetch_heads[layer_idx] = gather_heads
             layer_h2d_bytes[layer_idx] = gather_heads * prefetch_k * per_token_head_bytes
+            if layer_prefetch_head_masks is not None:
+                layer_prefetch_head_masks[layer_idx] = [
+                    int(value) for value in gather_mask.detach().cpu().tolist()
+                ]
 
         overlap_summary = self._summarize_decode_overlap_step()
         layer_selected_tokens = [0] * self.num_layers
@@ -1466,6 +1517,8 @@ class OffloadingCache(CustomStaticCache):
         self._decode_transfer_step_idx += 1
         step = {
             "step": int(self._decode_transfer_step_idx),
+            "attn_tp_rank": int(self.attn_tp_rank),
+            "attn_tp_size": int(self.attn_tp_size),
             "seq_len": int(self.get_seq_length(0)),
             "prefetch_k": int(prefetch_k),
             "h2d_bytes": int(sum(layer_h2d_bytes)),
@@ -1505,6 +1558,12 @@ class OffloadingCache(CustomStaticCache):
         }
         if overlap_summary is not None:
             step["overlap"] = overlap_summary
+        if layer_prefetch_head_masks is not None:
+            step["local_kv_head_ids_by_layer"] = [
+                [int(value) for value in layer_ids]
+                for layer_ids in self.local_kv_head_ids_by_layer
+            ]
+            step["layer_prefetch_head_masks"] = layer_prefetch_head_masks
         record_decode_transfer_step(step)
         self._decode_overlap_metrics = [None for _ in range(self.num_layers)]
 

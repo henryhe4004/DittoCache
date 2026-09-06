@@ -68,6 +68,7 @@ class InfiniGenOffloadingCache(OffloadingCache):
                 skewing_matrix = skewing_matrix.view(-1, self.head_dim, self.head_dim)
                 skewing_matrix = self._slice_local_kv_head_tensor(
                     skewing_matrix,
+                    layer_idx=layer,
                     tensor_name=f"skewing_matrix_layer_{layer:02d}",
                     head_dim=0,
                 ).to(self.dtype).to(self.layer_devices[layer])

@@ -11,6 +11,8 @@ from typing import Any
 
 LAYER_CSV_COLUMNS = [
     "step",
+    "attn_tp_rank",
+    "attn_tp_size",
     "seq_len",
     "prefetch_k",
     "layer_idx",
@@ -52,6 +54,8 @@ LAYER_CSV_COLUMNS = [
 
 HEAD_CSV_COLUMNS = [
     "step",
+    "attn_tp_rank",
+    "attn_tp_size",
     "seq_len",
     "prefetch_k",
     "layer_idx",
@@ -92,23 +96,45 @@ def _safe_list(value: Any) -> list[Any]:
 def _resolve_csv_path(json_path_value: str | None) -> Path | None:
     csv_path_env = os.environ.get("DITTO_TRANSFER_STATS_CSV_FILE")
     if csv_path_env:
-        return Path(csv_path_env)
+        return _with_tp_rank_suffix(Path(csv_path_env))
     if not json_path_value:
         return None
 
     json_path = Path(json_path_value)
     if json_path.suffix.lower() in {".json", ".jsonl"}:
-        return json_path.with_suffix(".csv")
-    return Path(str(json_path) + ".csv")
+        return _with_tp_rank_suffix(json_path.with_suffix(".csv"))
+    return _with_tp_rank_suffix(Path(str(json_path) + ".csv"))
 
 
 def _resolve_head_csv_path(layer_csv_path: Path | None) -> Path | None:
     head_csv_env = os.environ.get("DITTO_TRANSFER_STATS_PER_HEAD_CSV_FILE")
     if head_csv_env:
-        return Path(head_csv_env)
+        return _with_tp_rank_suffix(Path(head_csv_env))
     if layer_csv_path is None:
         return None
     return layer_csv_path.with_name(f"{layer_csv_path.stem}_per_head.csv")
+
+
+def _detect_tp_rank_suffix() -> tuple[int, int]:
+    try:
+        from sglang.srt.layers.dp_attention import (  # pylint: disable=import-outside-toplevel
+            get_attention_tp_rank,
+            get_attention_tp_size,
+        )
+
+        return int(get_attention_tp_rank()), int(get_attention_tp_size())
+    except Exception:
+        return 0, 1
+
+
+def _with_tp_rank_suffix(path: Path) -> Path:
+    rank, size = _detect_tp_rank_suffix()
+    if size <= 1:
+        return path
+    suffix = f".tp{rank:02d}"
+    if path.stem.endswith(suffix):
+        return path
+    return path.with_name(f"{path.stem}{suffix}{path.suffix}")
 
 
 def _empty_payload() -> dict[str, Any]:
@@ -203,6 +229,8 @@ def _build_layer_rows(steps: list[dict]) -> list[dict[str, Any]]:
             rows.append(
                 {
                     "step": _to_int(step.get("step")),
+                    "attn_tp_rank": _to_int(step.get("attn_tp_rank")),
+                    "attn_tp_size": _to_int(step.get("attn_tp_size"), 1),
                     "seq_len": _to_int(step.get("seq_len")),
                     "prefetch_k": _to_int(step.get("prefetch_k")),
                     "layer_idx": layer_idx,
@@ -335,6 +363,8 @@ def _build_head_rows(steps: list[dict]) -> list[dict[str, Any]]:
                 rows.append(
                     {
                         "step": _to_int(step.get("step")),
+                        "attn_tp_rank": _to_int(step.get("attn_tp_rank")),
+                        "attn_tp_size": _to_int(step.get("attn_tp_size"), 1),
                         "seq_len": _to_int(step.get("seq_len")),
                         "prefetch_k": _to_int(step.get("prefetch_k")),
                         "layer_idx": layer_idx,
@@ -422,7 +452,7 @@ class _TransferStatsRecorder:
             payload = _empty_payload()
 
         if raw_json_path:
-            json_path = Path(raw_json_path)
+            json_path = _with_tp_rank_suffix(Path(raw_json_path))
             json_path.parent.mkdir(parents=True, exist_ok=True)
             json_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 

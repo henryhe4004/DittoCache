@@ -99,6 +99,9 @@ def replace_linear_class(
     linear: nn.Linear,
     style: Literal["colwise", "rowwise"],
     quant_config: QuantizationConfig,
+    *,
+    tp_rank: Optional[int] = None,
+    tp_size: Optional[int] = None,
 ) -> Union[ColumnParallelLinear, RowParallelLinear]:
     """
     Replace nn.Linear with one of vLLM's tensor parallel linear classes.
@@ -107,6 +110,8 @@ def replace_linear_class(
         linear (nn.Linear): `nn.Linear` to be replaced.
         style (str): Tensor parallel style of the new linear, e.g. "colwise".
         quant_config (QuantConfig): Quantization config for the new linear.
+        tp_rank/tp_size: Optional override for layers that shard over a smaller
+            logical group while still running inside the process-local TP group.
     Returns:
         Union[ColumnParallelLinear, RowParallelLinear]: The new linear.
     """
@@ -131,12 +136,18 @@ def replace_linear_class(
         def forward(self, input: torch.Tensor) -> torch.Tensor:
             return super().forward(input)[0]
 
-    return HFCompatibleLinear(
-        input_size=linear.in_features,
-        output_size=linear.out_features,
-        bias=linear.bias is not None,
-        quant_config=quant_config,
-    )
+    kwargs = {
+        "input_size": linear.in_features,
+        "output_size": linear.out_features,
+        "bias": linear.bias is not None,
+        "params_dtype": linear.weight.dtype,
+        "quant_config": quant_config,
+    }
+    if sglang_linear_cls in (ColumnParallelLinear, RowParallelLinear):
+        kwargs["tp_rank"] = tp_rank
+        kwargs["tp_size"] = tp_size
+
+    return HFCompatibleLinear(**kwargs)
 
 
 class TransformersForCausalLM(nn.Module):
