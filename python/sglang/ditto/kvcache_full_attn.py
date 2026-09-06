@@ -63,7 +63,24 @@ class CustomStaticCache(Cache):
         self.dtype = self.model_config.torch_dtype
 
         # ==================== load model config ====================
-        self.num_layers = self.model_config.num_hidden_layers
+        self.total_num_layers = int(self.model_config.num_hidden_layers)
+        self.start_layer = int(
+            getattr(self.model_config, "_ditto_pp_start_layer", 0)
+        )
+        self.end_layer = int(
+            getattr(
+                self.model_config,
+                "_ditto_pp_end_layer",
+                self.total_num_layers,
+            )
+        )
+        if not 0 <= self.start_layer < self.end_layer <= self.total_num_layers:
+            raise ValueError(
+                "Invalid Ditto PP layer range: "
+                f"[{self.start_layer}, {self.end_layer})/{self.total_num_layers}."
+            )
+        self.num_layers = self.end_layer - self.start_layer
+        self.global_layer_ids = list(range(self.start_layer, self.end_layer))
         if hasattr(config, "qk_nope_head_dim"):
             self.head_dim = self.model_config.qk_nope_head_dim + self.model_config.qk_rope_head_dim
         elif hasattr(config, "head_dim"):
@@ -117,8 +134,9 @@ class CustomStaticCache(Cache):
         # ==================== set layer devices ====================
         self.layer_devices = []
         for l in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(l)
             if layer_device_map is not None:
-                layer_device = layer_device_map[l]
+                layer_device = layer_device_map[global_layer_idx]
                 self.layer_devices.append(layer_device)
             else:
                 layer_device = torch.device(device)
@@ -139,6 +157,9 @@ class CustomStaticCache(Cache):
         self.mem_budget = int(
             self.config.kvcache_manager_config.gpu_memory_budget * 1024 * 1024 * 1024
         )
+
+    def global_layer_idx(self, local_layer_idx: int) -> int:
+        return self.start_layer + int(local_layer_idx)
 
     def _slice_local_kv_head_tensor(
         self,

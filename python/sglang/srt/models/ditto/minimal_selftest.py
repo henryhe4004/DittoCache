@@ -112,6 +112,8 @@ def build_args():
         help="Force gather for a KV head after this many consecutive reuses.",
     )
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--tp-size", type=int, default=1)
+    parser.add_argument("--pp-size", type=int, default=1)
     parser.add_argument("--attention-backend", type=str, default=None)
     parser.add_argument("--mem-fraction-static", type=float, default=0.92)
     parser.add_argument("--max-total-tokens", type=int, default=512)
@@ -257,6 +259,8 @@ def main():
         trust_remote_code=True,
         log_level="info",
         device=args.device,
+        tp_size=args.tp_size,
+        pp_size=args.pp_size,
         attention_backend=args.attention_backend,
         json_model_override_args=json.dumps(model_override),
         # Minimize SGLang runtime features for bring-up.
@@ -281,7 +285,9 @@ def main():
         f"num_overlapped_heads={model_override.get('custom_config', {}).get('offload_config', {}).get('num_overlapped_heads')}, "
         f"max_reuse_count={model_override.get('custom_config', {}).get('offload_config', {}).get('max_reuse_count')}, "
         f"ditto_enable_cuda_graph={model_override.get('custom_config', {}).get('enable_cuda_graph')}, "
-        f"engine_disable_cuda_graph={args.disable_cuda_graph}",
+        f"engine_disable_cuda_graph={args.disable_cuda_graph}, "
+        f"tp_size={args.tp_size}, "
+        f"pp_size={args.pp_size}",
         flush=True,
     )
 

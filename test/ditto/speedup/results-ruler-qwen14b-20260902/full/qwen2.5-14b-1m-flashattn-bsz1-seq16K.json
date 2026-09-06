@@ -1,0 +1,54 @@
+{
+  "status": "ok",
+  "method": "flashattn",
+  "config_file": "/jhe/sglang-litecache/test/ditto/speedup/../config/full_attn/Qwen2.5-14B-Instruct-1M-16K.yaml",
+  "data": "/jhe/myTransformer/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-16K.jsonl",
+  "batch_size": 1,
+  "max_seq_len": 16000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 15864,
+  "avg_elapsed_s": 4.2607496481699245,
+  "p50_elapsed_s": 4.258294750470668,
+  "avg_tokens_per_s": 11.969754111057949,
+  "overall_tokens_per_s": 11.96972462860039,
+  "epoch_elapsed_s": [
+    4.26988942315802,
+    4.254064770881087,
+    4.258294750470668
+  ],
+  "epoch_tokens_per_s": [
+    11.944103218082937,
+    11.98853396617115,
+    11.97662514891976
+  ],
+  "avg_prefill_latency_s": 2.280424965079874,
+  "avg_decode_latency_ms_per_step": 49.50811707725128,
+  "avg_decode_tokens_per_s": 20.19870863916167,
+  "epoch_prefill_latency_s": [
+    2.2898840187117457,
+    2.2732450449839234,
+    2.2781458315439522
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    49.50013511115685,
+    49.52049314742908,
+    49.503722973167896
+  ],
+  "epoch_decode_tokens_per_s": [
+    20.201965060386467,
+    20.193659966649914,
+    20.200500890448623
+  ],
+  "runtime_meta": {
+    "ditto_enabled": false,
+    "variant": null,
+    "offloading_method": null,
+    "max_total_tokens": null,
+    "sglang_cuda_graph_enabled": false,
+    "ditto_cuda_graph_enabled": null,
+    "transfer_stats_enabled": false,
+    "ablation_stage": null,
+    "ablation_config": null
+  }
+}

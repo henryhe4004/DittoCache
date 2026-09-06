@@ -1,0 +1,84 @@
+{
+  "status": "ok",
+  "method": "offloading",
+  "config_file": "/jhe/sglang-litecache/test/ditto/speedup/../config/hata_offloading/Qwen2.5-14B-Instruct-1M-128K.yaml",
+  "data": "/jhe/myTransformer/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-128K.jsonl",
+  "batch_size": 1,
+  "pp_size": 2,
+  "max_seq_len": 128000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 127707,
+  "avg_elapsed_s": 61.3676905388323,
+  "p50_elapsed_s": 61.337838653009385,
+  "avg_tokens_per_s": 0.8310566936019319,
+  "overall_tokens_per_s": 0.8310562048563352,
+  "epoch_elapsed_s": [
+    61.43414901336655,
+    61.337838653009385,
+    61.331083950120956
+  ],
+  "epoch_tokens_per_s": [
+    0.830157181617404,
+    0.8314606631073039,
+    0.8315522360810879
+  ],
+  "avg_prefill_latency_s": 58.63443873884777,
+  "avg_decode_latency_ms_per_step": 68.33129499961312,
+  "avg_decode_tokens_per_s": 14.65493960759219,
+  "epoch_prefill_latency_s": [
+    58.56046417634934,
+    58.64221573108807,
+    58.7006363091059
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    71.84212092543021,
+    67.39057304803282,
+    65.76119102537632
+  ],
+  "epoch_decode_tokens_per_s": [
+    13.919410884848007,
+    14.838870702097267,
+    15.206537235831298
+  ],
+  "runtime_meta": {
+    "ditto_enabled": true,
+    "variant": "offloading",
+    "offloading_method": "hash",
+    "pp_size": 2,
+    "chunked_prefill_size": 128000,
+    "max_total_tokens": null,
+    "sglang_cuda_graph_enabled": false,
+    "ditto_cuda_graph_enabled": true,
+    "transfer_stats_enabled": false,
+    "ablation_stage": null,
+    "ablation_config": {
+      "transfer_backend": "gdr",
+      "prefetch_mode": "cross_layer",
+      "reuse_policy": "qsac",
+      "threshold_mode": "profile_adaptive",
+      "resident_policy": "profile",
+      "similarity_aggregation": "importance",
+      "fixed_similarity_threshold": 0.8,
+      "reuse_threshold_upper": 0.8,
+      "reuse_threshold_lower": -1.0,
+      "decay_p": 3.0,
+      "cosine_padding": 0.05,
+      "max_reuse_count": 0,
+      "num_skip_layers": 1,
+      "num_overlapped_heads": 3
+    },
+    "peak_gpu_memory_used_mb": 32732,
+    "peak_gpu_memory_used_gb": 31.96484375,
+    "peak_gpu_memory_by_gpu_mb": {
+      "0": 32396,
+      "1": 32732
+    }
+  },
+  "peak_gpu_memory_used_mb": 32732,
+  "peak_gpu_memory_used_gb": 31.96484375,
+  "peak_gpu_memory_by_gpu_mb": {
+    "0": 32396,
+    "1": 32732
+  }
+}

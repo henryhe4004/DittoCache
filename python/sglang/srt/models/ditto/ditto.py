@@ -8,6 +8,7 @@ This entry binds to SGLang-internal ports of internal prototype Ditto files:
 
 from __future__ import annotations
 
+import gc
 import logging
 import os
 from typing import Iterable, Optional, Tuple, Type
@@ -17,10 +18,15 @@ from torch import nn
 from transformers import PretrainedConfig
 
 from sglang.ditto.config_utils import ensure_ditto_custom_config
-from sglang.srt.distributed import get_tensor_model_parallel_world_size
+from sglang.srt.distributed import (
+    get_pp_group,
+    get_pp_indices,
+    get_tensor_model_parallel_world_size,
+)
+from sglang.srt.layers.utils import PPMissingLayer
 from sglang.srt.layers.logits_processor import LogitsProcessor, LogitsProcessorOutput
 from sglang.srt.layers.quantization.base_config import QuantizationConfig
-from sglang.srt.model_executor.forward_batch_info import ForwardBatch
+from sglang.srt.model_executor.forward_batch_info import ForwardBatch, PPProxyTensors
 from sglang.srt.model_loader.weight_utils import default_weight_loader
 from sglang.srt.models.ditto.awq_linear import (
     replace_ditto_linears_with_awq,
@@ -45,6 +51,63 @@ def _finalize_ditto_awq_modules(root: nn.Module) -> int:
             process_fn()
             finalized += 1
     return finalized
+
+
+def _configure_ditto_pipeline_stage(
+    model: nn.Module,
+    config: PretrainedConfig,
+    pp_group,
+) -> tuple[int, int]:
+    """Keep only this PP rank's transformer layers and remap cache layer ids."""
+
+    backbone = model.model
+    total_layers = int(config.num_hidden_layers)
+    start_layer, end_layer = get_pp_indices(
+        total_layers,
+        pp_group.rank_in_group,
+        pp_group.world_size,
+    )
+
+    for global_layer_idx in range(total_layers):
+        if not start_layer <= global_layer_idx < end_layer:
+            backbone.layers[global_layer_idx] = PPMissingLayer(return_tuple=True)
+
+    local_layers = [backbone.layers[i] for i in range(start_layer, end_layer)]
+    for local_layer_idx, layer in enumerate(local_layers):
+        attention = layer.self_attn
+        attention.global_layer_idx = start_layer + local_layer_idx
+        attention.layer_idx = local_layer_idx
+
+    # Cross-layer query prediction can only reference modules owned by this
+    # process. The final local layer wraps to local layer 0; that layer is made
+    # resident by the PP cache policy, avoiding a boundary H2D
+    # dependency that cannot be overlapped without an extra PP side channel.
+    for local_layer_idx, layer in enumerate(local_layers):
+        attention = layer.self_attn
+        if not hasattr(attention, "next_input_layernorm"):
+            continue
+        next_layer = local_layers[(local_layer_idx + 1) % len(local_layers)]
+        attention.next_input_layernorm = next_layer.input_layernorm
+        attention.next_q_proj = next_layer.self_attn.q_proj
+        attention.next_rotary_emb = next_layer.self_attn.rotary_emb
+
+    backbone.start_layer = start_layer
+    backbone.end_layer = end_layer
+    backbone.local_num_layers = end_layer - start_layer
+    backbone.is_first_pp_rank = pp_group.is_first_rank
+    backbone.is_last_pp_rank = pp_group.is_last_rank
+
+    if not pp_group.is_first_rank:
+        backbone.embed_tokens = PPMissingLayer()
+    if not pp_group.is_last_rank:
+        backbone.norm = PPMissingLayer()
+        model.lm_head = PPMissingLayer()
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    return start_layer, end_layer
 
 
 def _replace_ditto_linears_with_tp(model: nn.Module, quant_config) -> int:
@@ -312,6 +375,36 @@ def _flatten_ditto_hidden_states(
     return hidden_states.reshape(-1, hidden_states.shape[-1])
 
 
+def _get_ditto_pp_stage_inputs(
+    owner,
+    model_input_ids: torch.Tensor,
+    pp_proxy_tensors: Optional[PPProxyTensors],
+) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+    if owner.pp_group.is_first_rank:
+        return model_input_ids, None
+    if pp_proxy_tensors is None:
+        raise RuntimeError(
+            f"Ditto PP rank {owner.pp_group.rank_in_group} did not receive hidden_states."
+        )
+
+    hidden_states = pp_proxy_tensors["hidden_states"]
+    batch_size, seq_len = model_input_ids.shape
+    if hidden_states.dim() == 2:
+        expected_tokens = batch_size * seq_len
+        if hidden_states.shape[0] != expected_tokens:
+            raise RuntimeError(
+                "Ditto PP hidden-state shape mismatch: "
+                f"shape={tuple(hidden_states.shape)}, expected_tokens={expected_tokens}."
+            )
+        hidden_states = hidden_states.view(batch_size, seq_len, -1)
+    elif hidden_states.dim() != 3:
+        raise RuntimeError(
+            "Ditto PP expects hidden_states with rank 2 or 3, "
+            f"got shape={tuple(hidden_states.shape)}."
+        )
+    return None, hidden_states
+
+
 def _sync_ditto_cache_rows(
     owner,
     rids: list[str],
@@ -524,7 +617,13 @@ class DittoLlamaForCausalLM(nn.Module):
                 f"Supported: {sorted(variant_to_cls.keys())}"
             )
 
+        self.pp_group = get_pp_group()
         self.model: nn.Module = variant_to_cls[variant](config)
+        self.start_layer, self.end_layer = _configure_ditto_pipeline_stage(
+            self.model,
+            config,
+            self.pp_group,
+        )
         self._tp_enabled = _replace_ditto_linears_with_tp(self.model, quant_config) > 0
         self._awq_enabled = False
         if should_enable_ditto_awq(quant_config):
@@ -552,6 +651,31 @@ class DittoLlamaForCausalLM(nn.Module):
         self._custom_config = ensure_ditto_custom_config(
             getattr(config, "custom_config", None),
             self._hf_config,
+        )
+        self._hf_config._ditto_pp_start_layer = self.start_layer
+        self._hf_config._ditto_pp_end_layer = self.end_layer
+        global_skip_layers = int(self._custom_config.offload_config.num_skip_layers)
+        local_skip_layers = max(
+            min(global_skip_layers - self.start_layer, self.end_layer - self.start_layer),
+            0,
+        )
+        if (
+            self.pp_group.world_size > 1
+            and variant != "fullattn"
+            and self._custom_config.offload_config.prefetch_mode == "cross_layer"
+            and self._custom_config.offload_config.resident_policy != "none"
+        ):
+            local_skip_layers = max(local_skip_layers, 1)
+        self._custom_config.offload_config.num_skip_layers = local_skip_layers
+        logger.info(
+            "Ditto PP stage configured: rank=%d/%d layers=[%d,%d) "
+            "cache_layers=%d local_skip_layers=%d",
+            self.pp_group.rank_in_group,
+            self.pp_group.world_size,
+            self.start_layer,
+            self.end_layer,
+            self.end_layer - self.start_layer,
+            local_skip_layers,
         )
         if self._awq_enabled and bool(getattr(self._custom_config, "enable_cuda_graph", False)):
             logger.warning(
@@ -673,9 +797,9 @@ class DittoLlamaForCausalLM(nn.Module):
         forward_batch: ForwardBatch,
         input_embeds: torch.Tensor = None,
         get_embedding: bool = False,
-    ) -> LogitsProcessorOutput:
+        pp_proxy_tensors: Optional[PPProxyTensors] = None,
+    ) -> LogitsProcessorOutput | PPProxyTensors:
         _ = input_embeds
-
         if get_embedding:
             raise NotImplementedError(
                 "get_embedding is not supported yet for Ditto models."
@@ -697,11 +821,15 @@ class DittoLlamaForCausalLM(nn.Module):
                 extend_seq_lens,
             )
         self._maybe_reset_cache(model_positions, forward_batch)
+        stage_input_ids, stage_input_embeds = _get_ditto_pp_stage_inputs(
+            self, model_input_ids, pp_proxy_tensors
+        )
 
         self._cache._current_extend_seq_lens = extend_seq_lens
         try:
             model_outputs = self.model.model(
-                input_ids=model_input_ids,
+                input_ids=stage_input_ids,
+                inputs_embeds=stage_input_embeds,
                 position_ids=model_positions,
                 past_key_values=self._cache,
                 use_cache=True,
@@ -713,6 +841,10 @@ class DittoLlamaForCausalLM(nn.Module):
             self._cache.trim_prefill_padding(
                 extend_seq_lens,
                 padded_q_len=model_input_ids.shape[1],
+            )
+        if not self.pp_group.is_last_rank:
+            return PPProxyTensors(
+                {"hidden_states": model_outputs.last_hidden_state.contiguous()}
             )
         hidden_states = _flatten_ditto_hidden_states(model_outputs, extend_seq_lens)
 
@@ -821,7 +953,13 @@ class DittoQwen2ForCausalLM(nn.Module):
                 f"Supported: {sorted(variant_to_cls.keys())}"
             )
 
+        self.pp_group = get_pp_group()
         self.model: nn.Module = variant_to_cls[variant](config)
+        self.start_layer, self.end_layer = _configure_ditto_pipeline_stage(
+            self.model,
+            config,
+            self.pp_group,
+        )
         self._tp_enabled = _replace_ditto_linears_with_tp(self.model, quant_config) > 0
         self._awq_enabled = False
         if should_enable_ditto_awq(quant_config):
@@ -849,6 +987,31 @@ class DittoQwen2ForCausalLM(nn.Module):
         self._custom_config = ensure_ditto_custom_config(
             getattr(config, "custom_config", None),
             self._hf_config,
+        )
+        self._hf_config._ditto_pp_start_layer = self.start_layer
+        self._hf_config._ditto_pp_end_layer = self.end_layer
+        global_skip_layers = int(self._custom_config.offload_config.num_skip_layers)
+        local_skip_layers = max(
+            min(global_skip_layers - self.start_layer, self.end_layer - self.start_layer),
+            0,
+        )
+        if (
+            self.pp_group.world_size > 1
+            and variant != "fullattn"
+            and self._custom_config.offload_config.prefetch_mode == "cross_layer"
+            and self._custom_config.offload_config.resident_policy != "none"
+        ):
+            local_skip_layers = max(local_skip_layers, 1)
+        self._custom_config.offload_config.num_skip_layers = local_skip_layers
+        logger.info(
+            "Ditto PP stage configured: rank=%d/%d layers=[%d,%d) "
+            "cache_layers=%d local_skip_layers=%d",
+            self.pp_group.rank_in_group,
+            self.pp_group.world_size,
+            self.start_layer,
+            self.end_layer,
+            self.end_layer - self.start_layer,
+            local_skip_layers,
         )
         if self._awq_enabled and bool(getattr(self._custom_config, "enable_cuda_graph", False)):
             logger.warning(
@@ -970,9 +1133,9 @@ class DittoQwen2ForCausalLM(nn.Module):
         forward_batch: ForwardBatch,
         input_embeds: torch.Tensor = None,
         get_embedding: bool = False,
-    ) -> LogitsProcessorOutput:
+        pp_proxy_tensors: Optional[PPProxyTensors] = None,
+    ) -> LogitsProcessorOutput | PPProxyTensors:
         _ = input_embeds
-
         if get_embedding:
             raise NotImplementedError(
                 "get_embedding is not supported yet for Ditto models."
@@ -994,11 +1157,15 @@ class DittoQwen2ForCausalLM(nn.Module):
                 extend_seq_lens,
             )
         self._maybe_reset_cache(model_positions, forward_batch)
+        stage_input_ids, stage_input_embeds = _get_ditto_pp_stage_inputs(
+            self, model_input_ids, pp_proxy_tensors
+        )
 
         self._cache._current_extend_seq_lens = extend_seq_lens
         try:
             model_outputs = self.model.model(
-                input_ids=model_input_ids,
+                input_ids=stage_input_ids,
+                inputs_embeds=stage_input_embeds,
                 position_ids=model_positions,
                 past_key_values=self._cache,
                 use_cache=True,
@@ -1010,6 +1177,10 @@ class DittoQwen2ForCausalLM(nn.Module):
             self._cache.trim_prefill_padding(
                 extend_seq_lens,
                 padded_q_len=model_input_ids.shape[1],
+            )
+        if not self.pp_group.is_last_rank:
+            return PPProxyTensors(
+                {"hidden_states": model_outputs.last_hidden_state.contiguous()}
             )
         hidden_states = _flatten_ditto_hidden_states(model_outputs, extend_seq_lens)
 

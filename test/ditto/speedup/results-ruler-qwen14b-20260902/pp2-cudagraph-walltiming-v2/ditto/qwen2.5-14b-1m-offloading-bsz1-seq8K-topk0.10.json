@@ -1,0 +1,108 @@
+{
+  "status": "ok",
+  "method": "offloading",
+  "config_file": "/jhe/sglang-litecache/test/ditto/speedup/../config/hata_offloading/Qwen2.5-14B-Instruct-1M-8K.yaml",
+  "data": "/jhe/myTransformer/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-8K.jsonl",
+  "batch_size": 1,
+  "pp_size": 2,
+  "max_seq_len": 8000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 7710,
+  "avg_elapsed_s": 3.83631217184787,
+  "p50_elapsed_s": 4.1915167002007365,
+  "avg_tokens_per_s": 6.54538380988403,
+  "overall_tokens_per_s": 7.733121116777331,
+  "epoch_elapsed_s": [
+    5.009417326655239,
+    4.1915167002007365,
+    2.3080024886876345
+  ],
+  "epoch_tokens_per_s": [
+    10.180824769505165,
+    8.588776468020733,
+    0.8665501921261924
+  ],
+  "avg_prefill_latency_s": 2.234329853517314,
+  "avg_decode_latency_ms_per_step": 59.58210481097922,
+  "avg_decode_tokens_per_s": 16.92306219236869,
+  "epoch_prefill_latency_s": [
+    2.2262562327086926,
+    2.2362126419320703,
+    2.2405206859111786
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    55.602864373940974,
+    55.6616472825408,
+    67.48180277645588
+  ],
+  "epoch_decode_tokens_per_s": [
+    17.984684984478307,
+    17.965691797153596,
+    14.818809795474163
+  ],
+  "avg_internal_elapsed_s": 2.2983219769472876,
+  "avg_internal_prefill_latency_s": 1.0706339632160962,
+  "avg_internal_decode_latency_ms_per_step": 59.64023718299965,
+  "avg_internal_decode_tokens_per_s": 16.91061835977341,
+  "epoch_internal_elapsed_s": [
+    3.290109279099852,
+    2.462949609849602,
+    1.1419070418924093
+  ],
+  "epoch_internal_prefill_latency_s": [
+    1.066125508863479,
+    1.0715338247828186,
+    1.074242556001991
+  ],
+  "epoch_internal_decode_latency_ms_per_step": [
+    55.599594255909324,
+    55.65663140267134,
+    67.66448589041829
+  ],
+  "epoch_internal_decode_tokens_per_s": [
+    17.985742762748963,
+    17.96731089894893,
+    14.778801417622331
+  ],
+  "runtime_meta": {
+    "ditto_enabled": true,
+    "variant": "offloading",
+    "offloading_method": "hash",
+    "pp_size": 2,
+    "chunked_prefill_size": 8000,
+    "max_total_tokens": null,
+    "sglang_cuda_graph_enabled": false,
+    "ditto_cuda_graph_enabled": true,
+    "transfer_stats_enabled": false,
+    "ablation_stage": null,
+    "ablation_config": {
+      "transfer_backend": "gdr",
+      "prefetch_mode": "cross_layer",
+      "reuse_policy": "qsac",
+      "threshold_mode": "profile_adaptive",
+      "resident_policy": "profile",
+      "similarity_aggregation": "importance",
+      "fixed_similarity_threshold": 0.8,
+      "reuse_threshold_upper": 0.8,
+      "reuse_threshold_lower": -1.0,
+      "decay_p": 3.0,
+      "cosine_padding": 0.05,
+      "max_reuse_count": 0,
+      "num_skip_layers": 1,
+      "num_overlapped_heads": 8
+    },
+    "peak_gpu_memory_used_mb": 29836,
+    "peak_gpu_memory_used_gb": 29.13671875,
+    "peak_gpu_memory_by_gpu_mb": {
+      "0": 29836,
+      "1": 29836
+    }
+  },
+  "peak_gpu_memory_used_mb": 29836,
+  "peak_gpu_memory_used_gb": 29.13671875,
+  "peak_gpu_memory_by_gpu_mb": {
+    "0": 29836,
+    "1": 29836
+  }
+}

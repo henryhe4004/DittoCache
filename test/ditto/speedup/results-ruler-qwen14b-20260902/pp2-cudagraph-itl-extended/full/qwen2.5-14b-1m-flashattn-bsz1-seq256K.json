@@ -1,0 +1,63 @@
+{
+  "status": "ok",
+  "method": "flashattn",
+  "config_file": "/jhe/sglang-litecache/test/ditto/speedup/../config/full_attn/Qwen2.5-14B-Instruct-1M-256K.yaml",
+  "data": "/jhe/myTransformer/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-256K.jsonl",
+  "batch_size": 1,
+  "pp_size": 2,
+  "max_seq_len": 256000,
+  "warmup": 0,
+  "epoch": 1,
+  "input_tokens": 255860,
+  "avg_elapsed_s": 196.1310066129081,
+  "p50_elapsed_s": 196.1310066129081,
+  "avg_tokens_per_s": 0.2600302771129688,
+  "overall_tokens_per_s": 0.2600302771129688,
+  "epoch_elapsed_s": [
+    196.1310066129081
+  ],
+  "epoch_tokens_per_s": [
+    0.2600302771129688
+  ],
+  "avg_prefill_latency_s": 189.5579124931246,
+  "avg_decode_latency_ms_per_step": 121.7849182896316,
+  "avg_decode_tokens_per_s": 8.211197363714428,
+  "epoch_prefill_latency_s": [
+    189.5579124931246
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    121.7849182896316
+  ],
+  "epoch_decode_tokens_per_s": [
+    8.211197363714428
+  ],
+  "avg_internal_elapsed_s": 5.282653189729899,
+  "avg_internal_prefill_latency_s": 0.4120879899710417,
+  "avg_internal_decode_latency_ms_per_step": 121.76412999397144,
+  "avg_internal_decode_tokens_per_s": 8.212599228110202,
+  "epoch_internal_elapsed_s": [
+    5.282653189729899
+  ],
+  "epoch_internal_prefill_latency_s": [
+    0.4120879899710417
+  ],
+  "epoch_internal_decode_latency_ms_per_step": [
+    121.76412999397144
+  ],
+  "epoch_internal_decode_tokens_per_s": [
+    8.212599228110202
+  ],
+  "runtime_meta": {
+    "ditto_enabled": false,
+    "variant": null,
+    "offloading_method": null,
+    "pp_size": 2,
+    "chunked_prefill_size": 8192,
+    "max_total_tokens": 262144,
+    "sglang_cuda_graph_enabled": true,
+    "ditto_cuda_graph_enabled": null,
+    "transfer_stats_enabled": false,
+    "ablation_stage": null,
+    "ablation_config": null
+  }
+}

@@ -16,6 +16,15 @@ def _ns(**kwargs):
     return SimpleNamespace(**kwargs)
 
 
+def _choice(obj: Any, key: str, default: str, choices: set[str]) -> str:
+    value = str(_get(obj, key, default)).strip().lower()
+    if value not in choices:
+        raise ValueError(
+            f"Invalid Ditto config {key}={value!r}; expected one of {sorted(choices)}"
+        )
+    return value
+
+
 def ensure_ditto_custom_config(custom_config: Optional[Any], hf_config: Optional[Any] = None):
     """
     Normalize Ditto custom config into an object with all required attributes.
@@ -57,8 +66,36 @@ def ensure_ditto_custom_config(custom_config: Optional[Any], hf_config: Optional
         ),
         offload_config=_ns(
             attn_pattern_path=str(_get(ofc, "attn_pattern_path", "")),
+            transfer_backend=_choice(
+                ofc, "transfer_backend", "gdr", {"cuda_memcpy", "gdr"}
+            ),
+            prefetch_mode=_choice(
+                ofc, "prefetch_mode", "cross_layer", {"none", "cross_layer"}
+            ),
+            reuse_policy=_choice(
+                ofc, "reuse_policy", "qsac", {"always_gather", "qsac"}
+            ),
+            threshold_mode=_choice(
+                ofc,
+                "threshold_mode",
+                "profile_adaptive",
+                {"fixed", "profile_adaptive"},
+            ),
+            resident_policy=_choice(
+                ofc, "resident_policy", "profile", {"none", "profile"}
+            ),
+            similarity_aggregation=_choice(
+                ofc, "similarity_aggregation", "importance", {"importance", "min"}
+            ),
             reuse_threshold_upper=float(_get(ofc, "reuse_threshold_upper", 0.95)),
             reuse_threshold_lower=float(_get(ofc, "reuse_threshold_lower", 0.7)),
+            fixed_similarity_threshold=float(
+                _get(
+                    ofc,
+                    "fixed_similarity_threshold",
+                    _get(ofc, "reuse_threshold_upper", 0.95),
+                )
+            ),
             decay_p=float(_get(ofc, "decay_p", 2.0)),
             cosine_padding=float(_get(ofc, "cosine_padding", 0.02)),
             # <=0 means disabled: do not force gather refresh by reuse count.

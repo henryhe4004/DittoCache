@@ -1,0 +1,12 @@
+{
+  "gpu_ids": [
+    "0",
+    "1"
+  ],
+  "peak_used_mb": 30942,
+  "peak_used_mb_by_gpu": {
+    "0": 30942,
+    "1": 30934
+  },
+  "poll_interval_sec": 0.2
+}

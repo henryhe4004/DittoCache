@@ -56,6 +56,7 @@ class HashOffloadingCache(OffloadingCache):
         self.layers_hash_weight = [None for _ in range(self.num_layers)]
 
         for layer in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(layer)
             self.layers_hash_cache_data[layer] = torch.zeros(
                 (gpu_hash_numel,),
                 dtype=torch.int32,
@@ -69,12 +70,12 @@ class HashOffloadingCache(OffloadingCache):
                 )
             else:
                 hash_weight = torch.load(
-                    os.path.join(self.aux_data_path, f"hash_weight_layer_{layer:02d}.pt"),
+                    os.path.join(self.aux_data_path, f"hash_weight_layer_{global_layer_idx:02d}.pt"),
                     weights_only=True,
                 )
                 hash_weight = self._slice_local_kv_head_tensor(
                     hash_weight,
-                    tensor_name=f"hash_weight_layer_{layer:02d}",
+                    tensor_name=f"hash_weight_layer_{global_layer_idx:02d}",
                     head_dim=0,
                 )
                 self.layers_hash_weight[layer] = hash_weight.to(self.layer_devices[layer]).to(self.dtype)

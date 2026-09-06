@@ -17,7 +17,10 @@ WARMUP="${WARMUP:-1}"
 EPOCH="${EPOCH:-3}"
 CPUSET="${CPUSET:-0-95}"
 CUDA_DEVICE="${CUDA_DEVICE:-6}"
+PP_SIZE="${PP_SIZE:-1}"
 MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-}"
+SGLANG_CUDA_GRAPH="${SGLANG_CUDA_GRAPH:-0}"
+CHUNKED_PREFILL_SIZE="${CHUNKED_PREFILL_SIZE:-}"
 
 mkdir -p "${LOG_DIR}"
 
@@ -53,10 +56,19 @@ for method in ${METHODS}; do
       --batch_size "${BSZ}"
       --max_seq_len "${seq}"
       --max-running-requests "${BSZ}"
+      --pp-size "${PP_SIZE}"
       --result-json "${result_json}"
     )
     if [[ -n "${MAX_TOTAL_TOKENS}" ]]; then
       cmd+=(--max-total-tokens "${MAX_TOTAL_TOKENS}")
+    fi
+    if [[ -n "${CHUNKED_PREFILL_SIZE}" ]]; then
+      cmd+=(--chunked-prefill-size "${CHUNKED_PREFILL_SIZE}")
+    fi
+    if [[ "${SGLANG_CUDA_GRAPH}" == "1" ]]; then
+      cmd+=(--enable-cuda-graph)
+    else
+      cmd+=(--disable-cuda-graph)
     fi
 
     echo "[RUN] ${run_name}"

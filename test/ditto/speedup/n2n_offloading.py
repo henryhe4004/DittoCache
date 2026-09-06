@@ -23,6 +23,80 @@ if SGLANG_PY_ROOT.is_dir() and str(SGLANG_PY_ROOT) not in sys.path:
 from sglang import Engine
 
 
+ABLATION_STAGE_CONFIGS: dict[str, dict[str, Any]] = {
+    "b0_memcpy": {
+        "transfer_backend": "cuda_memcpy",
+        "prefetch_mode": "none",
+        "reuse_policy": "always_gather",
+        "threshold_mode": "fixed",
+        "resident_policy": "none",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": False,
+    },
+    "b1_gdr": {
+        "transfer_backend": "gdr",
+        "prefetch_mode": "none",
+        "reuse_policy": "always_gather",
+        "threshold_mode": "fixed",
+        "resident_policy": "none",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": False,
+    },
+    "b2_prefetch": {
+        "transfer_backend": "gdr",
+        "prefetch_mode": "cross_layer",
+        "reuse_policy": "always_gather",
+        "threshold_mode": "fixed",
+        "resident_policy": "none",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": False,
+    },
+    "b3_qsac_fixed": {
+        "transfer_backend": "gdr",
+        "prefetch_mode": "cross_layer",
+        "reuse_policy": "qsac",
+        "threshold_mode": "fixed",
+        "resident_policy": "none",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": False,
+    },
+    "b4_cudagraph": {
+        "transfer_backend": "gdr",
+        "prefetch_mode": "cross_layer",
+        "reuse_policy": "qsac",
+        "threshold_mode": "fixed",
+        "resident_policy": "none",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": True,
+    },
+    "b5_adaptive": {
+        "transfer_backend": "gdr",
+        "prefetch_mode": "cross_layer",
+        "reuse_policy": "qsac",
+        "threshold_mode": "profile_adaptive",
+        "resident_policy": "none",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": True,
+    },
+    "b6_resident": {
+        "transfer_backend": "gdr",
+        "prefetch_mode": "cross_layer",
+        "reuse_policy": "qsac",
+        "threshold_mode": "profile_adaptive",
+        "resident_policy": "profile",
+        "num_skip_layers": 0,
+        "num_overlapped_heads": 0,
+        "enable_cuda_graph": True,
+    },
+}
+
+
 def log(msg: str) -> None:
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{ts}] {msg}", flush=True)
@@ -84,6 +158,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--offloading-method", type=str, default="hash")
 
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--pp-size", type=int, default=1)
     parser.add_argument(
         "--cuda-visible-devices",
         type=str,
@@ -128,7 +203,7 @@ def parse_args() -> argparse.Namespace:
         dest="disable_cuda_graph",
         action="store_false",
     )
-    parser.add_argument("--chunked-prefill-size", type=int, default=8192)
+    parser.add_argument("--chunked-prefill-size", type=int, default=None)
     parser.add_argument(
         "--allow-auto-truncate",
         action="store_true",
@@ -146,17 +221,64 @@ def parse_args() -> argparse.Namespace:
         action="store_false",
     )
     parser.add_argument("--record-transfer-stats", action="store_true")
+    parser.add_argument(
+        "--ablation-stage",
+        type=str,
+        choices=sorted(ABLATION_STAGE_CONFIGS),
+        default=None,
+    )
+    parser.add_argument(
+        "--transfer-backend",
+        choices=["cuda_memcpy", "gdr"],
+        default=None,
+    )
+    parser.add_argument(
+        "--prefetch-mode",
+        choices=["none", "cross_layer"],
+        default=None,
+    )
+    parser.add_argument(
+        "--reuse-policy",
+        choices=["always_gather", "qsac"],
+        default=None,
+    )
+    parser.add_argument(
+        "--threshold-mode",
+        choices=["fixed", "profile_adaptive"],
+        default=None,
+    )
+    parser.add_argument(
+        "--resident-policy",
+        choices=["none", "profile"],
+        default=None,
+    )
+    parser.add_argument(
+        "--similarity-aggregation",
+        choices=["importance", "min"],
+        default=None,
+    )
+    parser.add_argument("--fixed-similarity-threshold", type=float, default=None)
+    parser.add_argument("--reuse-threshold-upper", type=float, default=None)
+    parser.add_argument("--reuse-threshold-lower", type=float, default=None)
+    parser.add_argument("--decay-p", type=float, default=None)
+    parser.add_argument("--cosine-padding", type=float, default=None)
+    parser.add_argument("--max-reuse-count", type=int, default=None)
 
-    parser.add_argument("--gpu-memory-budget", type=float, default=16.0)
+    parser.add_argument(
+        "--gpu-memory-budget",
+        type=float,
+        default=None,
+        help="Override the KV-cache GPU budget from the config file (GiB).",
+    )
     parser.add_argument("--token-budget", type=float, default=0.2)
     parser.add_argument("--sink-budget", type=int, default=4)
     parser.add_argument("--recent-budget", type=int, default=128)
     parser.add_argument("--num-omp-threads", type=int, default=4)
-    parser.add_argument("--num-skip-layers", type=int, default=0)
-    parser.add_argument("--num-overlapped-heads", type=int, default=0)
+    parser.add_argument("--num-skip-layers", type=int, default=None)
+    parser.add_argument("--num-overlapped-heads", type=int, default=None)
     parser.add_argument("--profile-reserve-ratio", type=float, default=0.85)
     parser.add_argument("--aux-data-path", type=str, default=None)
-    parser.add_argument("--attn-pattern-path", type=str, default="")
+    parser.add_argument("--attn-pattern-path", type=str, default=None)
     parser.add_argument("--num-channels", type=int, default=32)
     parser.add_argument("--rbits", type=int, default=32)
     parser.add_argument("--block-size", type=int, default=64)
@@ -306,11 +428,22 @@ def yaml_cfg_to_runtime(raw_cfg: dict[str, Any], config_file: str) -> dict[str, 
     set_if("recent_budget", sparse.get("recent_budget"))
     set_if("reuse_threshold_lower", offload.get("reuse_threshold_lower"))
     set_if("reuse_threshold_upper", offload.get("reuse_threshold_upper"))
+    set_if(
+        "fixed_similarity_threshold",
+        offload.get("fixed_similarity_threshold"),
+    )
     set_if("decay_p", offload.get("decay_p"))
     set_if("cosine_padding", offload.get("cosine_padding"))
+    set_if("max_reuse_count", offload.get("max_reuse_count"))
     set_if("num_omp_threads", offload.get("num_omp_threads"))
     set_if("num_overlapped_heads", offload.get("num_overlapped_heads"))
     set_if("num_skip_layers", offload.get("num_skip_layers"))
+    set_if("transfer_backend", offload.get("transfer_backend"))
+    set_if("prefetch_mode", offload.get("prefetch_mode"))
+    set_if("reuse_policy", offload.get("reuse_policy"))
+    set_if("threshold_mode", offload.get("threshold_mode"))
+    set_if("resident_policy", offload.get("resident_policy"))
+    set_if("similarity_aggregation", offload.get("similarity_aggregation"))
     set_if("chunk_prefill_size", raw_cfg.get("chunk_prefill_size"))
     set_if("_yaml_enable_cuda_graph", raw_cfg.get("enable_cuda_graph"))
     set_if("_yaml_sparse_method", sparse.get("method"))
@@ -434,6 +567,86 @@ def resolve_offloading_method(
     if from_cfg is not None:
         return from_cfg
     return default_method
+
+
+def resolve_ablation_config(
+    args: argparse.Namespace,
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    resolved = {
+        "transfer_backend": str(cfg.get("transfer_backend", "gdr")),
+        "prefetch_mode": str(cfg.get("prefetch_mode", "cross_layer")),
+        "reuse_policy": str(cfg.get("reuse_policy", "qsac")),
+        "threshold_mode": str(cfg.get("threshold_mode", "profile_adaptive")),
+        "resident_policy": str(cfg.get("resident_policy", "profile")),
+        "similarity_aggregation": str(
+            cfg.get("similarity_aggregation", "importance")
+        ),
+        "fixed_similarity_threshold": float(
+            cfg.get(
+                "fixed_similarity_threshold",
+                cfg.get("reuse_threshold_upper", 0.95),
+            )
+        ),
+        "reuse_threshold_upper": float(cfg.get("reuse_threshold_upper", 0.95)),
+        "reuse_threshold_lower": float(cfg.get("reuse_threshold_lower", 0.7)),
+        "decay_p": float(cfg.get("decay_p", cfg.get("deacy_p", 2.0))),
+        "cosine_padding": float(cfg.get("cosine_padding", 0.02)),
+        "max_reuse_count": int(cfg.get("max_reuse_count", 0)),
+        "num_skip_layers": int(
+            cfg.get(
+                "num_skip_layers",
+                args.num_skip_layers if args.num_skip_layers is not None else 0,
+            )
+        ),
+        "num_overlapped_heads": int(
+            cfg.get(
+                "num_overlapped_heads",
+                (
+                    args.num_overlapped_heads
+                    if args.num_overlapped_heads is not None
+                    else 0
+                ),
+            )
+        ),
+    }
+
+    if args.ablation_stage is not None:
+        resolved.update(ABLATION_STAGE_CONFIGS[args.ablation_stage])
+        # Keep every stage on the same threshold/profile constants. Fields that
+        # are inactive in early stages are still recorded for provenance.
+        resolved.update(
+            {
+                "fixed_similarity_threshold": 0.8,
+                "reuse_threshold_upper": 0.8,
+                "reuse_threshold_lower": -1.0,
+                "decay_p": 3.0,
+                "max_reuse_count": 0,
+                "similarity_aggregation": "importance",
+            }
+        )
+
+    cli_overrides = {
+        "transfer_backend": args.transfer_backend,
+        "prefetch_mode": args.prefetch_mode,
+        "reuse_policy": args.reuse_policy,
+        "threshold_mode": args.threshold_mode,
+        "resident_policy": args.resident_policy,
+        "similarity_aggregation": args.similarity_aggregation,
+        "fixed_similarity_threshold": args.fixed_similarity_threshold,
+        "reuse_threshold_upper": args.reuse_threshold_upper,
+        "reuse_threshold_lower": args.reuse_threshold_lower,
+        "decay_p": args.decay_p,
+        "cosine_padding": args.cosine_padding,
+        "max_reuse_count": args.max_reuse_count,
+        "num_skip_layers": args.num_skip_layers,
+        "num_overlapped_heads": args.num_overlapped_heads,
+    }
+    for key, value in cli_overrides.items():
+        if value is not None:
+            resolved[key] = value
+
+    return resolved
 
 
 def load_first_prompt(data_file: str) -> str:
@@ -645,7 +858,19 @@ def generate_with_internal_forward_timing(
     sampling_params: dict[str, Any],
     batch_size: int,
     transfer_stats_path: str | None = None,
-) -> tuple[Any, float, int, float, float, float, dict | None]:
+) -> tuple[
+    Any,
+    float,
+    int,
+    float,
+    float,
+    float,
+    dict | None,
+    float,
+    float,
+    float,
+    float,
+]:
     outputs_for_meta: list[dict[str, Any]] = []
     last_chunk: Any = None
     t0 = time.perf_counter()
@@ -690,10 +915,10 @@ def generate_with_internal_forward_timing(
             f"sample_meta_value_types={sample_meta}"
         )
     (
-        prefill_latency,
+        internal_prefill_latency,
         decode_forward_latency_sum,
-        decode_latency_ms_per_step,
-        decode_throughput,
+        internal_decode_latency_ms_per_step,
+        internal_decode_throughput,
     ) = _extract_internal_forward_timing(
         outputs_for_meta,
         batch_size=batch_size,
@@ -704,12 +929,12 @@ def generate_with_internal_forward_timing(
     # Fall back to stream timeline so benchmark still remains usable.
     if (
         completion_tokens > 0
-        and prefill_latency <= 0.0
+        and internal_prefill_latency <= 0.0
         and decode_forward_latency_sum <= 0.0
     ):
         if first_token_ts is None:
             first_token_ts = last_ts
-        prefill_latency = max(first_token_ts - t0, 0.0)
+        internal_prefill_latency = max(first_token_ts - t0, 0.0)
         decode_elapsed = max(last_ts - first_token_ts, 0.0)
         decode_tokens = max(max_completion_tokens - batch_size, 0)
         decode_forward_latency_sum = decode_elapsed
@@ -734,32 +959,58 @@ def generate_with_internal_forward_timing(
 
         if used_lat_ms:
             total_used_ms = sum(used_lat_ms)
-            decode_latency_ms_per_step = total_used_ms / len(used_lat_ms)
-            decode_throughput = (
+            internal_decode_latency_ms_per_step = total_used_ms / len(used_lat_ms)
+            internal_decode_throughput = (
                 batch_size * len(used_lat_ms) / total_used_ms * 1000.0
                 if total_used_ms > 0
                 else 0.0
             )
         else:
-            decode_latency_ms_per_step = 0.0
-            decode_throughput = 0.0
+            internal_decode_latency_ms_per_step = 0.0
+            internal_decode_throughput = 0.0
         log(
             "[WARN] Internal forward timing is unavailable; "
             "falling back to stream-based timing for this run."
         )
 
-    internal_elapsed = max(prefill_latency + decode_forward_latency_sum, 0.0)
+    last_token_ts = token_timestamps[-1] if token_timestamps else last_ts
+    wall_elapsed = max(last_token_ts - t0, 0.0)
+    ttft_latency = max((first_token_ts or last_ts) - t0, 0.0)
+    stream_decode_step_latencies_ms = [
+        (token_timestamps[i] - token_timestamps[i - 1]) * 1000.0
+        for i in range(1, len(token_timestamps))
+    ]
+    if len(stream_decode_step_latencies_ms) > 10:
+        stream_decode_step_latencies_ms = stream_decode_step_latencies_ms[10:]
+    if stream_decode_step_latencies_ms:
+        stream_decode_latency_ms_per_step = statistics.mean(
+            stream_decode_step_latencies_ms
+        )
+        stream_decode_throughput = (
+            batch_size * 1000.0 / stream_decode_latency_ms_per_step
+        )
+    else:
+        stream_decode_latency_ms_per_step = 0.0
+        stream_decode_throughput = 0.0
+
+    internal_elapsed = max(
+        internal_prefill_latency + decode_forward_latency_sum, 0.0
+    )
     transfer_stats = load_transfer_stats_file(transfer_stats_path)
     if transfer_stats is None:
         transfer_stats = extract_transfer_stats_from_meta(outputs_for_meta)
     return (
         last_chunk,
-        internal_elapsed,
+        wall_elapsed,
         completion_tokens,
-        prefill_latency,
-        decode_latency_ms_per_step,
-        decode_throughput,
+        ttft_latency,
+        stream_decode_latency_ms_per_step,
+        stream_decode_throughput,
         transfer_stats,
+        internal_elapsed,
+        internal_prefill_latency,
+        internal_decode_latency_ms_per_step,
+        internal_decode_throughput,
     )
 
 
@@ -778,7 +1029,12 @@ def build_engine_for_bench(
         max_total_tokens = None
         log("[Engine] max_total_tokens=<auto-profiled by available GPU memory>")
 
-    chunked_prefill_size = int(cfg.get("chunk_prefill_size", args.chunked_prefill_size))
+    chunked_prefill_size = int(
+        args.chunked_prefill_size
+        if args.chunked_prefill_size is not None
+        else cfg.get("chunk_prefill_size", 8192)
+    )
+    log(f"[Engine] chunked_prefill_size={chunked_prefill_size}")
     max_running_requests = (
         int(args.max_running_requests)
         if args.max_running_requests is not None
@@ -794,6 +1050,7 @@ def build_engine_for_bench(
     model_override = None
     variant = None
     offloading_method = None
+    ablation_config: dict[str, Any] | None = None
     ditto_enable_cuda_graph_value: bool | None = None
     if ditto_enabled:
         variant = method_to_variant(method, cfg_key)
@@ -802,6 +1059,12 @@ def build_engine_for_bench(
             if variant == "offloading"
             else None
         )
+        if args.ablation_stage is not None and variant != "offloading":
+            raise ValueError(
+                "--ablation-stage requires an offloading method, "
+                f"but method={args.method!r} resolved to variant={variant!r}"
+            )
+        ablation_config = resolve_ablation_config(args, cfg)
 
         ditto_cfg_max_tokens = int(cfg.get("max_num_tokens", args.max_seq_len))
         if max_total_tokens is None:
@@ -817,12 +1080,18 @@ def build_engine_for_bench(
                 f"Got {ditto_kvcache_max_tokens}."
             )
 
-        decay_p = float(cfg.get("decay_p", cfg.get("deacy_p", 2.0)))
-        ditto_enable_cuda_graph = (
-            bool(cfg.get("_yaml_enable_cuda_graph", False))
-            if args.ditto_enable_cuda_graph is None
-            else bool(args.ditto_enable_cuda_graph)
-        )
+        if args.ditto_enable_cuda_graph is not None:
+            ditto_enable_cuda_graph = bool(args.ditto_enable_cuda_graph)
+        elif args.ablation_stage is not None:
+            ditto_enable_cuda_graph = bool(
+                ABLATION_STAGE_CONFIGS[args.ablation_stage][
+                    "enable_cuda_graph"
+                ]
+            )
+        else:
+            ditto_enable_cuda_graph = bool(
+                cfg.get("_yaml_enable_cuda_graph", False)
+            )
         ditto_enable_cuda_graph_value = ditto_enable_cuda_graph
 
         architecture = resolve_ditto_architecture(args.model)
@@ -841,12 +1110,14 @@ def build_engine_for_bench(
                 "num_channels": int(cfg.get("num_channels", args.num_channels)),
                 "rbits": int(cfg.get("rbits", args.rbits)),
                 "block_size": int(cfg.get("block_size", args.block_size)),
-                "aux_data_path": cfg.get("aux_data_path") or args.aux_data_path,
+                "aux_data_path": args.aux_data_path or cfg.get("aux_data_path"),
                 "kvcache_manager_config": {
                     "max_tokens": int(ditto_kvcache_max_tokens),
                     "max_batch_size": int(args.batch_size),
                     "gpu_memory_budget": float(
-                        cfg.get("max_gpu_memory_size", args.gpu_memory_budget)
+                        args.gpu_memory_budget
+                        if args.gpu_memory_budget is not None
+                        else cfg.get("max_gpu_memory_size", 16.0)
                     ),
                 },
                 "sparse_attention_config": {
@@ -855,18 +1126,44 @@ def build_engine_for_bench(
                     "recent_budget": int(cfg.get("recent_budget", args.recent_budget)),
                 },
                 "offload_config": {
-                    "attn_pattern_path": cfg.get("attn_pattern_path") or args.attn_pattern_path,
+                    "attn_pattern_path": (
+                        args.attn_pattern_path
+                        or cfg.get("attn_pattern_path")
+                        or ""
+                    ),
                     "reuse_threshold_upper": float(
-                        cfg.get("reuse_threshold_upper", 0.95)
+                        ablation_config["reuse_threshold_upper"]
                     ),
                     "reuse_threshold_lower": float(
-                        cfg.get("reuse_threshold_lower", 0.7)
+                        ablation_config["reuse_threshold_lower"]
                     ),
-                    "decay_p": decay_p,
-                    "cosine_padding": float(cfg.get("cosine_padding", 0.02)),
-                    "num_skip_layers": int(cfg.get("num_skip_layers", args.num_skip_layers)),
+                    "fixed_similarity_threshold": float(
+                        ablation_config["fixed_similarity_threshold"]
+                    ),
+                    "decay_p": float(ablation_config["decay_p"]),
+                    "cosine_padding": float(
+                        ablation_config["cosine_padding"]
+                    ),
+                    "max_reuse_count": int(
+                        ablation_config["max_reuse_count"]
+                    ),
+                    "transfer_backend": ablation_config["transfer_backend"],
+                    "prefetch_mode": ablation_config["prefetch_mode"],
+                    "reuse_policy": ablation_config["reuse_policy"],
+                    "threshold_mode": ablation_config["threshold_mode"],
+                    "resident_policy": ablation_config["resident_policy"],
+                    "similarity_aggregation": ablation_config[
+                        "similarity_aggregation"
+                    ],
+                    "num_skip_layers": (
+                        0
+                        if ablation_config["resident_policy"] == "none"
+                        else int(ablation_config["num_skip_layers"])
+                    ),
                     "num_overlapped_heads": int(
-                        cfg.get("num_overlapped_heads", args.num_overlapped_heads)
+                        0
+                        if ablation_config["resident_policy"] == "none"
+                        else ablation_config["num_overlapped_heads"]
                     ),
                     "num_omp_threads": int(cfg.get("num_omp_threads", args.num_omp_threads)),
                 },
@@ -878,7 +1175,9 @@ def build_engine_for_bench(
             f"variant={variant} offloading_method={offloading_method} "
             f"token_budget={model_override['custom_config']['sparse_attention_config']['token_budget']} "
             f"kvcache_max_tokens={model_override['custom_config']['kvcache_manager_config']['max_tokens']} "
-            f"ditto_enable_cuda_graph={ditto_enable_cuda_graph_value}"
+            f"ditto_enable_cuda_graph={ditto_enable_cuda_graph_value} "
+            f"ablation_stage={args.ablation_stage} "
+            f"ablation_config={ablation_config}"
         )
 
     engine_kwargs = {
@@ -887,6 +1186,7 @@ def build_engine_for_bench(
         "trust_remote_code": True,
         "log_level": sglang_log_level,
         "device": args.device,
+        "pp_size": args.pp_size,
         "attention_backend": args.attention_backend,
         "kv_cache_dtype": args.kv_cache_dtype,
         "chunked_prefill_size": chunked_prefill_size,
@@ -911,10 +1211,14 @@ def build_engine_for_bench(
         "ditto_enabled": ditto_enabled,
         "variant": variant,
         "offloading_method": offloading_method,
+        "pp_size": args.pp_size,
+        "chunked_prefill_size": chunked_prefill_size,
         "max_total_tokens": max_total_tokens,
         "sglang_cuda_graph_enabled": not bool(args.disable_cuda_graph),
         "ditto_cuda_graph_enabled": ditto_enable_cuda_graph_value,
         "transfer_stats_enabled": bool(args.record_transfer_stats),
+        "ablation_stage": args.ablation_stage,
+        "ablation_config": ablation_config,
     }
     return engine, runtime_meta
 
@@ -1002,12 +1306,17 @@ def main() -> int:
     epoch_prefill_latencies: list[float] = []
     epoch_decode_latencies_ms: list[float] = []
     epoch_decode_tps: list[float] = []
+    epoch_internal_elapsed: list[float] = []
+    epoch_internal_prefill_latencies: list[float] = []
+    epoch_internal_decode_latencies_ms: list[float] = []
+    epoch_internal_decode_tps: list[float] = []
     epoch_transfer_stats: list[dict] = []
     sampling_params = {
         "temperature": 0.0,
         "top_p": 1.0,
         "max_new_tokens": args.num_decode_steps + 1,
         "min_new_tokens": args.num_decode_steps + 1,
+        "ignore_eos": True,
     }
 
     total_iters = args.warmup + args.epoch
@@ -1025,6 +1334,10 @@ def main() -> int:
                 decode_latency_ms_per_step,
                 decode_throughput,
                 transfer_stats,
+                internal_elapsed,
+                internal_prefill_latency,
+                internal_decode_latency_ms_per_step,
+                internal_decode_throughput,
             ) = generate_with_internal_forward_timing(
                 engine=engine,
                 prompt=prompt_batch,
@@ -1039,10 +1352,16 @@ def main() -> int:
                 else expected_completion_tokens
             )
             tps = completion_tokens / elapsed if elapsed > 0 else float("inf")
-            print(f"Prefilling latency: {prefill_latency:.3f} s", flush=True)
+            print(f"TTFT: {prefill_latency:.3f} s", flush=True)
             print(
-                f"Decoding latency: {decode_latency_ms_per_step:.3f} ms/step, "
+                f"Streaming decode latency: {decode_latency_ms_per_step:.3f} ms/step, "
                 f"Throughput: {decode_throughput:.3f} tokens/s",
+                flush=True,
+            )
+            print(
+                f"Internal timing: elapsed={internal_elapsed:.3f} s, "
+                f"prefill={internal_prefill_latency:.3f} s, "
+                f"decode={internal_decode_latency_ms_per_step:.3f} ms/step",
                 flush=True,
             )
             log(
@@ -1074,6 +1393,12 @@ def main() -> int:
                 epoch_prefill_latencies.append(prefill_latency)
                 epoch_decode_latencies_ms.append(decode_latency_ms_per_step)
                 epoch_decode_tps.append(decode_throughput)
+                epoch_internal_elapsed.append(internal_elapsed)
+                epoch_internal_prefill_latencies.append(internal_prefill_latency)
+                epoch_internal_decode_latencies_ms.append(
+                    internal_decode_latency_ms_per_step
+                )
+                epoch_internal_decode_tps.append(internal_decode_throughput)
                 if transfer_stats is not None:
                     epoch_transfer_stats.append(transfer_stats)
     finally:
@@ -1099,6 +1424,7 @@ def main() -> int:
         "config_file": args.config_file,
         "data": args.data,
         "batch_size": args.batch_size,
+        "pp_size": args.pp_size,
         "max_seq_len": args.max_seq_len,
         "warmup": args.warmup,
         "epoch": args.epoch,
@@ -1115,6 +1441,22 @@ def main() -> int:
         "epoch_prefill_latency_s": epoch_prefill_latencies,
         "epoch_decode_latency_ms_per_step": epoch_decode_latencies_ms,
         "epoch_decode_tokens_per_s": epoch_decode_tps,
+        "avg_internal_elapsed_s": statistics.mean(epoch_internal_elapsed),
+        "avg_internal_prefill_latency_s": statistics.mean(
+            epoch_internal_prefill_latencies
+        ),
+        "avg_internal_decode_latency_ms_per_step": statistics.mean(
+            epoch_internal_decode_latencies_ms
+        ),
+        "avg_internal_decode_tokens_per_s": statistics.mean(
+            epoch_internal_decode_tps
+        ),
+        "epoch_internal_elapsed_s": epoch_internal_elapsed,
+        "epoch_internal_prefill_latency_s": epoch_internal_prefill_latencies,
+        "epoch_internal_decode_latency_ms_per_step": (
+            epoch_internal_decode_latencies_ms
+        ),
+        "epoch_internal_decode_tokens_per_s": epoch_internal_decode_tps,
         "runtime_meta": runtime_meta,
     }
     if args.record_transfer_stats:

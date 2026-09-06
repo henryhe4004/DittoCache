@@ -21,6 +21,7 @@ SGLang Ditto bridge currently only supports `batch_size=1`.
 ## Run scripts
 
 Qwen:
+- `run_n2n_qwen_ablation_bsz.sh`
 - `run_n2n_qwen_offloading_bsz.sh`
 - `run_n2n_qwen_offloading_seqlen.sh`
 - `run_n2n_qwen_fullattn_bsz.sh`
@@ -31,6 +32,50 @@ Llama:
 - `run_n2n_llama_offloading_seqlen.sh`
 - `run_n2n_llama_fullattn_bsz.sh`
 - `run_n2n_llama_fullattn_seqlen.sh`
+
+## Offline ablation
+
+`run_n2n_qwen_ablation_bsz.sh` runs the full-attention reference and the
+cumulative LiteCache stages in one offline sweep:
+
+```text
+b0_memcpy -> b1_gdr -> b2_prefetch -> b3_qsac_fixed
+          -> b4_cudagraph -> b5_adaptive -> b6_resident
+```
+
+| Stage | Transfer | Fetch schedule | Reuse | Threshold | Ditto graph | Resident heads |
+| --- | --- | --- | --- | --- | --- | --- |
+| `b0_memcpy` | CUDA memcpy | same-layer demand | always gather | fixed 0.8 | off | none |
+| `b1_gdr` | GDR | same-layer demand | always gather | fixed 0.8 | off | none |
+| `b2_prefetch` | GDR | cross-layer prefetch | always gather | fixed 0.8 | off | none |
+| `b3_qsac_fixed` | GDR | cross-layer prefetch | QSAC | fixed 0.8 | off | none |
+| `b4_cudagraph` | GDR | cross-layer prefetch | QSAC | fixed 0.8 | on | none |
+| `b5_adaptive` | GDR | cross-layer prefetch | QSAC | profile-adaptive | on | none |
+| `b6_resident` | GDR | cross-layer prefetch | QSAC | profile-adaptive | on | profile-selected heads (`skip=0`, `overlap=0`) |
+
+`profile-adaptive` means a different threshold is derived for each head from
+the offline attention profile during cache initialization. It is not an online,
+per-token threshold update.
+
+Select a subset without starting a server:
+
+```bash
+STAGES="fullattn b0_memcpy b1_gdr" \
+BSZ_LIST="1 2 4" CUDA_DEVICE=1 \
+bash run_n2n_qwen_ablation_bsz.sh
+```
+
+The script auto-detects the `/jhe` model and RULER data used in this workspace.
+Override them, or the fixed KV-cache GPU budget, when running elsewhere:
+
+```bash
+MODEL_PATH=/path/to/model DATA_ROOT=/path/to/ruler/data \
+ATTN_PATTERN_PATH=/path/to/attention/profile \
+GPU_MEMORY_BUDGET=16 bash run_n2n_qwen_ablation_bsz.sh
+```
+
+Every result JSON records the resolved ablation configuration in
+`runtime_meta.ablation_config`.
 
 ## Export CSV
 

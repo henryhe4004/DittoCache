@@ -1,0 +1,81 @@
+{
+  "status": "ok",
+  "method": "flashattn",
+  "config_file": "/jhe/sglang-litecache/test/ditto/speedup/../config/full_attn/Qwen2.5-14B-Instruct-1M-8K.yaml",
+  "data": "/jhe/myTransformer/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-8K.jsonl",
+  "batch_size": 1,
+  "pp_size": 2,
+  "max_seq_len": 8000,
+  "warmup": 1,
+  "epoch": 3,
+  "input_tokens": 7710,
+  "avg_elapsed_s": 4.57530248677358,
+  "p50_elapsed_s": 4.576098618097603,
+  "avg_tokens_per_s": 11.146810293322511,
+  "overall_tokens_per_s": 11.146803986716137,
+  "epoch_elapsed_s": [
+    4.570746826007962,
+    4.576098618097603,
+    4.579062016215175
+  ],
+  "epoch_tokens_per_s": [
+    11.157913999919092,
+    11.144864710368054,
+    11.137652169680388
+  ],
+  "avg_prefill_latency_s": 2.1299060952539244,
+  "avg_decode_latency_ms_per_step": 48.908767833684884,
+  "avg_decode_tokens_per_s": 20.446231797699312,
+  "epoch_prefill_latency_s": [
+    2.1259359372779727,
+    2.1303536342456937,
+    2.133428714238107
+  ],
+  "epoch_decode_latency_ms_per_step": [
+    48.91306287609041,
+    48.90574902528897,
+    48.90749159967527
+  ],
+  "epoch_decode_tokens_per_s": [
+    20.44443633663387,
+    20.447493800430372,
+    20.446765256033693
+  ],
+  "avg_internal_elapsed_s": 1.9638606069299083,
+  "avg_internal_prefill_latency_s": 0.007631101179867983,
+  "avg_internal_decode_latency_ms_per_step": 48.905737643751,
+  "avg_internal_decode_tokens_per_s": 20.447498635269067,
+  "epoch_internal_elapsed_s": [
+    1.9642363614402711,
+    1.9636823986656964,
+    1.963663060683757
+  ],
+  "epoch_internal_prefill_latency_s": [
+    0.007840221282094717,
+    0.00756012462079525,
+    0.007492957636713982
+  ],
+  "epoch_internal_decode_latency_ms_per_step": [
+    48.90990350395441,
+    48.90305685112253,
+    48.90425257617608
+  ],
+  "epoch_internal_decode_tokens_per_s": [
+    20.445756960431318,
+    20.448619460422254,
+    20.448119484953633
+  ],
+  "runtime_meta": {
+    "ditto_enabled": false,
+    "variant": null,
+    "offloading_method": null,
+    "pp_size": 2,
+    "chunked_prefill_size": 8000,
+    "max_total_tokens": null,
+    "sglang_cuda_graph_enabled": true,
+    "ditto_cuda_graph_enabled": null,
+    "transfer_stats_enabled": false,
+    "ablation_stage": null,
+    "ablation_config": null
+  }
+}

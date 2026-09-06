@@ -431,7 +431,7 @@ if(SGL_KERNEL_ENABLE_KVLIB)
     ${PROJECT_SOURCE_DIR}/include
   )
   target_link_libraries(kvlib_offload_core PUBLIC OpenMP::OpenMP_CXX)
-  target_link_libraries(kvlib_offload_core PRIVATE ${TORCH_LIBRARIES} c10 cuda gdrapi)
+  target_link_libraries(kvlib_offload_core PRIVATE ${TORCH_LIBRARIES} c10 cuda CUDA::cudart gdrapi)
 endif()
 
 # =========================== Common SM90 Build ============================= #
@@ -545,7 +545,7 @@ endif()
 if(SGL_KERNEL_ENABLE_KVLIB)
   target_link_libraries(kvlib_cpu_gather PRIVATE kvlib_offload_core)
 endif()
-target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} ${TORCH_PYTHON_LIBRARY} gdrapi)
+target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} ${TORCH_PYTHON_LIBRARY} CUDA::cudart gdrapi)
 target_include_directories(kvlib_cpu_gather PRIVATE
     ${PROJECT_SOURCE_DIR}/csrc
     ${PROJECT_SOURCE_DIR}/include
