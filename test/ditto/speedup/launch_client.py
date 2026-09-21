@@ -1,6 +1,6 @@
 
 import argparse
-import asyncio, aiohttp, json, random, re, time, traceback
+import asyncio, aiohttp, json, os, random, re, time, traceback
 from pathlib import Path
 import sys
 
@@ -19,22 +19,27 @@ if str(DITTO_TEST_DIR) not in sys.path:
 
 from dataloader import datasets_category, datasets_maxlen, datasets_prompt
 
-SERVER = "http://127.0.0.1:30000"
 USE_NATIVE_GENERATE = True
-BASE_URL = f"{SERVER}/generate" if USE_NATIVE_GENERATE else f"{SERVER}/v1/chat/completions"
 CONCURRENCY = 1
 TOTAL_REQUESTS = 10
 REQUEST_TIMEOUT_SEC = 900
-LOG_FILE = Path("/speedup/online_client_results.jsonl")
-MODEL_PATH = "/models/Qwen2.5-14B-Instruct-1M"
-RULER_ROOT = Path("/datasets/ruler")
+SERVER = os.environ.get("SERVER_URL", "http://127.0.0.1:30000")
+LOG_FILE = Path(os.environ.get("LOG_FILE", THIS_DIR / "online_client_results.jsonl"))
+MODEL_PATH = os.environ.get(
+    "MODEL_PATH", "/jhe/Llama-3-8B-Instruct-Gradient-1048k"
+)
+RULER_ROOT = Path(os.environ.get("RULER_ROOT", "/jhe/dataset/ruler"))
 
 DEFAULT_DATA_FILES = {
-    "ruler": Path("/datasets/ruler/16K/qa_1/validation.jsonl"),
-    "longbench": Path("/datasets/LongBench/data/lcc_e.jsonl"),
+    "ruler": RULER_ROOT / "16K" / "qa_1" / "validation.jsonl",
+    "longbench": Path(
+        os.environ.get("LONGBENCH_FILE", "/jhe/dataset/LongBench/data/lcc_e.jsonl")
+    ),
 }
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--server", default=SERVER)
+parser.add_argument("--log-file", type=Path, default=LOG_FILE)
 parser.add_argument(
     "--dataset",
     choices=sorted(DEFAULT_DATA_FILES),
@@ -136,6 +141,9 @@ parser.add_argument(
 )
 args = parser.parse_args()
 random.seed(args.seed)
+SERVER = args.server.rstrip("/")
+BASE_URL = f"{SERVER}/generate" if USE_NATIVE_GENERATE else f"{SERVER}/v1/chat/completions"
+LOG_FILE = args.log_file
 
 if args.total_requests < 0:
     raise ValueError("--total-requests must be >= 0")

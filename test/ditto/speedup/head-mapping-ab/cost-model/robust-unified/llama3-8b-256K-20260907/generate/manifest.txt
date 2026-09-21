@@ -1,0 +1,60 @@
+phase=generate
+started_utc=2026-09-07T15:18:25Z
+hostname=086874ca0fe3
+git_commit=25a629c7421601463d757c0375f4843dcde8cc30
+model_name=Llama-3-8B-Instruct-Gradient-1048k
+model_path=/jhe/Llama-3-8B-Instruct-Gradient-1048k
+python=Python 3.13.15
+torch=2.9.1+cu128
+active_mapping=<linear>
+062cefe4deeb3316d9d422d54eeafbcb0451a4c0166cd45b6221dc74ed3fc981  /jhe/sglang-litecache/sgl-kernel/python/sgl_kernel/sm100/common_ops.abi3.so
+731a6d36bc755e389b0582b182332a1f6af4324908a6a41c82eeaacda448a257  /jhe/Llama-3-8B-Instruct-Gradient-1048k/config.json
+c9a49eb8992958fd7228a5c3710d4f7569db6b389d7c71978d710fee519ab15f  /jhe/sglang-litecache/test/ditto/config/hata_offloading/Llama-3-8B-Instruct-Gradient-1048k-256K.yaml
+a92c35e19750f98473c3212ec805da79ace4f9b36e50fda09322abecd17bc315  /jhe/myTransformer/speedup/data/RULER-Llama-3-8B-Instruct-Gradient-1048k-256K.jsonl
+5ed9bfaceb1c1b25794a38f3e11a169614c8ab14c51228761b915c222a422540  /jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/robust-unified/llama3-8b-layer0-only.json
+fa1f24dbd6e13d598ea1c0b35e9265d2102ace6993a0d50f55b1ce910af1bba1  /jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/robust-unified/llama3-8b-256K-20260907/candidate.json
+0, NVIDIA A40, 00000000:06:00.0, 49140 MiB
+1, NVIDIA A40, 00000000:07:00.0, 49140 MiB
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV4	NODE	NODE	SYS	SYS	SYS	SYS	NODE	SYS	0-95	0		N/A
+GPU1	NV4	 X 	NODE	NODE	SYS	SYS	SYS	SYS	NODE	SYS	0-95	0		N/A
+GPU2	NODE	NODE	 X 	NV4	SYS	SYS	SYS	SYS	PIX	SYS	0-95	0		N/A
+GPU3	NODE	NODE	NV4	 X 	SYS	SYS	SYS	SYS	PIX	SYS	0-95	0		N/A
+GPU4	SYS	SYS	SYS	SYS	 X 	NV4	NODE	NODE	SYS	NODE	96-191	1		N/A
+GPU5	SYS	SYS	SYS	SYS	NV4	 X 	NODE	NODE	SYS	NODE	96-191	1		N/A
+GPU6	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NV4	SYS	PIX	96-191	1		N/A
+GPU7	SYS	SYS	SYS	SYS	NODE	NODE	NV4	 X 	SYS	PIX	96-191	1		N/A
+NIC0	NODE	NODE	PIX	PIX	SYS	SYS	SYS	SYS	 X 	SYS				
+NIC1	SYS	SYS	SYS	SYS	NODE	NODE	PIX	PIX	SYS	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+
+seq_len=256000
+topk=0.10
+decode_steps=50
+ignore_eos=true
+tp_size=2
+pp_size=1
+cuda_device=0,1
+cpuset=0-95
+max_total_tokens=262144
+mem_fraction_static=0.92
+max_changes=1
+min_split_improvement_pct=0
+skip_steps=10
+skip_layers=1
+resident_file=/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/robust-unified/llama3-8b-layer0-only.json
+reference_mapping=<linear>

@@ -140,7 +140,7 @@ class SchedulerPPMixin:
                 self.pp_outputs = next_pp_outputs
 
             # When the server is idle, self-check and re-init some states
-            if server_is_idle:
+            if server_is_idle and self._is_no_request():
                 self.self_check_during_idle()
 
     @DynamicGradMode()

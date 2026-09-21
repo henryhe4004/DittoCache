@@ -160,6 +160,7 @@ class HashOffloadingCache(OffloadingCache):
         aux_data_path = self.aux_data_path
 
         for l in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(l)
             layer_device = self.layer_devices[l]
             if aux_data_path is None:
                 self.metadata_tensors['hash_weights'][l] = torch.randn(
@@ -168,11 +169,11 @@ class HashOffloadingCache(OffloadingCache):
                     device=layer_device)
             else:
                 hash_weight = torch.load(os.path.join(aux_data_path,
-                                 f"hash_weight_layer_{l:02d}.pt"), weights_only=True)
+                                 f"hash_weight_layer_{global_layer_idx:02d}.pt"), weights_only=True)
                 hash_weight = self._slice_local_kv_head_tensor(
                     hash_weight,
                     layer_idx=l,
-                    tensor_name=f"hash_weight_layer_{l:02d}",
+                    tensor_name=f"hash_weight_layer_{global_layer_idx:02d}",
                     head_dim=0,
                 )
                 self.metadata_tensors['hash_weights'][l] = hash_weight.to(
@@ -396,8 +397,12 @@ class HashOffloadingCache(OffloadingCache):
         encode_current_query = (
             self.layers_gpu_head_ids[layer_idx].numel() > 0
             or need_overlap_current_query
+            or self._needs_demand_transfer(layer_idx)
         )
-        encode_prefetch_query = not self.layers_full_gpu_mask[next_layer_idx]
+        encode_prefetch_query = (
+            self.prefetch_mode == "cross_layer"
+            and not self.layers_full_gpu_mask[next_layer_idx]
+        )
 
         if encode_current_query and encode_prefetch_query:
             prefetch_query_code, current_query_code = self._decode_append_hash_qqk(
@@ -583,7 +588,7 @@ class HashOffloadingCache(OffloadingCache):
             exclude_recent = 0
             k = self.metadata_tensors[f'topk_current_k_{device_idx}']
         max_k = int(self.topk_prefetch_k_host if is_prefetch else self.topk_current_k_host)
-        if max_k <= 0:
+        if max_k <= 0 and not self.config.enable_cuda_graph:
             return torch.empty(
                 (self.curr_batch_size, self.num_key_value_heads, 0),
                 dtype=torch.int32,
@@ -644,6 +649,10 @@ class HashOffloadingCache(OffloadingCache):
         active.clamp_min_(0)
         active.copy_(torch.minimum(active, row_max_indices))
         active.masked_fill_((per_head_seq_lens <= 0).view(-1, 1), 0)
+        if self.config.enable_cuda_graph:
+            # k grows during replay. Keep capacity and strides fixed instead of
+            # capturing a copy whose width is frozen at the initial k.
+            return topk_indices
         return topk_indices[:, :, :max_k].contiguous()
 
 """

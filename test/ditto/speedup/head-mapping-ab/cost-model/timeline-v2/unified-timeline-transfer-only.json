@@ -1,0 +1,3566 @@
+{
+  "orders": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      3,
+      4,
+      0,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      6,
+      1,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      5,
+      3,
+      4,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      4,
+      5,
+      0,
+      2,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      5,
+      3,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      7,
+      2,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      3,
+      6,
+      2,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      2,
+      5,
+      7,
+      1,
+      3,
+      4,
+      6
+    ],
+    [
+      0,
+      2,
+      3,
+      7,
+      1,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      6,
+      7,
+      2,
+      3,
+      4,
+      5
+    ],
+    [
+      0,
+      3,
+      5,
+      7,
+      1,
+      2,
+      4,
+      6
+    ],
+    [
+      1,
+      2,
+      3,
+      4,
+      0,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      4,
+      5,
+      6,
+      0,
+      2,
+      3,
+      7
+    ],
+    [
+      2,
+      3,
+      4,
+      6,
+      0,
+      1,
+      5,
+      7
+    ],
+    [
+      3,
+      4,
+      5,
+      6,
+      0,
+      1,
+      2,
+      7
+    ],
+    [
+      2,
+      3,
+      6,
+      7,
+      0,
+      1,
+      4,
+      5
+    ],
+    [
+      1,
+      2,
+      5,
+      6,
+      0,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      3,
+      6,
+      7,
+      1,
+      2,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      5,
+      7,
+      1,
+      3,
+      4,
+      6
+    ],
+    [
+      1,
+      4,
+      6,
+      7,
+      0,
+      2,
+      3,
+      5
+    ],
+    [
+      0,
+      3,
+      4,
+      7,
+      1,
+      2,
+      5,
+      6
+    ],
+    [
+      0,
+      3,
+      5,
+      7,
+      1,
+      2,
+      4,
+      6
+    ],
+    [
+      0,
+      1,
+      6,
+      7,
+      2,
+      3,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      3,
+      7,
+      2,
+      4,
+      5,
+      6
+    ],
+    [
+      1,
+      2,
+      5,
+      6,
+      0,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      5,
+      6,
+      7,
+      1,
+      2,
+      3,
+      4
+    ],
+    [
+      0,
+      1,
+      6,
+      7,
+      2,
+      3,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      2,
+      5,
+      3,
+      4,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      4,
+      7,
+      0,
+      3,
+      5,
+      6
+    ],
+    [
+      0,
+      3,
+      5,
+      7,
+      1,
+      2,
+      4,
+      6
+    ],
+    [
+      1,
+      2,
+      4,
+      5,
+      0,
+      3,
+      6,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      7,
+      1,
+      2,
+      5,
+      6
+    ],
+    [
+      0,
+      4,
+      6,
+      7,
+      1,
+      2,
+      3,
+      5
+    ]
+  ],
+  "metadata": {
+    "objective": "normalized full-layer TP2 timeline regret",
+    "scope": "transfer timeline proxy; end-to-end prediction requires calibrated per-profile timing",
+    "transfer_json": [
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.tp01.json"
+    ],
+    "resident_heads_file": "test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json",
+    "reference_mapping": null,
+    "timing_json": null,
+    "profiles": [
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json"
+    ],
+    "profile_count": 6,
+    "profile_steps": 246,
+    "skip_steps": 10,
+    "skip_layers": 1,
+    "num_layers": 48,
+    "num_heads": 8,
+    "per_token_head_bytes": 512,
+    "search": {
+      "algorithm": "layerwise beam search plus full-timeline coordinate refinement",
+      "beam_width": 128,
+      "local_passes": 1
+    },
+    "cost_config": {
+      "h2d_gbps": [
+        22.0,
+        22.0
+      ],
+      "d2h_gbps": [
+        22.0,
+        22.0
+      ],
+      "h2d_launch_us": 2.0,
+      "d2h_launch_us": 1.0,
+      "active_head_us": 0.5,
+      "tail_quantile": 0.95,
+      "tail_weight": 0.1,
+      "worst_profile_weight": 0.25
+    },
+    "resolved_timing": {
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "timeline_metrics": {
+      "objective": -0.038786622230148116,
+      "worst_profile_regret": -0.025749606547724326,
+      "reference_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reference_mean_timeline_us": 5385.446799704364,
+      "optimized_mean_timeline_us": 5119.126354767187,
+      "local_improvement_passes": 1,
+      "local_improvement_moves": 14,
+      "profiles": {
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+          "label": "128K",
+          "samples": 41,
+          "reference_mean_timeline_us": 13448.755955654105,
+          "optimized_mean_timeline_us": 12647.740177383594,
+          "mean_regret": -0.05846892711019098,
+          "mean_critical_exposed_wait_us": 12596.364904656319,
+          "mean_rank_exposed_wait_us": [
+            9259.926412416851,
+            8033.616957871398
+          ]
+        },
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+          "label": "16K",
+          "samples": 41,
+          "reference_mean_timeline_us": 1617.799592017739,
+          "optimized_mean_timeline_us": 1522.0308115299342,
+          "mean_regret": -0.05821397579796122,
+          "mean_critical_exposed_wait_us": 1470.6555388026604,
+          "mean_rank_exposed_wait_us": [
+            984.8276541019952,
+            1005.1916274944563
+          ]
+        },
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+          "label": "32K",
+          "samples": 41,
+          "reference_mean_timeline_us": 9196.173711751668,
+          "optimized_mean_timeline_us": 8947.89146784923,
+          "mean_regret": -0.026883839892614295,
+          "mean_critical_exposed_wait_us": 8896.516195121952,
+          "mean_rank_exposed_wait_us": [
+            7559.350926829267,
+            7210.66975609756
+          ]
+        },
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+          "label": "4K",
+          "samples": 41,
+          "reference_mean_timeline_us": 422.4534900221729,
+          "optimized_mean_timeline_us": 405.1645055432372,
+          "mean_regret": -0.040196970157913084,
+          "mean_critical_exposed_wait_us": 353.7892328159646,
+          "mean_rank_exposed_wait_us": [
+            238.11498891352556,
+            241.3722838137472
+          ]
+        },
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+          "label": "64K",
+          "samples": 41,
+          "reference_mean_timeline_us": 6826.3463059867,
+          "optimized_mean_timeline_us": 6427.711334811534,
+          "mean_regret": -0.061704646127192855,
+          "mean_critical_exposed_wait_us": 6376.336062084259,
+          "mean_rank_exposed_wait_us": [
+            4560.509011086477,
+            4433.997215077605
+          ]
+        },
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+          "label": "8K",
+          "samples": 41,
+          "reference_mean_timeline_us": 801.1517427937918,
+          "optimized_mean_timeline_us": 764.2198314855876,
+          "mean_regret": -0.046610563597276285,
+          "mean_critical_exposed_wait_us": 712.8445587583146,
+          "mean_rank_exposed_wait_us": [
+            461.4787228381373,
+            484.227751662971
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "layer_idx": 0,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        0.0
+      ],
+      "mean_d2h_us": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "layer_idx": 1,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        1.8217560975609755,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 2,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        25.979898004434588,
+        7.894276422764227
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 3,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        44.07169844789357
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 4,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        54.62107612712491,
+        30.500314855875835
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 5,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        59.39945158906134,
+        24.054844050258687
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 6,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          0,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        3.9471382113821134,
+        13.09659866962306
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 7,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          6
+        ],
+        [
+          1,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        40.87517664449371,
+        35.21063266814487
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 8,
+      "rank_heads": [
+        [
+          0,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        28.692026607538804,
+        32.489148558758316
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 9,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        37.34560088691796,
+        42.922486326681444
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 10,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        56.78473318551367,
+        70.41214781966002
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 11,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        55.0659364375462,
+        53.6808839615669
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 12,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        54.20525203252033,
+        33.87752402069475
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 13,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          7
+        ],
+        [
+          2,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        39.34455580192166,
+        79.46645528455282
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 14,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          6
+        ],
+        [
+          2,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        60.65546637102734,
+        41.6249903917221
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 15,
+      "rank_heads": [
+        [
+          0,
+          2,
+          5,
+          7
+        ],
+        [
+          1,
+          3,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        42.96746637102734,
+        77.7309179600887
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 16,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          7
+        ],
+        [
+          1,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        61.11980931263858,
+        19.895568366592755
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 17,
+      "rank_heads": [
+        [
+          0,
+          1,
+          6,
+          7
+        ],
+        [
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        65.54518551367332,
+        91.35504804138951
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 18,
+      "rank_heads": [
+        [
+          0,
+          3,
+          5,
+          7
+        ],
+        [
+          1,
+          2,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        108.98424685883222,
+        140.23441980783446
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 19,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          0,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        112.25367331855136,
+        102.94324020694752
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 20,
+      "rank_heads": [
+        [
+          1,
+          4,
+          5,
+          6
+        ],
+        [
+          0,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        141.90230450849964,
+        149.4500177383592
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 21,
+      "rank_heads": [
+        [
+          2,
+          3,
+          4,
+          6
+        ],
+        [
+          0,
+          1,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        113.23226607538804,
+        105.22976644493718
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 22,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          6
+        ],
+        [
+          0,
+          1,
+          2,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        115.19254101995567,
+        129.2767745750185
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 23,
+      "rank_heads": [
+        [
+          2,
+          3,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        128.3138551367332,
+        117.1211869918699
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 24,
+      "rank_heads": [
+        [
+          1,
+          2,
+          5,
+          6
+        ],
+        [
+          0,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        142.8151219512195,
+        135.29248484848486
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 25,
+      "rank_heads": [
+        [
+          0,
+          3,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        226.26707908351813,
+        242.80976496674057
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 26,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        96.35910864745011,
+        106.58811529933482
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 27,
+      "rank_heads": [
+        [
+          0,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        108.24041093865483,
+        80.25682631189949
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 28,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        91.51378861788618,
+        106.49122690317812
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 29,
+      "rank_heads": [
+        [
+          0,
+          2,
+          5,
+          7
+        ],
+        [
+          1,
+          3,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        173.10159793052475,
+        154.43654249815225
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 30,
+      "rank_heads": [
+        [
+          1,
+          4,
+          6,
+          7
+        ],
+        [
+          0,
+          2,
+          3,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        143.96829416112345,
+        118.08393939393939
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 31,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          7
+        ],
+        [
+          1,
+          2,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        97.5650968218773,
+        95.5469889135255
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 32,
+      "rank_heads": [
+        [
+          0,
+          3,
+          5,
+          7
+        ],
+        [
+          1,
+          2,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        97.10779157427937,
+        124.02061492978565
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 33,
+      "rank_heads": [
+        [
+          0,
+          1,
+          6,
+          7
+        ],
+        [
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        67.54617590539542,
+        65.3300561714708
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 34,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          7
+        ],
+        [
+          2,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        176.98692239467852,
+        202.45136585365856
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 35,
+      "rank_heads": [
+        [
+          1,
+          2,
+          5,
+          6
+        ],
+        [
+          0,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        112.98656467110125,
+        84.76429859571323
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 36,
+      "rank_heads": [
+        [
+          0,
+          5,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        178.60948410938656,
+        180.89198965262383
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 37,
+      "rank_heads": [
+        [
+          0,
+          1,
+          6,
+          7
+        ],
+        [
+          2,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        126.54477014042867,
+        142.47075831485589
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 38,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        116.28445084996305,
+        83.09973540280856
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 39,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        76.5259246119734,
+        64.95311899482631
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 40,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        102.51019660014782,
+        100.01073614190686
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 41,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        117.3360192165558,
+        113.31214634146342
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 42,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        73.07624094604581,
+        93.9500325203252
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 43,
+      "rank_heads": [
+        [
+          1,
+          2,
+          4,
+          7
+        ],
+        [
+          0,
+          3,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        176.53721064301553,
+        132.94516925351073
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 44,
+      "rank_heads": [
+        [
+          0,
+          3,
+          5,
+          7
+        ],
+        [
+          1,
+          2,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        184.41392461197339,
+        172.07948558758315
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 45,
+      "rank_heads": [
+        [
+          1,
+          2,
+          4,
+          5
+        ],
+        [
+          0,
+          3,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        220.41808425720623,
+        258.78025277161856
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 46,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          7
+        ],
+        [
+          1,
+          2,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        264.646066518847,
+        255.59387139689576
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 47,
+      "rank_heads": [
+        [
+          0,
+          4,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          3,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        98.14865927568366,
+        102.9311796008869
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    }
+  ]
+}

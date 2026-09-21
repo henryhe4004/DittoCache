@@ -1,0 +1,352 @@
+{
+  "date": "2026-09-21",
+  "ditto_internal_cuda_graph": true,
+  "outer_sglang_cuda_graph": false,
+  "unit_tests_passed": 40,
+  "suites": [
+    {
+      "suite": "llama-complete",
+      "process_cases": 8,
+      "passed": true,
+      "graph_cases": [
+        {
+          "case": "tp1-pp1-ditto_graph",
+          "graph_paths": {
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 61
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.json",
+              "seq_len": [
+                910,
+                941
+              ],
+              "prefetch_k": [
+                112,
+                119
+              ]
+            }
+          ]
+        },
+        {
+          "case": "tp2-pp1-ditto_graph",
+          "graph_paths": {
+            "pp0.tp1": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 61
+            },
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 61
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.tp00.json",
+              "seq_len": [
+                910,
+                941
+              ],
+              "prefetch_k": [
+                112,
+                119
+              ]
+            },
+            {
+              "rank_file": "transfer.tp01.json",
+              "seq_len": [
+                910,
+                941
+              ],
+              "prefetch_k": [
+                112,
+                119
+              ]
+            }
+          ]
+        },
+        {
+          "case": "tp1-pp2-ditto_graph",
+          "graph_paths": {
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp1.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.pp00.json",
+              "seq_len": [
+                910,
+                940
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp01.json",
+              "seq_len": [
+                910,
+                940
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            }
+          ]
+        },
+        {
+          "case": "tp2-pp2-ditto_graph",
+          "graph_paths": {
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp0.tp1": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp1.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp1.tp1": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.pp00.tp00.json",
+              "seq_len": [
+                910,
+                940
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp00.tp01.json",
+              "seq_len": [
+                910,
+                940
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp01.tp00.json",
+              "seq_len": [
+                910,
+                940
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp01.tp01.json",
+              "seq_len": [
+                910,
+                940
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "suite": "llama-zero-k-fixed",
+      "process_cases": 4,
+      "passed": true,
+      "graph_cases": [
+        {
+          "case": "tp1-pp1-ditto_graph",
+          "graph_paths": {
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 61
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.json",
+              "seq_len": [
+                336,
+                367
+              ],
+              "prefetch_k": [
+                0,
+                4
+              ]
+            }
+          ]
+        },
+        {
+          "case": "tp2-pp1-ditto_graph",
+          "graph_paths": {
+            "pp0.tp1": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 61
+            },
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 61
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.tp00.json",
+              "seq_len": [
+                336,
+                367
+              ],
+              "prefetch_k": [
+                0,
+                4
+              ]
+            },
+            {
+              "rank_file": "transfer.tp01.json",
+              "seq_len": [
+                336,
+                367
+              ],
+              "prefetch_k": [
+                0,
+                4
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "suite": "qwen-final",
+      "process_cases": 2,
+      "passed": true,
+      "graph_cases": [
+        {
+          "case": "tp2-pp2-ditto_graph",
+          "graph_paths": {
+            "pp0.tp1": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp0.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp1.tp0": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            },
+            "pp1.tp1": {
+              "warmup": 1,
+              "capture": 2,
+              "replay": 59
+            }
+          },
+          "metadata": [
+            {
+              "rank_file": "transfer.pp00.tp00.json",
+              "seq_len": [
+                909,
+                939
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp00.tp01.json",
+              "seq_len": [
+                909,
+                939
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp01.tp00.json",
+              "seq_len": [
+                909,
+                939
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            },
+            {
+              "rank_file": "transfer.pp01.tp01.json",
+              "seq_len": [
+                909,
+                939
+              ],
+              "prefetch_k": [
+                112,
+                118
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "targeted_memcheck": {
+    "kernel": "_fwd_mix_kernel",
+    "exit_code": 0,
+    "errors": 0,
+    "logs": [
+      "memcheck-final-128867.log"
+    ],
+    "command": "memcheck-final-command.json"
+  },
+  "source_sha256": {
+    "python/sglang/ditto/kvcache_offloading.py": "408236c799eae42a723f74f9db1cf20ef8d3ed30bdddb26c2201682043fdba7c",
+    "python/sglang/ditto/kvcache_hash.py": "ab33228fcd2b72e9066931ac61504980758fcd043f8afe6ca345659929fc3be1",
+    "python/sglang/ditto/kvcache_offloading_hash.py": "64902eed5b88809e8e7613a7ebed7a3f4fe63699aaf7d7719df341267a3cfb54",
+    "python/sglang/srt/models/ditto/full_attn_ops.py": "0ab7f339c78e156be3991497c72eba5a31b352fe650711468cb2ecb647583678",
+    "python/sglang/srt/models/ditto/offloading_ops.py": "16622377ef7748e0c66ada387edde4db31774b9878c0dd533ecdf9a4ea825d8d",
+    "test/ditto/run_tp_pp_graph.py": "f05617b2e53754b01066da387bce657b10d46f9d9d8db76bcd87370796d28177",
+    "test/ditto/test_cuda_graph_decode.py": "88f716735127d7e5bb1942156eca3811843548695ec3ef3160435b75f46d306b"
+  }
+}

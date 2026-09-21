@@ -56,6 +56,7 @@ class HashOffloadingCache(OffloadingCache):
         self.layers_hash_weight = [None for _ in range(self.num_layers)]
 
         for layer in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(layer)
             self.layers_hash_cache_data[layer] = torch.zeros(
                 (gpu_hash_numel,),
                 dtype=torch.int32,
@@ -69,13 +70,13 @@ class HashOffloadingCache(OffloadingCache):
                 )
             else:
                 hash_weight = torch.load(
-                    os.path.join(self.aux_data_path, f"hash_weight_layer_{layer:02d}.pt"),
+                    os.path.join(self.aux_data_path, f"hash_weight_layer_{global_layer_idx:02d}.pt"),
                     weights_only=True,
                 )
                 hash_weight = self._slice_local_kv_head_tensor(
                     hash_weight,
                     layer_idx=layer,
-                    tensor_name=f"hash_weight_layer_{layer:02d}",
+                    tensor_name=f"hash_weight_layer_{global_layer_idx:02d}",
                     head_dim=0,
                 )
                 self.layers_hash_weight[layer] = hash_weight.to(self.layer_devices[layer]).to(self.dtype)
@@ -348,7 +349,7 @@ class HashOffloadingCache(OffloadingCache):
             k_tensor = self.metadata_tensors[f"topk_current_k_{device_idx}"]
 
         k = int(self.topk_prefetch_k_host if is_prefetch else self.topk_current_k_host)
-        if k <= 0:
+        if k <= 0 and not self.config.enable_cuda_graph:
             return torch.empty(
                 (self.curr_batch_size, self.num_key_value_heads, 0),
                 dtype=torch.int32,
@@ -409,6 +410,10 @@ class HashOffloadingCache(OffloadingCache):
         active_indices.copy_(torch.minimum(active_indices, row_max_indices))
         active_indices.masked_fill_((per_head_seq_lens <= 0).view(-1, 1), 0)
 
+        if self.config.enable_cuda_graph:
+            # A replay can request more indices than the capture-time k. Keep
+            # the preallocated capacity/strides; kernels read k from the GPU.
+            return topk_indices
         return topk_indices[:, :, :k].contiguous()
 
 

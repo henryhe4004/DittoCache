@@ -1,0 +1,2553 @@
+{
+  "orders": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      3,
+      4,
+      6,
+      7,
+      0,
+      1,
+      2,
+      5
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      1,
+      5,
+      6,
+      7,
+      0,
+      2,
+      3,
+      4
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      2,
+      3,
+      6,
+      7,
+      0,
+      1,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      3,
+      4,
+      6,
+      7,
+      0,
+      1,
+      2,
+      5
+    ],
+    [
+      1,
+      2,
+      3,
+      7,
+      0,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      4,
+      7,
+      1,
+      3,
+      5,
+      6
+    ],
+    [
+      3,
+      4,
+      5,
+      6,
+      0,
+      1,
+      2,
+      7
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      3,
+      4,
+      5,
+      7,
+      0,
+      1,
+      2,
+      6
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      4,
+      7,
+      2,
+      3,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      4,
+      6,
+      2,
+      3,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      5,
+      7,
+      2,
+      3,
+      4,
+      6
+    ],
+    [
+      3,
+      4,
+      5,
+      7,
+      0,
+      1,
+      2,
+      6
+    ],
+    [
+      0,
+      1,
+      5,
+      6,
+      2,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      0,
+      2,
+      5,
+      6,
+      1,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      1,
+      4,
+      6,
+      2,
+      3,
+      5,
+      7
+    ],
+    [
+      0,
+      4,
+      6,
+      7,
+      1,
+      2,
+      3,
+      5
+    ],
+    [
+      2,
+      5,
+      6,
+      7,
+      0,
+      1,
+      3,
+      4
+    ],
+    [
+      2,
+      5,
+      6,
+      7,
+      0,
+      1,
+      3,
+      4
+    ],
+    [
+      2,
+      3,
+      4,
+      5,
+      0,
+      1,
+      6,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      5,
+      1,
+      2,
+      6,
+      7
+    ],
+    [
+      3,
+      4,
+      5,
+      7,
+      0,
+      1,
+      2,
+      6
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      3,
+      4,
+      5,
+      7,
+      0,
+      1,
+      2,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      2,
+      4,
+      5,
+      1,
+      3,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      4,
+      5,
+      0,
+      2,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      4,
+      5,
+      0,
+      2,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      4,
+      6,
+      0,
+      2,
+      5,
+      7
+    ],
+    [
+      0,
+      2,
+      5,
+      7,
+      1,
+      3,
+      4,
+      6
+    ],
+    [
+      0,
+      1,
+      5,
+      6,
+      2,
+      3,
+      4,
+      7
+    ]
+  ],
+  "metadata": {
+    "objective": "byte-aware TP2 critical-rank transfer cost",
+    "scope": "data-path cost only; predicted gains are not end-to-end latency",
+    "transfer_json": [
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp01.json"
+    ],
+    "resident_heads_file": "test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json",
+    "reference_mapping": "test/ditto/speedup/head-mapping-ab/qsac-resident-layerwise-128K.json",
+    "profiles": [
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json"
+    ],
+    "profile_count": 1,
+    "profile_steps": 41,
+    "skip_steps": 10,
+    "skip_layers": 1,
+    "num_layers": 48,
+    "num_heads": 8,
+    "per_token_head_bytes": 512,
+    "cost_config": {
+      "h2d_gbps": [
+        22.0,
+        22.0
+      ],
+      "d2h_gbps": [
+        22.0,
+        22.0
+      ],
+      "h2d_launch_us": 2.0,
+      "d2h_launch_us": 1.0,
+      "active_head_us": 0.5,
+      "shrinkage": 0.5,
+      "tail_quantile": 0.95,
+      "tail_weight": 0.1,
+      "imbalance_weight": 0.05,
+      "worst_profile_weight": 0.25
+    },
+    "cumulative_mean_rank_us": [
+      8928.19361419069,
+      8875.053126385812
+    ]
+  },
+  "layers": [
+    {
+      "layer_idx": 0,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "predicted": {
+        "objective_us": 0.0,
+        "mean_profile_score_us": 0.0,
+        "worst_profile_score_us": 0.0,
+        "mean_rank_us": [
+          0.0,
+          0.0
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          }
+        }
+      },
+      "reference_objective_us": 0.0,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 1,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 18.946300665188467,
+        "mean_profile_score_us": 18.946300665188467,
+        "worst_profile_score_us": 18.946300665188467,
+        "mean_rank_us": [
+          12.023627494456761,
+          1.0930909090909091
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.023627494456761,
+            "aggregate_critical_us": 12.023627494456761,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              12.023627494456761,
+              1.0930909090909091
+            ],
+            "score_us": 18.946300665188467
+          }
+        }
+      },
+      "reference_objective_us": 18.946300665188467,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 2,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 77.15140798226163,
+        "mean_profile_score_us": 77.15140798226163,
+        "worst_profile_score_us": 77.15140798226163,
+        "mean_rank_us": [
+          48.45874944567627,
+          75.7850909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              48.45874944567627,
+              75.7850909090909
+            ],
+            "score_us": 77.15140798226163
+          }
+        }
+      },
+      "reference_objective_us": 130.58138847006649,
+      "predicted_objective_improvement_pct": 40.91699522712055
+    },
+    {
+      "layer_idx": 3,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 79.5196909090909,
+        "mean_profile_score_us": 79.5196909090909,
+        "worst_profile_score_us": 79.5196909090909,
+        "mean_rank_us": [
+          75.7850909090909,
+          1.0930909090909091
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              75.7850909090909,
+              1.0930909090909091
+            ],
+            "score_us": 79.5196909090909
+          }
+        }
+      },
+      "reference_objective_us": 79.5196909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 4,
+      "rank_heads": [
+        [
+          3,
+          4,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 135.17977383592014,
+        "mean_profile_score_us": 135.17977383592014,
+        "worst_profile_score_us": 135.17977383592014,
+        "mean_rank_us": [
+          116.56352993348114,
+          127.20138359201772
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 137.8392372505543,
+            "aggregate_critical_us": 127.20138359201772,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              116.56352993348114,
+              127.20138359201772
+            ],
+            "score_us": 135.17977383592014
+          }
+        }
+      },
+      "reference_objective_us": 135.17977383592014,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 5,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 76.24052993348114,
+        "mean_profile_score_us": 76.24052993348114,
+        "worst_profile_score_us": 76.24052993348114,
+        "mean_rank_us": [
+          66.67631042128602,
+          75.7850909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              66.67631042128602,
+              75.7850909090909
+            ],
+            "score_us": 76.24052993348114
+          }
+        }
+      },
+      "reference_objective_us": 76.24052993348114,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 6,
+      "rank_heads": [
+        [
+          1,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          2,
+          3,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 78.33554944567626,
+        "mean_profile_score_us": 78.33554944567626,
+        "worst_profile_score_us": 78.33554944567626,
+        "mean_rank_us": [
+          24.77592017738359,
+          75.7850909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              24.77592017738359,
+              75.7850909090909
+            ],
+            "score_us": 78.33554944567626
+          }
+        }
+      },
+      "reference_objective_us": 108.6851396895787,
+      "predicted_objective_improvement_pct": 27.924323721334385
+    },
+    {
+      "layer_idx": 7,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 148.4770909090909,
+        "mean_profile_score_us": 148.4770909090909,
+        "worst_profile_score_us": 148.4770909090909,
+        "mean_rank_us": [
+          148.4770909090909,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              148.4770909090909
+            ],
+            "score_us": 148.4770909090909
+          }
+        }
+      },
+      "reference_objective_us": 148.4770909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 8,
+      "rank_heads": [
+        [
+          2,
+          3,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 173.47604700665187,
+        "mean_profile_score_us": 173.47604700665187,
+        "worst_profile_score_us": 173.47604700665187,
+        "mean_rank_us": [
+          166.20684700665186,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 167.97982261640797,
+            "aggregate_critical_us": 166.20684700665186,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              166.20684700665186,
+              148.4770909090909
+            ],
+            "score_us": 173.47604700665187
+          }
+        }
+      },
+      "reference_objective_us": 254.32617383592014,
+      "predicted_objective_improvement_pct": 31.78993558147466
+    },
+    {
+      "layer_idx": 9,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 152.1116909090909,
+        "mean_profile_score_us": 152.1116909090909,
+        "worst_profile_score_us": 152.1116909090909,
+        "mean_rank_us": [
+          75.7850909090909,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              75.7850909090909,
+              148.4770909090909
+            ],
+            "score_us": 152.1116909090909
+          }
+        }
+      },
+      "reference_objective_us": 152.1116909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 10,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 223.11936407982262,
+        "mean_profile_score_us": 223.11936407982262,
+        "worst_profile_score_us": 223.11936407982262,
+        "mean_rank_us": [
+          219.3961152993348,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 219.3961152993348,
+            "aggregate_critical_us": 219.3961152993348,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              219.3961152993348,
+              148.4770909090909
+            ],
+            "score_us": 223.11936407982262
+          }
+        }
+      },
+      "reference_objective_us": 223.11936407982262,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 11,
+      "rank_heads": [
+        [
+          3,
+          4,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 150.5160128603104,
+        "mean_profile_score_us": 150.5160128603104,
+        "worst_profile_score_us": 150.5160128603104,
+        "mean_rank_us": [
+          107.69865188470065,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              107.69865188470065,
+              148.4770909090909
+            ],
+            "score_us": 150.5160128603104
+          }
+        }
+      },
+      "reference_objective_us": 150.5160128603104,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 12,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          7
+        ],
+        [
+          0,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 194.0425640798226,
+        "mean_profile_score_us": 194.0425640798226,
+        "worst_profile_score_us": 194.0425640798226,
+        "mean_rank_us": [
+          180.39065188470065,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 196.34743237250552,
+            "aggregate_critical_us": 180.39065188470065,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              180.39065188470065,
+              148.4770909090909
+            ],
+            "score_us": 194.0425640798226
+          }
+        }
+      },
+      "reference_objective_us": 202.02095432372502,
+      "predicted_objective_improvement_pct": 3.9492884639667576
+    },
+    {
+      "layer_idx": 13,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 151.84574456762746,
+        "mean_profile_score_us": 151.84574456762746,
+        "worst_profile_score_us": 151.84574456762746,
+        "mean_rank_us": [
+          148.4770909090909,
+          81.10401773835919
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              81.10401773835919
+            ],
+            "score_us": 151.84574456762746
+          }
+        }
+      },
+      "reference_objective_us": 151.84574456762746,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 14,
+      "rank_heads": [
+        [
+          0,
+          2,
+          4,
+          7
+        ],
+        [
+          1,
+          3,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 148.4770909090909,
+        "mean_profile_score_us": 148.4770909090909,
+        "worst_profile_score_us": 148.4770909090909,
+        "mean_rank_us": [
+          148.4770909090909,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              148.4770909090909
+            ],
+            "score_us": 148.4770909090909
+          }
+        }
+      },
+      "reference_objective_us": 228.4382909090909,
+      "predicted_objective_improvement_pct": 35.003413692944015
+    },
+    {
+      "layer_idx": 15,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          6
+        ],
+        [
+          0,
+          1,
+          2,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 223.56260798226162,
+        "mean_profile_score_us": 223.56260798226162,
+        "worst_profile_score_us": 223.56260798226162,
+        "mean_rank_us": [
+          173.29874944567626,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              173.29874944567626,
+              221.1690909090909
+            ],
+            "score_us": 223.56260798226162
+          }
+        }
+      },
+      "reference_objective_us": 223.56260798226162,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 16,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 150.6046616407982,
+        "mean_profile_score_us": 150.6046616407982,
+        "worst_profile_score_us": 150.6046616407982,
+        "mean_rank_us": [
+          105.92567627494455,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              105.92567627494455,
+              148.4770909090909
+            ],
+            "score_us": 150.6046616407982
+          }
+        }
+      },
+      "reference_objective_us": 150.6046616407982,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 17,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 221.1690909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 18,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 297.49569090909085,
+        "mean_profile_score_us": 297.49569090909085,
+        "worst_profile_score_us": 297.49569090909085,
+        "mean_rank_us": [
+          293.8610909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              221.1690909090909
+            ],
+            "score_us": 297.49569090909085
+          }
+        }
+      },
+      "reference_objective_us": 297.49569090909085,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 19,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 221.1690909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 20,
+      "rank_heads": [
+        [
+          0,
+          1,
+          4,
+          7
+        ],
+        [
+          2,
+          3,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 221.1690909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 21,
+      "rank_heads": [
+        [
+          0,
+          1,
+          4,
+          6
+        ],
+        [
+          2,
+          3,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 221.1690909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 22,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 265.4934811529933,
+        "mean_profile_score_us": 265.4934811529933,
+        "worst_profile_score_us": 265.4934811529933,
+        "mean_rank_us": [
+          221.1690909090909,
+          260.17455432372503
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 260.17455432372503,
+            "aggregate_critical_us": 260.17455432372503,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              260.17455432372503
+            ],
+            "score_us": 265.4934811529933
+          }
+        }
+      },
+      "reference_objective_us": 299.1800177383592,
+      "predicted_objective_improvement_pct": 11.259621160536753
+    },
+    {
+      "layer_idx": 23,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 221.1690909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 24,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 221.1690909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 25,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          7
+        ],
+        [
+          2,
+          3,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 293.8610909090909,
+        "mean_profile_score_us": 293.8610909090909,
+        "worst_profile_score_us": 293.8610909090909,
+        "mean_rank_us": [
+          293.8610909090909,
+          293.8610909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          }
+        }
+      },
+      "reference_objective_us": 293.8610909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 26,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 177.99713481152992,
+        "mean_profile_score_us": 177.99713481152992,
+        "worst_profile_score_us": 177.99713481152992,
+        "mean_rank_us": [
+          162.66089578713968,
+          167.97982261640797
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 176.84470066518844,
+            "aggregate_critical_us": 167.97982261640797,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              162.66089578713968,
+              167.97982261640797
+            ],
+            "score_us": 177.99713481152992
+          }
+        }
+      },
+      "reference_objective_us": 177.99713481152992,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 27,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          6
+        ],
+        [
+          2,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 223.56260798226162,
+        "mean_profile_score_us": 223.56260798226162,
+        "worst_profile_score_us": 223.56260798226162,
+        "mean_rank_us": [
+          221.1690909090909,
+          173.29874944567626
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              173.29874944567626
+            ],
+            "score_us": 223.56260798226162
+          }
+        }
+      },
+      "reference_objective_us": 223.56260798226162,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 28,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 256.0080616407982,
+        "mean_profile_score_us": 256.0080616407982,
+        "worst_profile_score_us": 256.0080616407982,
+        "mean_rank_us": [
+          228.26099334811528,
+          247.76372505543236
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 253.08265188470065,
+            "aggregate_critical_us": 247.76372505543236,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              228.26099334811528,
+              247.76372505543236
+            ],
+            "score_us": 256.0080616407982
+          }
+        }
+      },
+      "reference_objective_us": 256.0080616407982,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 29,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 221.1690909090909,
+        "mean_profile_score_us": 221.1690909090909,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          221.1690909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          }
+        }
+      },
+      "reference_objective_us": 301.1302909090909,
+      "predicted_objective_improvement_pct": 26.553688690235322
+    },
+    {
+      "layer_idx": 30,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 249.97994456762748,
+        "mean_profile_score_us": 249.97994456762748,
+        "worst_profile_score_us": 249.97994456762748,
+        "mean_rank_us": [
+          233.57992017738357,
+          238.89884700665186
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 249.53670066518845,
+            "aggregate_critical_us": 238.89884700665186,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              233.57992017738357,
+              238.89884700665186
+            ],
+            "score_us": 249.97994456762748
+          }
+        }
+      },
+      "reference_objective_us": 294.3043348115299,
+      "predicted_objective_improvement_pct": 15.060733057937247
+    },
+    {
+      "layer_idx": 31,
+      "rank_heads": [
+        [
+          0,
+          2,
+          5,
+          6
+        ],
+        [
+          1,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 234.46640798226164,
+        "mean_profile_score_us": 234.46640798226164,
+        "worst_profile_score_us": 234.46640798226164,
+        "mean_rank_us": [
+          221.1690909090909,
+          224.7150421286031
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 230.0339689578714,
+            "aggregate_critical_us": 224.7150421286031,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              224.7150421286031
+            ],
+            "score_us": 234.46640798226164
+          }
+        }
+      },
+      "reference_objective_us": 295.63406651884696,
+      "predicted_objective_improvement_pct": 20.69032816713152
+    },
+    {
+      "layer_idx": 32,
+      "rank_heads": [
+        [
+          0,
+          1,
+          4,
+          6
+        ],
+        [
+          2,
+          3,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 282.3367494456763,
+        "mean_profile_score_us": 282.3367494456763,
+        "worst_profile_score_us": 282.3367494456763,
+        "mean_rank_us": [
+          221.1690909090909,
+          277.904310421286
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 277.904310421286,
+            "aggregate_critical_us": 277.904310421286,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              277.904310421286
+            ],
+            "score_us": 282.3367494456763
+          }
+        }
+      },
+      "reference_objective_us": 296.52055432372504,
+      "predicted_objective_improvement_pct": 4.783413719968854
+    },
+    {
+      "layer_idx": 33,
+      "rank_heads": [
+        [
+          0,
+          4,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          3,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 219.6620616407982,
+        "mean_profile_score_us": 219.6620616407982,
+        "worst_profile_score_us": 219.6620616407982,
+        "mean_rank_us": [
+          201.66635920177382,
+          185.70957871396894
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 217.6231396895787,
+            "aggregate_critical_us": 201.66635920177382,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              201.66635920177382,
+              185.70957871396894
+            ],
+            "score_us": 219.6620616407982
+          }
+        }
+      },
+      "reference_objective_us": 247.14318359201772,
+      "predicted_objective_improvement_pct": 11.11951442552636
+    },
+    {
+      "layer_idx": 34,
+      "rank_heads": [
+        [
+          2,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          3,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 293.8610909090909,
+        "mean_profile_score_us": 293.8610909090909,
+        "worst_profile_score_us": 293.8610909090909,
+        "mean_rank_us": [
+          293.8610909090909,
+          293.8610909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          }
+        }
+      },
+      "reference_objective_us": 293.8610909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 35,
+      "rank_heads": [
+        [
+          2,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          3,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 215.4069201773836,
+        "mean_profile_score_us": 215.4069201773836,
+        "worst_profile_score_us": 215.4069201773836,
+        "mean_rank_us": [
+          214.07718847006652,
+          201.66635920177382
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 214.07718847006652,
+            "aggregate_critical_us": 214.07718847006652,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              214.07718847006652,
+              201.66635920177382
+            ],
+            "score_us": 215.4069201773836
+          }
+        }
+      },
+      "reference_objective_us": 222.49882261640798,
+      "predicted_objective_improvement_pct": 3.1873887491310233
+    },
+    {
+      "layer_idx": 36,
+      "rank_heads": [
+        [
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          0,
+          1,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 297.49569090909085,
+        "mean_profile_score_us": 297.49569090909085,
+        "worst_profile_score_us": 297.49569090909085,
+        "mean_rank_us": [
+          293.8610909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              221.1690909090909
+            ],
+            "score_us": 297.49569090909085
+          }
+        }
+      },
+      "reference_objective_us": 297.49569090909085,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 37,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          5
+        ],
+        [
+          1,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 258.75617383592015,
+        "mean_profile_score_us": 258.75617383592015,
+        "worst_profile_score_us": 258.75617383592015,
+        "mean_rank_us": [
+          221.1690909090909,
+          253.08265188470065
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 253.08265188470065,
+            "aggregate_critical_us": 253.08265188470065,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              253.08265188470065
+            ],
+            "score_us": 258.75617383592015
+          }
+        }
+      },
+      "reference_objective_us": 258.75617383592015,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 38,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 150.69331042128604,
+        "mean_profile_score_us": 150.69331042128604,
+        "worst_profile_score_us": 150.69331042128604,
+        "mean_rank_us": [
+          146.7041152993348,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 152.0230421286031,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              146.7041152993348,
+              148.4770909090909
+            ],
+            "score_us": 150.69331042128604
+          }
+        }
+      },
+      "reference_objective_us": 150.69331042128604,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 39,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 130.92463237250553,
+        "mean_profile_score_us": 130.92463237250553,
+        "worst_profile_score_us": 130.92463237250553,
+        "mean_rank_us": [
+          79.33104212860309,
+          125.42840798226162
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 127.20138359201772,
+            "aggregate_critical_us": 125.42840798226162,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              79.33104212860309,
+              125.42840798226162
+            ],
+            "score_us": 130.92463237250553
+          }
+        }
+      },
+      "reference_objective_us": 130.92463237250553,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 40,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 255.91941286031042,
+        "mean_profile_score_us": 255.91941286031042,
+        "worst_profile_score_us": 255.91941286031042,
+        "mean_rank_us": [
+          249.53670066518845,
+          228.26099334811528
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 251.30967627494454,
+            "aggregate_critical_us": 249.53670066518845,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              249.53670066518845,
+              228.26099334811528
+            ],
+            "score_us": 255.91941286031042
+          }
+        }
+      },
+      "reference_objective_us": 255.91941286031042,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 41,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 236.85992505543237,
+        "mean_profile_score_us": 236.85992505543237,
+        "worst_profile_score_us": 236.85992505543237,
+        "mean_rank_us": [
+          221.1690909090909,
+          230.0339689578714
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 230.0339689578714,
+            "aggregate_critical_us": 230.0339689578714,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              230.0339689578714
+            ],
+            "score_us": 236.85992505543237
+          }
+        }
+      },
+      "reference_objective_us": 300.6870470066518,
+      "predicted_objective_improvement_pct": 21.227093945888353
+    },
+    {
+      "layer_idx": 42,
+      "rank_heads": [
+        [
+          0,
+          2,
+          4,
+          5
+        ],
+        [
+          1,
+          3,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 148.4770909090909,
+        "mean_profile_score_us": 148.4770909090909,
+        "worst_profile_score_us": 148.4770909090909,
+        "mean_rank_us": [
+          148.4770909090909,
+          148.4770909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              148.4770909090909
+            ],
+            "score_us": 148.4770909090909
+          }
+        }
+      },
+      "reference_objective_us": 148.4770909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 43,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 297.49569090909085,
+        "mean_profile_score_us": 297.49569090909085,
+        "worst_profile_score_us": 297.49569090909085,
+        "mean_rank_us": [
+          293.8610909090909,
+          221.1690909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              221.1690909090909
+            ],
+            "score_us": 297.49569090909085
+          }
+        }
+      },
+      "reference_objective_us": 297.49569090909085,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 44,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 293.8610909090909,
+        "mean_profile_score_us": 293.8610909090909,
+        "worst_profile_score_us": 293.8610909090909,
+        "mean_rank_us": [
+          293.8610909090909,
+          293.8610909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          }
+        }
+      },
+      "reference_objective_us": 293.8610909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 45,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          6
+        ],
+        [
+          0,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 293.8610909090909,
+        "mean_profile_score_us": 293.8610909090909,
+        "worst_profile_score_us": 293.8610909090909,
+        "mean_rank_us": [
+          293.8610909090909,
+          293.8610909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          }
+        }
+      },
+      "reference_objective_us": 293.8610909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 46,
+      "rank_heads": [
+        [
+          0,
+          2,
+          5,
+          7
+        ],
+        [
+          1,
+          3,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 293.8610909090909,
+        "mean_profile_score_us": 293.8610909090909,
+        "worst_profile_score_us": 293.8610909090909,
+        "mean_rank_us": [
+          293.8610909090909,
+          293.8610909090909
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          }
+        }
+      },
+      "reference_objective_us": 293.8610909090909,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 47,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          6
+        ],
+        [
+          2,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 249.09345676274944,
+        "mean_profile_score_us": 249.09345676274944,
+        "worst_profile_score_us": 249.09345676274944,
+        "mean_rank_us": [
+          219.39611529933478,
+          235.3528957871397
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 249.53670066518845,
+            "aggregate_critical_us": 235.3528957871397,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              219.39611529933478,
+              235.3528957871397
+            ],
+            "score_us": 249.09345676274944
+          }
+        }
+      },
+      "reference_objective_us": 300.5097494456762,
+      "predicted_objective_improvement_pct": 17.109692040863855
+    }
+  ]
+}

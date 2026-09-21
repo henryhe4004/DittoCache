@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-/opt/conda/bin/python3}"
+
 CUDA_DEVICE="${CUDA_DEVICE:-0}"
 PORT="${PORT:-30000}"
 
-MODEL_PATH="${MODEL_PATH:-/data3/Llama-3-8B-Instruct-Gradient-1048k}" #/models/Llama-3-8B-Instruct
-# /models/Qwen2.5-14B-Instruct-1M
+MODEL_PATH="${MODEL_PATH:-/jhe/Llama-3-8B-Instruct-Gradient-1048k}"
 # Offline-parity defaults for accuracy debugging. Override these env vars when
 # testing online multi-batch behavior.
 
 DITTO_ENABLE_CUDA_GRAPH="${DITTO_ENABLE_CUDA_GRAPH:-true}"
 DITTO_MAX_TOKENS="${DITTO_MAX_TOKENS:-1048576}"
-DITTO_MAX_BATCH_SIZE="${DITTO_MAX_BATCH_SIZE:-128}"
-DITTO_TARGET_SEQ_LEN="${DITTO_TARGET_SEQ_LEN:-}"
-DITTO_GPU_MEMORY_BUDGET="${DITTO_GPU_MEMORY_BUDGET:-70.0}"
+DITTO_MAX_BATCH_SIZE="${DITTO_MAX_BATCH_SIZE:-64}"
+DITTO_TARGET_SEQ_LEN="${DITTO_TARGET_SEQ_LEN:-8192}"
+DITTO_GPU_MEMORY_BUDGET="${DITTO_GPU_MEMORY_BUDGET:-40.0}"
 DITTO_CHUNK_PREFILL_SIZE="${DITTO_CHUNK_PREFILL_SIZE:-}"
 DITTO_TOKEN_BUDGET="${DITTO_TOKEN_BUDGET:-0.1}"
 DITTO_SINK_BUDGET="${DITTO_SINK_BUDGET:-4}"
@@ -27,19 +30,33 @@ DITTO_NUM_CHANNELS="${DITTO_NUM_CHANNELS:-32}"
 DITTO_RBITS="${DITTO_RBITS:-256}"
 DITTO_BLOCK_SIZE="${DITTO_BLOCK_SIZE:-64}"
 
-SGLANG_MAX_RUNNING_REQUESTS="${SGLANG_MAX_RUNNING_REQUESTS:-}"
+SGLANG_MAX_RUNNING_REQUESTS="${SGLANG_MAX_RUNNING_REQUESTS:-64}"
 SGLANG_PREFILL_MAX_REQUESTS="${SGLANG_PREFILL_MAX_REQUESTS:-}"
 SGLANG_MAX_PREFILL_TOKENS="${SGLANG_MAX_PREFILL_TOKENS:-}"
 SGLANG_CHUNKED_PREFILL_SIZE="${SGLANG_CHUNKED_PREFILL_SIZE:-}"
 SGLANG_DISABLE_OVERLAP_SCHEDULE="${SGLANG_DISABLE_OVERLAP_SCHEDULE:-0}"
 
 MODEL_NAME="$(basename "${MODEL_PATH%/}")"
-DITTO_AUX_ROOT="${DITTO_AUX_ROOT:-../auxiliary}"
+DITTO_AUX_ROOT="${DITTO_AUX_ROOT:-/jhe/myTransformer/auxiliary}"
 DITTO_ATTENTION_PATTERN_PATH="${DITTO_ATTENTION_PATTERN_PATH:-${DITTO_AUX_ROOT}/attn_pattern/${MODEL_NAME}}"
 DITTO_AUX_DATA_PATH="${DITTO_AUX_DATA_PATH:-${DITTO_AUX_ROOT}/hash_weights/${MODEL_NAME}-${DITTO_RBITS}}"
 
+for required_path in \
+  "${MODEL_PATH}/config.json" \
+  "${DITTO_ATTENTION_PATTERN_PATH}/heads_cosine_similarity.csv" \
+  "${DITTO_ATTENTION_PATTERN_PATH}/k_heads_importance.tsv" \
+  "${DITTO_ATTENTION_PATTERN_PATH}/q_heads_importance.tsv" \
+  "${DITTO_AUX_DATA_PATH}/hash_weight_layer_00.pt"; do
+  if [[ ! -f "${required_path}" ]]; then
+    echo "Missing required file: ${required_path}" >&2
+    exit 1
+  fi
+done
+
+export PYTHONPATH="${REPO_ROOT}/python${PYTHONPATH:+:${PYTHONPATH}}"
+
 if [[ -z "${DITTO_ARCHITECTURE:-}" ]]; then
-  DITTO_ARCHITECTURE="$(python3 - "${MODEL_PATH}" <<'PY'
+  DITTO_ARCHITECTURE="$("${PYTHON_BIN}" - "${MODEL_PATH}" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -149,7 +166,7 @@ if [[ "${SGLANG_DISABLE_OVERLAP_SCHEDULE}" == "1" || "${SGLANG_DISABLE_OVERLAP_S
 fi
 
 # CUDA_LAUNCH_BLOCKING=1 
-CUDA_VISIBLE_DEVICES="${CUDA_DEVICE}" python3 -m sglang.launch_server \
+CUDA_VISIBLE_DEVICES="${CUDA_DEVICE}" "${PYTHON_BIN}" -m sglang.launch_server \
   --model-path "${MODEL_PATH}" \
   --port "${PORT}" \
   --tp 1 \

@@ -57,6 +57,7 @@ class LokiOffloadingCache(OffloadingCache):
         self.layers_pca_matrix = [None for _ in range(self.num_layers)]
 
         for layer in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(layer)
             self.layers_partial_key_cache_data[layer] = torch.zeros(
                 (gpu_partial_key_numel,),
                 dtype=self.dtype,
@@ -71,14 +72,14 @@ class LokiOffloadingCache(OffloadingCache):
                 )
             else:
                 pca = torch.load(
-                    os.path.join(self.aux_data_path, f"pca_components/pca_components_layer_{layer:02d}.pt"),
+                    os.path.join(self.aux_data_path, f"pca_components/pca_components_layer_{global_layer_idx:02d}.pt"),
                     weights_only=True,
                 )
                 pca = pca.view(-1, self.head_dim, self.head_dim)
                 pca = self._slice_local_kv_head_tensor(
                     pca,
                     layer_idx=layer,
-                    tensor_name=f"pca_components_layer_{layer:02d}",
+                    tensor_name=f"pca_components_layer_{global_layer_idx:02d}",
                     head_dim=0,
                 )
                 pca = pca.transpose(-1, -2).contiguous().to(self.dtype).to(self.layer_devices[layer])

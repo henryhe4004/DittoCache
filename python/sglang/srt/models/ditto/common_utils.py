@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from sglang.srt.layers.rotary_embedding import get_rope
 from sglang.srt.models.ditto.awq_linear import ditto_linear_forward
 
 
@@ -86,7 +87,6 @@ def _fuse_gate_up_proj(self):
     self.fn = flashinfer.activation.silu_and_mul
     del self.gate_proj
     del self.up_proj
-    torch.cuda.empty_cache()
     self.converted = True
 
 
@@ -276,3 +276,46 @@ def _layernorm_decode_forward(self, hidden_states):
         out=self._graph_buffers[bsz]["output"],
     )
     return self._graph_buffers[bsz]["output"]
+
+
+def _init_native_rope(self, config):
+    head_dim = int(
+        getattr(
+            config,
+            "head_dim",
+            int(config.hidden_size) // int(config.num_attention_heads),
+        )
+    )
+    partial_rotary_factor = float(
+        getattr(config, "partial_rotary_factor", 1.0) or 1.0
+    )
+    self.rope = get_rope(
+        head_dim,
+        rotary_dim=int(head_dim * partial_rotary_factor),
+        max_position=int(config.max_position_embeddings),
+        base=float(config.rope_theta),
+        is_neox_style=True,
+        rope_scaling=getattr(config, "rope_scaling", None),
+    )
+
+
+def _native_rope_forward(self, query_states, key_states, past_key_values):
+    _, offsets = past_key_values.get_rope_metadata(query_states.device)
+    batch_size = int(offsets.shape[0])
+    token_count = int(query_states.shape[0])
+    if batch_size <= 0 or token_count % batch_size != 0:
+        raise RuntimeError(
+            "Ditto RoPE metadata shape mismatch: "
+            f"token_count={token_count}, batch_size={batch_size}"
+        )
+
+    q_len = token_count // batch_size
+    relative_positions = torch.arange(
+        q_len,
+        dtype=torch.long,
+        device=query_states.device,
+    )
+    positions = (
+        offsets.to(dtype=torch.long).unsqueeze(1) + relative_positions.unsqueeze(0)
+    ).reshape(-1)
+    return self.rope(positions, query_states, key_states)

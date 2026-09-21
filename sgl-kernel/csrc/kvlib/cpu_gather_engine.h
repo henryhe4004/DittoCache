@@ -1,4 +1,5 @@
 #pragma once
+#include <cuda_runtime_api.h>
 #include <gdrapi.h>
 #include <torch/script.h>
 #include <atomic>
@@ -6,6 +7,7 @@
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -13,6 +15,11 @@ namespace kvlib {
 
 class CPUGatherEngineV3 {
  private:
+  enum class TransferBackend {
+    kCudaMemcpy,
+    kGdr,
+  };
+
   int32_t _max_batch_size = 0;
   int32_t _sink_recent_budget = 0;
   int32_t _num_heads = 0;
@@ -36,12 +43,17 @@ class CPUGatherEngineV3 {
 
   std::vector<void*> _gpu_kv_buffer_mapped = {};
   std::vector<void*> _user_space_gpu_kv_buffer_mapped = {};
+  std::vector<void*> _cuda_staging_buffers = {};
+  std::vector<cudaStream_t> _cuda_copy_streams = {};
+  std::vector<int> _gpu_device_ids = {};
   int64_t* __restrict__ _cpu_indices_buffer = nullptr;
 
-  gdr_t _g;
+  TransferBackend _transfer_backend = TransferBackend::kGdr;
+  gdr_t _g = nullptr;
   std::vector<std::optional<gdr_mh_t>> _gdr_handlers = {};
 
   std::thread _worker;
+  std::atomic<bool> _stop_requested{false};
 
   bool _debug;
 
@@ -64,7 +76,8 @@ class CPUGatherEngineV3 {
     int64_t sink_recent_budget,
     int64_t num_heads,
     int64_t head_dim,
-    bool debug);
+    bool debug,
+    const std::string& transfer_backend = "gdr");
   ~CPUGatherEngineV3();
 };
 
