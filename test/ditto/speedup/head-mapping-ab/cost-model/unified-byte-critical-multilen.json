@@ -1,0 +1,5208 @@
+{
+  "orders": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      0,
+      3,
+      4,
+      6,
+      1,
+      2,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      5,
+      3,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      5,
+      6,
+      0,
+      2,
+      4,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      1,
+      2,
+      3,
+      4,
+      0,
+      5,
+      6,
+      7
+    ],
+    [
+      2,
+      5,
+      6,
+      7,
+      0,
+      1,
+      3,
+      4
+    ],
+    [
+      0,
+      1,
+      3,
+      7,
+      2,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      4,
+      6,
+      2,
+      3,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      6,
+      1,
+      2,
+      5,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      5,
+      1,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      3,
+      4,
+      6,
+      7,
+      0,
+      1,
+      2,
+      5
+    ],
+    [
+      1,
+      3,
+      5,
+      7,
+      0,
+      2,
+      4,
+      6
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      1,
+      3,
+      4,
+      6,
+      0,
+      2,
+      5,
+      7
+    ],
+    [
+      2,
+      4,
+      5,
+      7,
+      0,
+      1,
+      3,
+      6
+    ],
+    [
+      0,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      7
+    ],
+    [
+      0,
+      1,
+      5,
+      6,
+      2,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      2,
+      5,
+      6,
+      1,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      5,
+      1,
+      2,
+      6,
+      7
+    ],
+    [
+      3,
+      4,
+      5,
+      7,
+      0,
+      1,
+      2,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      3,
+      4,
+      6,
+      7,
+      0,
+      1,
+      2,
+      5
+    ],
+    [
+      0,
+      3,
+      6,
+      7,
+      1,
+      2,
+      4,
+      5
+    ],
+    [
+      0,
+      2,
+      4,
+      5,
+      1,
+      3,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      5,
+      6,
+      1,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      2,
+      6,
+      7,
+      1,
+      3,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      4,
+      6,
+      2,
+      3,
+      5,
+      7
+    ]
+  ],
+  "metadata": {
+    "objective": "byte-aware TP2 critical-rank transfer cost",
+    "scope": "data-path cost only; predicted gains are not end-to-end latency",
+    "transfer_json": [
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.tp01.json"
+    ],
+    "resident_heads_file": "test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json",
+    "reference_mapping": "test/ditto/speedup/head-mapping-ab/qsac-resident-layerwise-128K.json",
+    "profiles": [
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json",
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json"
+    ],
+    "profile_count": 6,
+    "profile_steps": 246,
+    "skip_steps": 10,
+    "skip_layers": 1,
+    "num_layers": 48,
+    "num_heads": 8,
+    "per_token_head_bytes": 512,
+    "cost_config": {
+      "h2d_gbps": [
+        22.0,
+        22.0
+      ],
+      "d2h_gbps": [
+        22.0,
+        22.0
+      ],
+      "h2d_launch_us": 2.0,
+      "d2h_launch_us": 1.0,
+      "active_head_us": 0.5,
+      "shrinkage": 0.5,
+      "tail_quantile": 0.95,
+      "tail_weight": 0.1,
+      "imbalance_weight": 0.05,
+      "worst_profile_weight": 0.25
+    },
+    "cumulative_mean_rank_us": [
+      4720.3489490022175,
+      4720.147362897265
+    ]
+  },
+  "layers": [
+    {
+      "layer_idx": 0,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "predicted": {
+        "objective_us": 0.0,
+        "mean_profile_score_us": 0.0,
+        "worst_profile_score_us": 0.0,
+        "mean_rank_us": [
+          0.0,
+          0.0
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 0.0,
+            "aggregate_critical_us": 0.0,
+            "tail_critical_us": 0.0,
+            "mean_rank_us": [
+              0.0,
+              0.0
+            ],
+            "score_us": 0.0
+          }
+        }
+      },
+      "reference_objective_us": 0.0,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 1,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 7.788044567627493,
+        "mean_profile_score_us": 4.068625868440502,
+        "worst_profile_score_us": 18.946300665188467,
+        "mean_rank_us": [
+          2.9148470066518843,
+          1.0930909090909091
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.023627494456761,
+            "aggregate_critical_us": 12.023627494456761,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              12.023627494456761,
+              1.0930909090909091
+            ],
+            "score_us": 18.946300665188467
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          }
+        }
+      },
+      "reference_objective_us": 7.788044567627493,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 2,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 45.68246668514412,
+        "mean_profile_score_us": 35.19281958610495,
+        "worst_profile_score_us": 77.15140798226163,
+        "mean_rank_us": [
+          8.987367331855136,
+          27.072988913525496
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 44.71556541019956,
+            "aggregate_critical_us": 44.71556541019956,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              1.0930909090909091,
+              44.71556541019956
+            ],
+            "score_us": 72.34313259423503
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.469623059866962,
+            "aggregate_critical_us": 8.469623059866962,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              1.0930909090909091,
+              8.469623059866962
+            ],
+            "score_us": 11.881269179600885
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              48.45874944567627,
+              75.7850909090909
+            ],
+            "score_us": 77.15140798226163
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 2.538572062084257,
+            "aggregate_critical_us": 2.538572062084257,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              1.0930909090909091,
+              2.538572062084257
+            ],
+            "score_us": 3.4540434589800446
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 26.619840354767184,
+            "aggregate_critical_us": 26.619840354767184,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              1.0930909090909091,
+              26.619840354767184
+            ],
+            "score_us": 40.29488470066519
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 4.309241685144124,
+            "aggregate_critical_us": 4.309241685144124,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              1.0930909090909091,
+              4.309241685144124
+            ],
+            "score_us": 6.032179600886917
+          }
+        }
+      },
+      "reference_objective_us": 65.71870936807093,
+      "predicted_objective_improvement_pct": 30.487882180871477
+    },
+    {
+      "layer_idx": 3,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 71.4806246119734,
+        "mean_profile_score_us": 52.774743828529196,
+        "worst_profile_score_us": 127.598266962306,
+        "mean_rank_us": [
+          45.16478935698448,
+          1.0930909090909091
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 102.87886474501109,
+            "aggregate_critical_us": 102.87886474501109,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              102.87886474501109,
+              1.0930909090909091
+            ],
+            "score_us": 127.598266962306
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 15.846155210643015,
+            "aggregate_critical_us": 15.846155210643015,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              15.846155210643015,
+              1.0930909090909091
+            ],
+            "score_us": 18.888974722838135
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              75.7850909090909,
+              1.0930909090909091
+            ],
+            "score_us": 79.5196909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 4.947707317073171,
+            "aggregate_critical_us": 4.947707317073171,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              4.947707317073171,
+              1.0930909090909091
+            ],
+            "score_us": 5.7427219512195125
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 63.08662527716186,
+            "aggregate_critical_us": 63.08662527716186,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              63.08662527716186,
+              1.0930909090909091
+            ],
+            "score_us": 74.93833037694013
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.444292682926829,
+            "aggregate_critical_us": 8.444292682926829,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              8.444292682926829,
+              1.0930909090909091
+            ],
+            "score_us": 9.960478048780487
+          }
+        }
+      },
+      "reference_objective_us": 71.4806246119734,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 4,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 78.13683442350332,
+        "mean_profile_score_us": 59.12252128603104,
+        "worst_profile_score_us": 135.17977383592014,
+        "mean_rank_us": [
+          40.935837398373984,
+          46.396125646711006
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 117.41968957871397,
+            "aggregate_critical_us": 81.06762749445676,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              66.52680266075389,
+              81.06762749445676
+            ],
+            "score_us": 121.78193702882484
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.768221729490023,
+            "aggregate_critical_us": 11.235822616407981,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              11.235822616407981,
+              11.235822616407981
+            ],
+            "score_us": 16.76822172949002
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 137.8392372505543,
+            "aggregate_critical_us": 127.20138359201772,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              116.56352993348114,
+              127.20138359201772
+            ],
+            "score_us": 135.17977383592014
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 5.862580931263858,
+            "aggregate_critical_us": 4.224966740576497,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              3.9352727272727273,
+              4.224966740576497
+            ],
+            "score_us": 5.732816407982262
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 63.08662527716186,
+            "aggregate_critical_us": 48.49991130820399,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              41.20655432372505,
+              48.49991130820399
+            ],
+            "score_us": 66.36863592017738
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.903742793791574,
+            "aggregate_critical_us": 6.147042128603104,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              6.147042128603104,
+              6.147042128603104
+            ],
+            "score_us": 8.903742793791574
+          }
+        }
+      },
+      "reference_objective_us": 79.3884779933481,
+      "predicted_objective_improvement_pct": 1.5766060787179494
+    },
+    {
+      "layer_idx": 5,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 94.33453952328158,
+        "mean_profile_score_us": 67.61524368070953,
+        "worst_profile_score_us": 174.49242705099775,
+        "mean_rank_us": [
+          25.14793495934959,
+          60.492542498152254
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 161.0421640798226,
+            "aggregate_critical_us": 146.50133924611973,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              37.44515299334812,
+              146.50133924611973
+            ],
+            "score_us": 174.49242705099775
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 25.988886917960087,
+            "aggregate_critical_us": 25.06682039911308,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              8.469623059866962,
+              25.06682039911308
+            ],
+            "score_us": 27.740813303769404
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              66.67631042128602,
+              75.7850909090909
+            ],
+            "score_us": 76.24052993348114
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 7.597756097560976,
+            "aggregate_critical_us": 7.115929046563193,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              3.2613126385809315,
+              7.115929046563193
+            ],
+            "score_us": 7.935035033259424
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 95.90673170731706,
+            "aggregate_critical_us": 95.90673170731706,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              30.26651884700665,
+              95.90673170731706
+            ],
+            "score_us": 104.65876008869179
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 14.417144124168512,
+            "aggregate_critical_us": 12.579343680709533,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              4.768691796008869,
+              12.579343680709533
+            ],
+            "score_us": 14.623896674057647
+          }
+        }
+      },
+      "reference_objective_us": 94.33453952328158,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 6,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 30.56925931263858,
+        "mean_profile_score_us": 14.647162601626015,
+        "worst_profile_score_us": 78.33554944567626,
+        "mean_rank_us": [
+          14.189689578713967,
+          5.040229120473023
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 75.7850909090909,
+            "aggregate_critical_us": 75.7850909090909,
+            "tail_critical_us": 75.7850909090909,
+            "mean_rank_us": [
+              75.7850909090909,
+              24.77592017738359
+            ],
+            "score_us": 78.33554944567626
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.3340044345898006,
+            "aggregate_critical_us": 1.3340044345898006,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.3340044345898006,
+              1.0930909090909091
+            ],
+            "score_us": 1.3460501108647451
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 4.739769401330377,
+            "aggregate_critical_us": 4.739769401330377,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              4.739769401330377,
+              1.0930909090909091
+            ],
+            "score_us": 4.92210332594235
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 1.0930909090909091,
+            "aggregate_critical_us": 1.0930909090909091,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              1.0930909090909091,
+              1.0930909090909091
+            ],
+            "score_us": 1.0930909090909091
+          }
+        }
+      },
+      "reference_objective_us": 41.950355654102,
+      "predicted_objective_improvement_pct": 27.12991621645656
+    },
+    {
+      "layer_idx": 7,
+      "rank_heads": [
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 75.95964711751662,
+        "mean_profile_score_us": 51.78716585365853,
+        "worst_profile_score_us": 148.4770909090909,
+        "mean_rank_us": [
+          40.8440679970436,
+          37.4360532150776
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 59.25639024390244,
+            "aggregate_critical_us": 37.44515299334812,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              37.44515299334812,
+              37.44515299334812
+            ],
+            "score_us": 74.52425631929046
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 14.002022172949001,
+            "aggregate_critical_us": 10.313756097560976,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              10.313756097560976,
+              7.547556541019955
+            ],
+            "score_us": 15.15460532150776
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              148.4770909090909
+            ],
+            "score_us": 148.4770909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 5.621667405764967,
+            "aggregate_critical_us": 3.743139689578714,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              3.743139689578714,
+              3.453445676274945
+            ],
+            "score_us": 5.419628824833703
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 52.14658980044346,
+            "aggregate_critical_us": 37.559875831485584,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              37.559875831485584,
+              22.973161862527714
+            ],
+            "score_us": 56.88727184035476
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 10.23331263858093,
+            "aggregate_critical_us": 7.525392461197338,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              7.525392461197338,
+              4.719911308203991
+            ],
+            "score_us": 10.260141906873613
+          }
+        }
+      },
+      "reference_objective_us": 75.95964711751662,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 8,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          6
+        ],
+        [
+          1,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 73.72460848115298,
+        "mean_profile_score_us": 40.47412897265336,
+        "worst_profile_score_us": 173.47604700665187,
+        "mean_rank_us": [
+          33.03557280118255,
+          30.331784183296374
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.36350332594235,
+            "aggregate_critical_us": 8.36350332594235,
+            "tail_critical_us": 1.0930909090909091,
+            "mean_rank_us": [
+              8.36350332594235,
+              1.0930909090909091
+            ],
+            "score_us": 8.727023946784922
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 13.953241685144123,
+            "aggregate_critical_us": 9.34290909090909,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              5.703423503325943,
+              9.34290909090909
+            ],
+            "score_us": 14.785540576496674
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 167.97982261640797,
+            "aggregate_critical_us": 166.20684700665186,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              166.20684700665186,
+              148.4770909090909
+            ],
+            "score_us": 173.47604700665187
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 4.127405764966741,
+            "aggregate_critical_us": 3.6455787139689577,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              2.0567450110864747,
+              3.6455787139689577
+            ],
+            "score_us": 4.698430598669623
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 26.619840354767184,
+            "aggregate_critical_us": 15.67980487804878,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              12.033126385809313,
+              15.67980487804878
+            ],
+            "score_us": 34.82486696230599
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 5.590031042128603,
+            "aggregate_critical_us": 3.849791574279379,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              3.849791574279379,
+              3.752230598669623
+            ],
+            "score_us": 6.332864745011086
+          }
+        }
+      },
+      "reference_objective_us": 105.61503974501107,
+      "predicted_objective_improvement_pct": 30.194971607123307
+    },
+    {
+      "layer_idx": 9,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 88.80784972283814,
+        "mean_profile_score_us": 67.70656932742055,
+        "worst_profile_score_us": 152.1116909090909,
+        "mean_rank_us": [
+          23.243858093126384,
+          59.226671101256464
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 117.41968957871397,
+            "aggregate_critical_us": 110.14927716186253,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              30.174740576496674,
+              110.14927716186253
+            ],
+            "score_us": 136.68628248337032
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 18.612354767184033,
+            "aggregate_critical_us": 14.002022172949001,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              7.547556541019955,
+              14.002022172949001
+            ],
+            "score_us": 19.119491352549886
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              75.7850909090909,
+              148.4770909090909
+            ],
+            "score_us": 152.1116909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 6.536541019955655,
+            "aggregate_critical_us": 5.81380044345898,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              2.7794855875831486,
+              5.81380044345898
+            ],
+            "score_us": 6.842560975609756
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 70.33120177383591,
+            "aggregate_critical_us": 66.68452328159646,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              19.326483370288248,
+              66.68452328159646
+            ],
+            "score_us": 79.26800310421285
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 11.611662971175166,
+            "aggregate_critical_us": 10.23331263858093,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              3.849791574279379,
+              10.23331263858093
+            ],
+            "score_us": 12.21138713968958
+          }
+        }
+      },
+      "reference_objective_us": 88.80784972283814,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 10,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 118.63863968957872,
+        "mean_profile_score_us": 83.81173155949742,
+        "worst_profile_score_us": 223.11936407982262,
+        "mean_rank_us": [
+          71.50523872875092,
+          57.87782409460458
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 139.13336585365855,
+            "aggregate_critical_us": 102.83008425720621,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              102.83008425720621,
+              102.83008425720621
+            ],
+            "score_us": 140.61671662971176
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 27.686678492239466,
+            "aggregate_critical_us": 19.485640798226164,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              19.485640798226164,
+              19.436860310421284
+            ],
+            "score_us": 29.110289135254988
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 219.3961152993348,
+            "aggregate_critical_us": 219.3961152993348,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              219.3961152993348,
+              148.4770909090909
+            ],
+            "score_us": 223.11936407982262
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.02781374722838,
+            "aggregate_critical_us": 6.438980044345898,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              6.295627494456763,
+              6.438980044345898
+            ],
+            "score_us": 8.481466518847006
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 84.9179157427938,
+            "aggregate_critical_us": 70.37998226164079,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              70.37998226164079,
+              59.391166297117515
+            ],
+            "score_us": 86.2210824833703
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 14.730252771618623,
+            "aggregate_critical_us": 10.692762749445675,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              10.643982261640797,
+              10.692762749445675
+            ],
+            "score_us": 15.321470509977827
+          }
+        }
+      },
+      "reference_objective_us": 122.89654889135255,
+      "predicted_objective_improvement_pct": 3.464628779395635
+    },
+    {
+      "layer_idx": 11,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 95.15069334811528,
+        "mean_profile_score_us": 75.13296348854396,
+        "worst_profile_score_us": 155.20388292682924,
+        "mean_rank_us": [
+          56.1590273466371,
+          54.773974870657796
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 160.99338359201775,
+            "aggregate_critical_us": 110.14927716186253,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              95.55967184035477,
+              110.14927716186253
+            ],
+            "score_us": 155.20388292682924
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 25.89132594235033,
+            "aggregate_critical_us": 19.436860310421284,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              19.436860310421284,
+              14.924088691796008
+            ],
+            "score_us": 24.835827494456762
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              107.69865188470065
+            ],
+            "score_us": 150.5160128603104
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 7.5001951219512195,
+            "aggregate_critical_us": 5.331973392461197,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              5.331973392461197,
+              5.188620842572062
+            ],
+            "score_us": 6.98710909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 99.50462971175166,
+            "aggregate_critical_us": 81.3200177383592,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              59.391166297117515,
+              81.3200177383592
+            ],
+            "score_us": 98.4374554323725
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 14.730252771618623,
+            "aggregate_critical_us": 9.363192904656318,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              8.75740133037694,
+              9.363192904656318
+            ],
+            "score_us": 14.817493126385806
+          }
+        }
+      },
+      "reference_objective_us": 95.15069334811528,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 12,
+      "rank_heads": [
+        [
+          0,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 103.75504356984479,
+        "mean_profile_score_us": 73.65920339985217,
+        "worst_profile_score_us": 194.0425640798226,
+        "mean_rank_us": [
+          59.13979009608278,
+          31.129167775314116
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 110.14927716186253,
+            "aggregate_critical_us": 110.14927716186253,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              110.14927716186253,
+              1.0930909090909091
+            ],
+            "score_us": 134.50515875831485
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 15.846155210643015,
+            "aggregate_critical_us": 15.846155210643015,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              15.846155210643015,
+              1.0930909090909091
+            ],
+            "score_us": 18.888974722838135
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 196.34743237250552,
+            "aggregate_critical_us": 180.39065188470065,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              180.39065188470065
+            ],
+            "score_us": 194.0425640798226
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 5.188620842572062,
+            "aggregate_critical_us": 5.188620842572062,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              5.188620842572062,
+              1.0930909090909091
+            ],
+            "score_us": 5.971589800443459
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 66.73330376940133,
+            "aggregate_critical_us": 66.73330376940133,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              66.73330376940133,
+              1.0930909090909091
+            ],
+            "score_us": 78.40267494456764
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.903742793791574,
+            "aggregate_critical_us": 8.444292682926829,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              8.444292682926829,
+              2.011991130820399
+            ],
+            "score_us": 10.144258093126385
+          }
+        }
+      },
+      "reference_objective_us": 106.7469399113082,
+      "predicted_objective_improvement_pct": 2.8027935451351245
+    },
+    {
+      "layer_idx": 13,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 137.88574196230599,
+        "mean_profile_score_us": 99.26768181818181,
+        "worst_profile_score_us": 253.7399223946785,
+        "mean_rank_us": [
+          39.55115890613451,
+          81.4460339985218
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 241.01670066518847,
+            "aggregate_critical_us": 233.74628824833704,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              37.44515299334812,
+              233.74628824833704
+            ],
+            "score_us": 253.7399223946785
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 31.47250554323725,
+            "aggregate_critical_us": 29.677152993348116,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              9.34290909090909,
+              29.677152993348116
+            ],
+            "score_us": 32.51360798226164
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              81.10401773835919
+            ],
+            "score_us": 151.84574456762746
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 7.838669623059867,
+            "aggregate_critical_us": 7.838669623059867,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              2.538572062084257,
+              7.838669623059867
+            ],
+            "score_us": 8.416862084257206
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 128.72683813747227,
+            "aggregate_critical_us": 121.43348115299334,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              33.91319733924612,
+              121.43348115299334
+            ],
+            "score_us": 132.37351662971173
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.61683370288248,
+            "aggregate_critical_us": 14.876594235033258,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              5.590031042128603,
+              14.876594235033258
+            ],
+            "score_us": 16.71643725055432
+          }
+        }
+      },
+      "reference_objective_us": 137.88574196230599,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 14,
+      "rank_heads": [
+        [
+          1,
+          3,
+          5,
+          6
+        ],
+        [
+          0,
+          2,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 93.54461990022172,
+        "mean_profile_score_us": 74.69527886178861,
+        "worst_profile_score_us": 150.09264301552105,
+        "mean_rank_us": [
+          61.748557280118256,
+          42.718081300813004
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 139.13336585365855,
+            "aggregate_critical_us": 117.41968957871397,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              117.41968957871397,
+              44.61800443458981
+            ],
+            "score_us": 150.09264301552105
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 20.310146341463412,
+            "aggregate_critical_us": 16.670660753880266,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              16.670660753880266,
+              10.21619512195122
+            ],
+            "score_us": 24.616315299334808
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              148.4770909090909
+            ],
+            "score_us": 148.4770909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 6.92080709534368,
+            "aggregate_critical_us": 5.139840354767184,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              5.139840354767184,
+              4.029844789356985
+            ],
+            "score_us": 7.456639467849223
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 92.11371175166296,
+            "aggregate_critical_us": 73.92909977827051,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              73.92909977827051,
+              44.755671840354765
+            ],
+            "score_us": 106.8992399113082
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 9.725082039911307,
+            "aggregate_critical_us": 8.854962305986696,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              8.854962305986696,
+              4.211680709534368
+            ],
+            "score_us": 10.629744567627494
+          }
+        }
+      },
+      "reference_objective_us": 119.55623420177383,
+      "predicted_objective_improvement_pct": 21.756802959896326
+    },
+    {
+      "layer_idx": 15,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 121.19868675166296,
+        "mean_profile_score_us": 87.07737967479675,
+        "worst_profile_score_us": 223.56260798226162,
+        "mean_rank_us": [
+          62.12871249076127,
+          60.76398373983739
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 160.94460310421286,
+            "aggregate_critical_us": 102.87886474501109,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              73.69965410199558,
+              102.87886474501109
+            ],
+            "score_us": 153.00080798226165
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 26.715831485587582,
+            "aggregate_critical_us": 20.35892682926829,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              12.011547671840354,
+              20.35892682926829
+            ],
+            "score_us": 29.389109977827047
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              173.29874944567626
+            ],
+            "score_us": 223.56260798226162
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 7.112940133037694,
+            "aggregate_critical_us": 5.765019955654102,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              4.752585365853658,
+              5.765019955654102
+            ],
+            "score_us": 7.79789977827051
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 84.72279379157428,
+            "aggregate_critical_us": 55.549365853658536,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              55.549365853658536,
+              52.14658980044346
+            ],
+            "score_us": 94.56335476718405
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.38422172949002,
+            "aggregate_critical_us": 10.135751662971174,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              5.590031042128603,
+              10.135751662971174
+            ],
+            "score_us": 14.150497560975609
+          }
+        }
+      },
+      "reference_objective_us": 121.19868675166296,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 16,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 82.99259672949002,
+        "mean_profile_score_us": 60.45524175905395,
+        "worst_profile_score_us": 150.6046616407982,
+        "mean_rank_us": [
+          43.86241685144124,
+          39.46109386548411
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 124.69010199556541,
+            "aggregate_critical_us": 81.06762749445676,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              59.25639024390244,
+              81.06762749445676
+            ],
+            "score_us": 125.78066385809312
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.768221729490023,
+            "aggregate_critical_us": 11.235822616407981,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              9.391689578713969,
+              11.235822616407981
+            ],
+            "score_us": 16.86042838137472
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              105.92567627494455
+            ],
+            "score_us": 150.6046616407982
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 4.706793791574279,
+            "aggregate_critical_us": 3.502226164079823,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              3.2613126385809315,
+              3.502226164079823
+            ],
+            "score_us": 4.863387583148559
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 52.14658980044346,
+            "aggregate_critical_us": 37.559875831485584,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              37.559875831485584,
+              30.26651884700665
+            ],
+            "score_us": 56.522603991130815
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 7.9848425720620835,
+            "aggregate_critical_us": 5.2281419068736135,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              5.2281419068736135,
+              4.768691796008869
+            ],
+            "score_us": 8.09970509977827
+          }
+        }
+      },
+      "reference_objective_us": 82.99259672949002,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 17,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 134.49383492239468,
+        "mean_profile_score_us": 105.60208292682927,
+        "worst_profile_score_us": 221.1690909090909,
+        "mean_rank_us": [
+          80.96529046563192,
+          78.16990539541759
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 204.32317516629712,
+            "aggregate_critical_us": 139.0358048780488,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              139.0358048780488,
+              138.9870243902439
+            ],
+            "score_us": 217.30503946784924
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 30.98470066518847,
+            "aggregate_critical_us": 24.77413747228381,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              24.77413747228381,
+              22.783662971175165
+            ],
+            "score_us": 36.55225631929047
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.07360532150776,
+            "aggregate_critical_us": 6.051725055432373,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              6.051725055432373,
+              6.002944567627495
+            ],
+            "score_us": 8.344731707317072
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 110.20076274944567,
+            "aggregate_critical_us": 84.6740133037694,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              84.6740133037694,
+              70.13607982261641
+            ],
+            "score_us": 134.26033791574278
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 13.156780487804877,
+            "aggregate_critical_us": 10.086971175166296,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              10.086971175166296,
+              9.940629711751663
+            ],
+            "score_us": 15.981041241685144
+          }
+        }
+      },
+      "reference_objective_us": 138.39128237250554,
+      "predicted_objective_improvement_pct": 2.816252139076336
+    },
+    {
+      "layer_idx": 18,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          0,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 224.19843170731707,
+        "mean_profile_score_us": 164.82939556541018,
+        "worst_profile_score_us": 402.3055401330377,
+        "mean_rank_us": [
+          134.90828677014042,
+          116.50469179600887
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 392.62219068736147,
+            "aggregate_critical_us": 291.2266607538803,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              291.2266607538803,
+              283.8586873614191
+            ],
+            "score_us": 402.3055401330377
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 49.66517073170731,
+            "aggregate_critical_us": 37.29282483370288,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              37.29282483370288,
+              37.04892239467849
+            ],
+            "score_us": 50.81263769401329
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              221.1690909090909
+            ],
+            "score_us": 297.49569090909085
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 11.681330376940133,
+            "aggregate_critical_us": 9.47030598669623,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              9.47030598669623,
+              9.034270509977826
+            ],
+            "score_us": 12.323134811529933
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 186.14686474501107,
+            "aggregate_critical_us": 160.91279822616409,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              160.91279822616409,
+              131.73937028824832
+            ],
+            "score_us": 203.4606776053215
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 21.036638580931264,
+            "aggregate_critical_us": 16.686039911308203,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              16.686039911308203,
+              16.17780931263858
+            ],
+            "score_us": 22.57869223946785
+          }
+        }
+      },
+      "reference_objective_us": 225.74034412416853,
+      "predicted_objective_improvement_pct": 0.6830468974581392
+    },
+    {
+      "layer_idx": 19,
+      "rank_heads": [
+        [
+          2,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          3,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 183.36531762749445,
+        "mean_profile_score_us": 135.4177951219512,
+        "worst_profile_score_us": 327.2078851441242,
+        "mean_rank_us": [
+          101.67260162601626,
+          115.686103473762
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 320.3570909090909,
+            "aggregate_critical_us": 262.38891352549894,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              211.44724611973393,
+              262.38891352549894
+            ],
+            "score_us": 327.2078851441242
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 45.29874057649667,
+            "aggregate_critical_us": 39.18573835920177,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              33.65333924611973,
+              39.18573835920177
+            ],
+            "score_us": 49.651012860310416
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.501631929046562,
+            "aggregate_critical_us": 10.433960088691796,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              8.890917960088691,
+              10.433960088691796
+            ],
+            "score_us": 13.174097560975609
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 178.9510687361419,
+            "aggregate_critical_us": 142.87452771618624,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              120.89689578713968,
+              142.87452771618624
+            ],
+            "score_us": 177.53629977827046
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 21.955538802660755,
+            "aggregate_critical_us": 18.064390243902437,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              13.978119733924611,
+              18.064390243902437
+            ],
+            "score_us": 23.768384478935698
+          }
+        }
+      },
+      "reference_objective_us": 199.53248470066518,
+      "predicted_objective_improvement_pct": 8.10252380579754
+    },
+    {
+      "layer_idx": 20,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          7
+        ],
+        [
+          2,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 243.19915554323723,
+        "mean_profile_score_us": 173.37829549150035,
+        "worst_profile_score_us": 452.6617356984479,
+        "mean_rank_us": [
+          150.5431086474501,
+          142.99539541759054
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 428.827911308204,
+            "aggregate_critical_us": 370.95729490022177,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              370.95729490022177,
+              356.367689578714
+            ],
+            "score_us": 452.6617356984479
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 56.84658093126385,
+            "aggregate_critical_us": 51.558084257206204,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              51.558084257206204,
+              48.84066518847006
+            ],
+            "score_us": 60.23312239467849
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 14.374181818181818,
+            "aggregate_critical_us": 13.556869179600886,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              13.556869179600886,
+              11.104931263858093
+            ],
+            "score_us": 15.404980931263857
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 251.10415077605322,
+            "aggregate_critical_us": 218.67428824833704,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              218.67428824833704,
+              196.89177827050997
+            ],
+            "score_us": 258.6743707317073
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 31.282953436807095,
+            "aggregate_critical_us": 27.3430243902439,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              27.3430243902439,
+              23.59821729490022
+            ],
+            "score_us": 32.12647228381375
+          }
+        }
+      },
+      "reference_objective_us": 251.4519770509978,
+      "predicted_objective_improvement_pct": 3.282066661216509
+    },
+    {
+      "layer_idx": 21,
+      "rank_heads": [
+        [
+          0,
+          1,
+          4,
+          6
+        ],
+        [
+          2,
+          3,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 190.70754318181818,
+        "mean_profile_score_us": 138.34196548410938,
+        "worst_profile_score_us": 347.8042762749446,
+        "mean_rank_us": [
+          108.36622172949002,
+          112.30638285291944
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 312.7939955654102,
+            "aggregate_critical_us": 254.77703769401333,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              247.55540576496676,
+              254.77703769401333
+            ],
+            "score_us": 347.8042762749446
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 43.40582705099778,
+            "aggregate_critical_us": 38.01976940133037,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              31.71164523281596,
+              38.01976940133037
+            ],
+            "score_us": 48.27695476718403
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 9.7570110864745,
+            "aggregate_critical_us": 8.6500044345898,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              6.9665986696230595,
+              8.6500044345898
+            ],
+            "score_us": 10.307477605321507
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 164.12045232815964,
+            "aggregate_critical_us": 135.09336585365853,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              128.04391130820397,
+              135.09336585365853
+            ],
+            "score_us": 181.0134997782705
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 19.198838137472283,
+            "aggregate_critical_us": 16.129028824833703,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              14.750678492239468,
+              16.129028824833703
+            ],
+            "score_us": 21.48049356984479
+          }
+        }
+      },
+      "reference_objective_us": 190.70754318181818,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 22,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 217.32793680709534,
+        "mean_profile_score_us": 157.27813806356244,
+        "worst_profile_score_us": 397.477333037694,
+        "mean_rank_us": [
+          120.72677309682187,
+          125.96124464153732
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 370.7133924611974,
+            "aggregate_critical_us": 305.62114412416855,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              290.88519733924613,
+              305.62114412416855
+            ],
+            "score_us": 397.477333037694
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 46.26958758314856,
+            "aggregate_critical_us": 36.41953880266075,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              36.32197782705099,
+              36.41953880266075
+            ],
+            "score_us": 48.75821463414634
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 260.17455432372503,
+            "aggregate_critical_us": 260.17455432372503,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              260.17455432372503
+            ],
+            "score_us": 265.4934811529933
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 11.007370288248337,
+            "aggregate_critical_us": 8.93969844789357,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              8.6500044345898,
+              8.93969844789357
+            ],
+            "score_us": 11.76659467849224
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 178.85350776053215,
+            "aggregate_critical_us": 146.17974279379158,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              146.17974279379158,
+              124.64113525498891
+            ],
+            "score_us": 193.53903592017738
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 25.505223946784923,
+            "aggregate_critical_us": 21.154625277161863,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              21.154625277161863,
+              19.97139689578714
+            ],
+            "score_us": 26.6341689578714
+          }
+        }
+      },
+      "reference_objective_us": 241.1030728381375,
+      "predicted_objective_improvement_pct": 9.860984246767938
+    },
+    {
+      "layer_idx": 23,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          6
+        ],
+        [
+          1,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 211.92542317073173,
+        "mean_profile_score_us": 152.7633686622321,
+        "worst_profile_score_us": 389.41158669623064,
+        "mean_rank_us": [
+          126.36879379157428,
+          121.21177974870658
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 356.17256762749446,
+            "aggregate_critical_us": 305.4748026607539,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              305.4748026607539,
+              305.4748026607539
+            ],
+            "score_us": 389.41158669623064
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 50.53845676274944,
+            "aggregate_critical_us": 39.76634146341463,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              39.76634146341463,
+              32.7800532150776
+            ],
+            "score_us": 52.5758066518847
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 11.443405764966741,
+            "aggregate_critical_us": 8.796345898004434,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              8.796345898004434,
+              8.36329933481153
+            ],
+            "score_us": 11.934439024390244
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 211.28337028824834,
+            "aggregate_critical_us": 164.2180133037694,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              164.2180133037694,
+              142.53306430155212
+            ],
+            "score_us": 216.97659246119736
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 23.0899866962306,
+            "aggregate_critical_us": 18.788168514412416,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              18.788168514412416,
+              16.950368070953438
+            ],
+            "score_us": 24.512696230598667
+          }
+        }
+      },
+      "reference_objective_us": 215.704922616408,
+      "predicted_objective_improvement_pct": 1.7521618884875512
+    },
+    {
+      "layer_idx": 24,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 240.9711228381375,
+        "mean_profile_score_us": 169.90415654101997,
+        "worst_profile_score_us": 454.1720217294901,
+        "mean_rank_us": [
+          136.38557575757577,
+          143.9082128603104
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 443.07605321507765,
+            "aggregate_critical_us": 356.07500665188473,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              334.7027937915743,
+              356.07500665188473
+            ],
+            "score_us": 454.1720217294901
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 56.797800443458975,
+            "aggregate_critical_us": 50.44089578713969,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              41.85437694013304,
+              50.44089578713969
+            ],
+            "score_us": 60.05531175166297
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.834128603104212,
+            "aggregate_critical_us": 11.294075388026608,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              9.903352549889135,
+              11.294075388026608
+            ],
+            "score_us": 13.676776053215075
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 233.06588026607537,
+            "aggregate_critical_us": 200.29455432372504,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              189.69598226164078,
+              200.29455432372504
+            ],
+            "score_us": 241.74414501108646
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 26.83479379157428,
+            "aggregate_critical_us": 24.175654101995566,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              20.987858093126384,
+              24.175654101995566
+            ],
+            "score_us": 28.60759379157428
+          }
+        }
+      },
+      "reference_objective_us": 241.19158625277166,
+      "predicted_objective_improvement_pct": 0.09140593088646104
+    },
+    {
+      "layer_idx": 25,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          5
+        ],
+        [
+          1,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 386.7166634700665,
+        "mean_profile_score_us": 263.8598386548411,
+        "worst_profile_score_us": 755.2871379157428,
+        "mean_rank_us": [
+          238.9098388765706,
+          232.36131707317074
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 732.1852328159646,
+            "aggregate_critical_us": 674.3146164079823,
+            "tail_critical_us": 1187.4407272727274,
+            "mean_rank_us": [
+              659.8225720620843,
+              674.3146164079823
+            ],
+            "score_us": 755.2871379157428
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 81.2010288248337,
+            "aggregate_critical_us": 73.24389356984479,
+            "tail_critical_us": 146.31199999999998,
+            "mean_rank_us": [
+              73.24389356984479,
+              64.41347228381375
+            ],
+            "score_us": 84.9707929046563
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 19.99482039911308,
+            "aggregate_critical_us": 18.60110864745011,
+            "tail_critical_us": 34.602909090909094,
+            "mean_rank_us": [
+              18.60110864745011,
+              16.87191130820399
+            ],
+            "score_us": 20.9846044345898
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 366.0417649667406,
+            "aggregate_critical_us": 351.55261197339246,
+            "tail_critical_us": 593.1483636363637,
+            "mean_rank_us": [
+              351.55261197339246,
+              308.3778359201774
+            ],
+            "score_us": 385.11550243902445
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 42.68414190687361,
+            "aggregate_critical_us": 36.377756097560976,
+            "tail_critical_us": 70.44290909090908,
+            "mean_rank_us": [
+              36.377756097560976,
+              36.3289756097561
+            ],
+            "score_us": 42.93990332594235
+          }
+        }
+      },
+      "reference_objective_us": 427.9511241130821,
+      "predicted_objective_improvement_pct": 9.6353200913943
+    },
+    {
+      "layer_idx": 26,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 178.0884079268293,
+        "mean_profile_score_us": 124.87601293422026,
+        "worst_profile_score_us": 337.72559290465637,
+        "mean_rank_us": [
+          100.10659423503326,
+          105.01055136733186
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 327.67628381374726,
+            "aggregate_critical_us": 284.10258980044347,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              269.7081064301552,
+              284.10258980044347
+            ],
+            "score_us": 337.72559290465637
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 32.00432815964523,
+            "aggregate_critical_us": 24.82291796008869,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              24.82291796008869,
+              23.803290465631928
+            ],
+            "score_us": 33.45256718403547
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 176.84470066518844,
+            "aggregate_critical_us": 167.97982261640797,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              167.97982261640797,
+              162.66089578713968
+            ],
+            "score_us": 177.99713481152992
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 9.762988913525499,
+            "aggregate_critical_us": 7.982022172949002,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              6.92080709534368,
+              7.982022172949002
+            ],
+            "score_us": 10.012164079822616
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 171.7552727272727,
+            "aggregate_critical_us": 139.08150776053213,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              117.4941197339246,
+              139.08150776053213
+            ],
+            "score_us": 172.4016815964523
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.881161862527716,
+            "aggregate_critical_us": 13.713791574279378,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              13.713791574279378,
+              12.433002217294899
+            ],
+            "score_us": 17.666937028824837
+          }
+        }
+      },
+      "reference_objective_us": 178.0884079268293,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 27,
+      "rank_heads": [
+        [
+          3,
+          4,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 174.06632732815967,
+        "mean_profile_score_us": 124.37725358462676,
+        "worst_profile_score_us": 323.1335485587584,
+        "mean_rank_us": [
+          100.56529785661493,
+          90.13438137472284
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 320.3083104212861,
+            "aggregate_critical_us": 255.02094013303773,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              255.02094013303773,
+              226.13441241685146
+            ],
+            "score_us": 323.1335485587584
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 30.404097560975607,
+            "aggregate_critical_us": 22.154279379157426,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              18.563574279379157,
+              22.154279379157426
+            ],
+            "score_us": 31.71355033259423
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              173.29874944567626
+            ],
+            "score_us": 223.56260798226162
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 7.979033259423503,
+            "aggregate_critical_us": 5.765019955654102,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              5.185631929046563,
+              5.765019955654102
+            ],
+            "score_us": 8.20929401330377
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 146.47242572062083,
+            "aggregate_critical_us": 102.95618625277162,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              95.66282926829268,
+              102.95618625277162
+            ],
+            "score_us": 144.59542793791573
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 14.075680709534367,
+            "aggregate_critical_us": 10.497640798226163,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              7.789720620842572,
+              10.497640798226163
+            ],
+            "score_us": 15.04909268292683
+          }
+        }
+      },
+      "reference_objective_us": 174.37016657427935,
+      "predicted_objective_improvement_pct": 0.174249558906195
+    },
+    {
+      "layer_idx": 28,
+      "rank_heads": [
+        [
+          1,
+          3,
+          5,
+          7
+        ],
+        [
+          0,
+          2,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 176.20201568736144,
+        "mean_profile_score_us": 126.24731966001478,
+        "worst_profile_score_us": 326.06610376940137,
+        "mean_rank_us": [
+          99.56246119733925,
+          100.6449963045085
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 327.5787228381375,
+            "aggregate_critical_us": 255.0697206208426,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              240.62645676274946,
+              255.0697206208426
+            ],
+            "score_us": 326.06610376940137
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 30.11141463414634,
+            "aggregate_critical_us": 22.007937915742794,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              22.007937915742794,
+              19.290518847006652
+            ],
+            "score_us": 31.465007982261636
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 253.08265188470065,
+            "aggregate_critical_us": 247.76372505543236,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              247.76372505543236,
+              228.26099334811528
+            ],
+            "score_us": 256.0080616407982
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.171166297117516,
+            "aggregate_critical_us": 6.438980044345898,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              4.8471574279379155,
+              6.438980044345898
+            ],
+            "score_us": 8.625566297117516
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 113.74988026607538,
+            "aggregate_critical_us": 84.77157427937915,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              73.83153880266075,
+              84.77157427937915
+            ],
+            "score_us": 121.142644345898
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.794891352549888,
+            "aggregate_critical_us": 10.03819068736142,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              8.297951219512194,
+              10.03819068736142
+            ],
+            "score_us": 14.176533924611972
+          }
+        }
+      },
+      "reference_objective_us": 195.8803845343681,
+      "predicted_objective_improvement_pct": 10.046115078742861
+    },
+    {
+      "layer_idx": 29,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 296.7132770509978,
+        "mean_profile_score_us": 198.80805410199557,
+        "worst_profile_score_us": 590.4289458980045,
+        "mean_rank_us": [
+          157.453889135255,
+          172.25417294900222
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 587.9477161862528,
+            "aggregate_critical_us": 508.363423503326,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              428.8766917960089,
+              508.363423503326
+            ],
+            "score_us": 590.4289458980045
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 70.28733481152993,
+            "aggregate_critical_us": 53.35343680709534,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              48.11372062084257,
+              53.35343680709534
+            ],
+            "score_us": 67.79775521064302
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 221.1690909090909,
+            "aggregate_critical_us": 221.1690909090909,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              221.1690909090909
+            ],
+            "score_us": 221.1690909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 15.194483370288248,
+            "aggregate_critical_us": 13.032239467849223,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              13.032239467849223,
+              12.355290465631928
+            ],
+            "score_us": 15.516530376940132
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 272.9354412416851,
+            "aggregate_critical_us": 218.67428824833704,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              211.5760532150776,
+              218.67428824833704
+            ],
+            "score_us": 268.8558022172949
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 29.640274944567626,
+            "aggregate_critical_us": 21.955538802660755,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              21.955538802660755,
+              19.60950776053215
+            ],
+            "score_us": 29.0802
+          }
+        }
+      },
+      "reference_objective_us": 304.58197860310423,
+      "predicted_objective_improvement_pct": 2.583442916811566
+    },
+    {
+      "layer_idx": 30,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 236.04000698447896,
+        "mean_profile_score_us": 166.5612189209165,
+        "worst_profile_score_us": 444.4763711751664,
+        "mean_rank_us": [
+          133.91883222468587,
+          130.32771322985957
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 436.2446651884701,
+            "aggregate_critical_us": 342.1195476718404,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              342.1195476718404,
+              334.7027937915743
+            ],
+            "score_us": 444.4763711751664
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 49.9090731707317,
+            "aggregate_critical_us": 36.517099778270506,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              36.41953880266075,
+              36.517099778270506
+            ],
+            "score_us": 50.61698181818181
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 249.53670066518845,
+            "aggregate_critical_us": 238.89884700665186,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              238.89884700665186,
+              233.57992017738357
+            ],
+            "score_us": 249.97994456762748
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 12.501631929046562,
+            "aggregate_critical_us": 9.7570110864745,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              9.7570110864745,
+              8.991467849223946
+            ],
+            "score_us": 12.076697560975608
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 225.8700842572062,
+            "aggregate_critical_us": 160.91279822616409,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              160.91279822616409,
+              153.277977827051
+            ],
+            "score_us": 222.24535698447892
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 20.21529933481153,
+            "aggregate_critical_us": 15.405250554323723,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              15.405250554323723,
+              14.897019955654102
+            ],
+            "score_us": 19.971961419068737
+          }
+        }
+      },
+      "reference_objective_us": 258.4175812638581,
+      "predicted_objective_improvement_pct": 8.659462784976089
+    },
+    {
+      "layer_idx": 31,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 171.64596906873615,
+        "mean_profile_score_us": 122.421229563932,
+        "worst_profile_score_us": 319.3201875831486,
+        "mean_rank_us": [
+          98.11755949741315,
+          97.18070805617147
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 320.5034323725056,
+            "aggregate_critical_us": 247.94564966740577,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              247.94564966740577,
+              240.67523725055435
+            ],
+            "score_us": 319.3201875831486
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 33.07273614190687,
+            "aggregate_critical_us": 21.183432372505543,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              21.183432372505543,
+              20.35892682926829
+            ],
+            "score_us": 32.52122084257206
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 228.26099334811528,
+            "aggregate_critical_us": 226.4880177383592,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              226.4880177383592,
+              219.3961152993348
+            ],
+            "score_us": 234.46640798226164
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.222935698447893,
+            "aggregate_critical_us": 6.295627494456763,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              6.295627494456763,
+              5.429534368070954
+            ],
+            "score_us": 7.770078048780488
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 121.18957871396896,
+            "aggregate_critical_us": 88.51581374722838,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              77.47821729490022,
+              88.51581374722838
+            ],
+            "score_us": 126.36506740576496
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 13.303121951219511,
+            "aggregate_critical_us": 9.314412416851441,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              9.314412416851441,
+              8.708620842572062
+            ],
+            "score_us": 14.084415521064303
+          }
+        }
+      },
+      "reference_objective_us": 181.9908920177384,
+      "predicted_objective_improvement_pct": 5.684308063061713
+    },
+    {
+      "layer_idx": 32,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          6
+        ],
+        [
+          0,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 198.72362932372505,
+        "mean_profile_score_us": 148.059914338507,
+        "worst_profile_score_us": 350.7147742793792,
+        "mean_rank_us": [
+          119.5350125646711,
+          103.81209608277901
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 327.52994235033265,
+            "aggregate_critical_us": 305.86504656319295,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              305.86504656319295,
+              204.32317516629712
+            ],
+            "score_us": 350.7147742793792
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 41.90315742793791,
+            "aggregate_critical_us": 33.75090022172949,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              33.75090022172949,
+              19.388079822616408
+            ],
+            "score_us": 42.64033436807095
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 292.0881152993348,
+            "aggregate_critical_us": 292.0881152993348,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              206.9852860310421,
+              292.0881152993348
+            ],
+            "score_us": 296.52055432372504
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 9.18360088691796,
+            "aggregate_critical_us": 8.076594235033259,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              8.076594235033259,
+              5.331973392461197
+            ],
+            "score_us": 9.844469179600887
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 157.21733924611974,
+            "aggregate_critical_us": 146.42364523281597,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              146.42364523281597,
+              91.96737028824833
+            ],
+            "score_us": 169.71301419068737
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.97872283813747,
+            "aggregate_critical_us": 16.108603104212857,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              16.108603104212857,
+              9.773862527716185
+            ],
+            "score_us": 18.926339689578715
+          }
+        }
+      },
+      "reference_objective_us": 209.85860293791575,
+      "predicted_objective_improvement_pct": 5.3059409804061515
+    },
+    {
+      "layer_idx": 33,
+      "rank_heads": [
+        [
+          2,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          3,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 123.24732777161861,
+        "mean_profile_score_us": 91.10908314855875,
+        "worst_profile_score_us": 219.6620616407982,
+        "mean_rank_us": [
+          60.80872431633407,
+          74.25368957871396
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 204.6158580931264,
+            "aggregate_critical_us": 161.0421640798226,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              110.10049667405765,
+              161.0421640798226
+            ],
+            "score_us": 199.18987804878049
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 22.300620842572062,
+            "aggregate_critical_us": 17.69028824833703,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              9.391689578713969,
+              17.69028824833703
+            ],
+            "score_us": 22.531137472283813
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 215.8501640798226,
+            "aggregate_critical_us": 203.43933481152993,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              203.43933481152993,
+              183.93660310421285
+            ],
+            "score_us": 219.6620616407982
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 5.429534368070954,
+            "aggregate_critical_us": 4.947707317073171,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              2.7794855875831486,
+              4.947707317073171
+            ],
+            "score_us": 5.8993157427937915
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 88.61337472283813,
+            "aggregate_critical_us": 70.37998226164079,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              33.91319733924612,
+              70.37998226164079
+            ],
+            "score_us": 89.34271042128603
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 9.822643015521063,
+            "aggregate_critical_us": 7.525392461197338,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              5.2281419068736135,
+              7.525392461197338
+            ],
+            "score_us": 10.0293955654102
+          }
+        }
+      },
+      "reference_objective_us": 133.55274850332594,
+      "predicted_objective_improvement_pct": 7.7163673883137545
+    },
+    {
+      "layer_idx": 34,
+      "rank_heads": [
+        [
+          0,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 314.3981780487805,
+        "mean_profile_score_us": 218.307859127864,
+        "worst_profile_score_us": 602.66913481153,
+        "mean_rank_us": [
+          195.08550332594234,
+          186.52270657797487
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 595.1205676274946,
+            "aggregate_critical_us": 537.2011707317074,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              537.2011707317074,
+              515.3411529933481
+            ],
+            "score_us": 602.66913481153
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 65.8721241685144,
+            "aggregate_critical_us": 55.24635033259423,
+            "tail_critical_us": 146.31199999999998,
+            "mean_rank_us": [
+              55.24635033259423,
+              46.074465631929044
+            ],
+            "score_us": 70.12439645232816
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 15.14570288248337,
+            "aggregate_critical_us": 13.98991574279379,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              13.98991574279379,
+              9.903352549889135
+            ],
+            "score_us": 16.045691352549888
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 305.26774279379157,
+            "aggregate_critical_us": 243.90835476718402,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              243.90835476718402,
+              233.0170997782705
+            ],
+            "score_us": 295.3052305986696
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 31.38051441241685,
+            "aggregate_critical_us": 26.30613747228381,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              26.30613747228381,
+              20.939077605321508
+            ],
+            "score_us": 31.84161064301552
+          }
+        }
+      },
+      "reference_objective_us": 338.08788636363636,
+      "predicted_objective_improvement_pct": 7.006967498792896
+    },
+    {
+      "layer_idx": 35,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          6
+        ],
+        [
+          2,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 172.19091502217296,
+        "mean_profile_score_us": 126.01859076127126,
+        "worst_profile_score_us": 310.70788780487806,
+        "mean_rank_us": [
+          98.93023355506283,
+          101.05559201773836
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 313.33058093126385,
+            "aggregate_critical_us": 233.55116629711753,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              211.64236807095344,
+              233.55116629711753
+            ],
+            "score_us": 310.70788780487806
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 38.751476718403545,
+            "aggregate_critical_us": 25.89132594235033,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              25.89132594235033,
+              24.969259423503324
+            ],
+            "score_us": 37.2486266075388
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 214.07718847006652,
+            "aggregate_critical_us": 214.07718847006652,
+            "tail_critical_us": 221.1690909090909,
+            "mean_rank_us": [
+              214.07718847006652,
+              201.66635920177382
+            ],
+            "score_us": 215.4069201773836
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 10.342376940133038,
+            "aggregate_critical_us": 8.320496674057651,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              6.9695875831485585,
+              8.320496674057651
+            ],
+            "score_us": 10.451732594235033
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 168.35249667405765,
+            "aggregate_critical_us": 124.78747671840354,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              121.18957871396896,
+              124.78747671840354
+            ],
+            "score_us": 164.0832066518847
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 17.94640354767184,
+            "aggregate_critical_us": 13.811352549889135,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              13.811352549889135,
+              13.038793791574278
+            ],
+            "score_us": 18.21317073170732
+          }
+        }
+      },
+      "reference_objective_us": 174.11664495565412,
+      "predicted_objective_improvement_pct": 1.105999908263584
+    },
+    {
+      "layer_idx": 36,
+      "rank_heads": [
+        [
+          0,
+          2,
+          5,
+          6
+        ],
+        [
+          1,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 320.370737195122,
+        "mean_profile_score_us": 220.21584634146342,
+        "worst_profile_score_us": 620.8354097560976,
+        "mean_rank_us": [
+          177.70761714708055,
+          183.96377827050998
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 602.4397605321508,
+            "aggregate_critical_us": 501.2393525498892,
+            "tail_critical_us": 1187.4407272727274,
+            "mean_rank_us": [
+              501.2393525498892,
+              493.72503769401334
+            ],
+            "score_us": 620.8354097560976
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 65.82334368070953,
+            "aggregate_critical_us": 53.450997782705095,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              53.450997782705095,
+              51.41174279379157
+            ],
+            "score_us": 65.44476097560974
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              293.8610909090909
+            ],
+            "score_us": 297.49569090909085
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 17.597640798226163,
+            "aggregate_critical_us": 14.618084257206208,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              14.618084257206208,
+              14.230829268292682
+            ],
+            "score_us": 17.337962305986693
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 283.58279379157426,
+            "aggregate_critical_us": 247.45747228381373,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              247.45747228381373,
+              225.6261818181818
+            ],
+            "score_us": 286.4294048780488
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 33.79575166297118,
+            "aggregate_critical_us": 28.31070509977827,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              28.31070509977827,
+              24.927787139689578
+            ],
+            "score_us": 33.751849223946785
+          }
+        }
+      },
+      "reference_objective_us": 337.3057552660754,
+      "predicted_objective_improvement_pct": 5.020672729878154
+    },
+    {
+      "layer_idx": 37,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          5
+        ],
+        [
+          1,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 240.97097233924615,
+        "mean_profile_score_us": 170.7278157427938,
+        "worst_profile_score_us": 451.7004421286032,
+        "mean_rank_us": [
+          137.9169977827051,
+          133.38227346637103
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 436.2446651884701,
+            "aggregate_critical_us": 356.5628115299335,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              356.5628115299335,
+              320.2107494456763
+            ],
+            "score_us": 451.7004421286032
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 44.71813747228381,
+            "aggregate_critical_us": 36.614660753880266,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              36.614660753880266,
+              32.92639467849224
+            ],
+            "score_us": 44.65960088691796
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 253.08265188470065,
+            "aggregate_critical_us": 253.08265188470065,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              253.08265188470065
+            ],
+            "score_us": 258.75617383592015
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 11.589747228381375,
+            "aggregate_critical_us": 10.098474501108647,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              10.098474501108647,
+              8.652993348115299
+            ],
+            "score_us": 11.791337472283814
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 229.6631042128603,
+            "aggregate_critical_us": 182.744088691796,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              182.744088691796,
+              167.91347228381375
+            ],
+            "score_us": 233.23417294900221
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 24.56589800443459,
+            "aggregate_critical_us": 20.312860310421286,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              20.312860310421286,
+              17.507379157427938
+            ],
+            "score_us": 24.225167184035474
+          }
+        }
+      },
+      "reference_objective_us": 240.97097233924615,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 38,
+      "rank_heads": [
+        [
+          3,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 195.78443093126384,
+        "mean_profile_score_us": 134.81387257945306,
+        "worst_profile_score_us": 378.69610598669624,
+        "mean_rank_us": [
+          84.19282631189948,
+          117.37754175905395
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 378.47160975609756,
+            "aggregate_critical_us": 313.0866784922395,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              219.1079024390244,
+              313.0866784922395
+            ],
+            "score_us": 378.69610598669624
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 43.74729046563193,
+            "aggregate_critical_us": 40.0590243902439,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              25.988886917960087,
+              40.0590243902439
+            ],
+            "score_us": 46.071016407982256
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 152.0230421286031,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              146.7041152993348,
+              148.4770909090909
+            ],
+            "score_us": 150.69331042128604
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 11.781880266075389,
+            "aggregate_critical_us": 10.818226164079823,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              7.597756097560976,
+              10.818226164079823
+            ],
+            "score_us": 12.264054101995566
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 190.03744567627493,
+            "aggregate_critical_us": 171.8040532150776,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              92.2600532150776,
+              171.8040532150776
+            ],
+            "score_us": 197.52961685144126
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 23.236328159645232,
+            "aggregate_critical_us": 20.020177383592017,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              13.498243902439024,
+              20.020177383592017
+            ],
+            "score_us": 23.629131707317075
+          }
+        }
+      },
+      "reference_objective_us": 195.78443093126384,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 39,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 122.23391080931263,
+        "mean_profile_score_us": 87.48658913525499,
+        "worst_profile_score_us": 226.47587583148558,
+        "mean_rank_us": [
+          77.0280236511456,
+          66.63720177383591
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 241.01670066518847,
+            "aggregate_critical_us": 190.12381374722838,
+            "tail_critical_us": 299.18,
+            "mean_rank_us": [
+              190.12381374722838,
+              190.12381374722838
+            ],
+            "score_us": 226.47587583148558
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 29.677152993348116,
+            "aggregate_critical_us": 25.988886917960087,
+            "tail_critical_us": 38.89781818181818,
+            "mean_rank_us": [
+              25.988886917960087,
+              22.300620842572062
+            ],
+            "score_us": 29.308326385809313
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 127.20138359201772,
+            "aggregate_critical_us": 125.42840798226162,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              125.42840798226162,
+              79.33104212860309
+            ],
+            "score_us": 130.92463237250553
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.320496674057651,
+            "aggregate_critical_us": 7.115929046563193,
+            "tail_critical_us": 10.970545454545455,
+            "mean_rank_us": [
+              7.115929046563193,
+              6.875015521064302
+            ],
+            "score_us": 8.115720177383592
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 117.78680266075388,
+            "aggregate_critical_us": 99.55341019955654,
+            "tail_critical_us": 150.60690909090908,
+            "mean_rank_us": [
+              99.55341019955654,
+              88.61337472283813
+            ],
+            "score_us": 114.3224580931264
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.254944567627494,
+            "aggregate_critical_us": 13.957694013303767,
+            "tail_critical_us": 19.930545454545452,
+            "mean_rank_us": [
+              13.957694013303767,
+              12.579343680709533
+            ],
+            "score_us": 15.772521951219511
+          }
+        }
+      },
+      "reference_objective_us": 122.23391080931263,
+      "predicted_objective_improvement_pct": 0.0
+    },
+    {
+      "layer_idx": 40,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 176.34574129711754,
+        "mean_profile_score_us": 132.64482062084258,
+        "worst_profile_score_us": 307.4485033259424,
+        "mean_rank_us": [
+          103.60328750923873,
+          101.10382705099778
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 305.7187050997783,
+            "aggregate_critical_us": 233.16092239467852,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              233.16092239467852,
+              197.19910421286033
+            ],
+            "score_us": 307.4485033259424
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 34.91686917960089,
+            "aggregate_critical_us": 28.608745011086473,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              26.618270509977826,
+              28.608745011086473
+            ],
+            "score_us": 36.47171086474501
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 251.30967627494454,
+            "aggregate_critical_us": 249.53670066518845,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              228.26099334811528,
+              249.53670066518845
+            ],
+            "score_us": 255.91941286031042
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 9.424514412416851,
+            "aggregate_critical_us": 7.738119733924612,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              7.738119733924612,
+              6.152274944567628
+            ],
+            "score_us": 9.77159733924612
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 153.66822172949003,
+            "aggregate_critical_us": 113.60353880266075,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              113.60353880266075,
+              110.3471042128603
+            ],
+            "score_us": 167.0018026607539
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 19.080851441241684,
+            "aggregate_critical_us": 14.779033259423501,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              12.237880266075388,
+              14.779033259423501
+            ],
+            "score_us": 19.25589667405765
+          }
+        }
+      },
+      "reference_objective_us": 177.160875443459,
+      "predicted_objective_improvement_pct": 0.4601095723313922
+    },
+    {
+      "layer_idx": 41,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 204.553688691796,
+        "mean_profile_score_us": 147.6797049519586,
+        "worst_profile_score_us": 375.1756399113082,
+        "mean_rank_us": [
+          118.42911012564672,
+          114.40523725055432
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 349.29239911308207,
+            "aggregate_critical_us": 276.6858359201774,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              276.6858359201774,
+              262.29135254988915
+            ],
+            "score_us": 375.1756399113082
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 39.283299334811524,
+            "aggregate_critical_us": 31.17982261640798,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              31.17982261640798,
+              26.569490022172946
+            ],
+            "score_us": 39.81434988913525
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 230.0339689578714,
+            "aggregate_critical_us": 230.0339689578714,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              230.0339689578714
+            ],
+            "score_us": 236.85992505543237
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 10.62609312638581,
+            "aggregate_critical_us": 8.555432372505543,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              8.555432372505543,
+              8.31750776053215
+            ],
+            "score_us": 10.631915742793792
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 189.64720177383592,
+            "aggregate_critical_us": 157.0709977827051,
+            "tail_critical_us": 445.63454545454545,
+            "mean_rank_us": [
+              157.0709977827051,
+              142.63062527716187
+            ],
+            "score_us": 202.9374731707317
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 20.625968957871397,
+            "aggregate_critical_us": 16.588478935698447,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              15.913481152993347,
+              16.588478935698447
+            ],
+            "score_us": 20.658925942350333
+          }
+        }
+      },
+      "reference_objective_us": 231.8317016629712,
+      "predicted_objective_improvement_pct": 11.766299766384419
+    },
+    {
+      "layer_idx": 42,
+      "rank_heads": [
+        [
+          3,
+          4,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 158.70758813747227,
+        "mean_profile_score_us": 111.40681611234294,
+        "worst_profile_score_us": 300.60990421286033,
+        "mean_rank_us": [
+          95.04312342941611,
+          74.16933185513673
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 276.7833968957872,
+            "aggregate_critical_us": 247.7017472283814,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              247.7017472283814,
+              175.48542793791574
+            ],
+            "score_us": 300.60990421286033
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 31.131042128603102,
+            "aggregate_critical_us": 24.725356984478935,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              24.725356984478935,
+              19.485640798226164
+            ],
+            "score_us": 33.18790421286031
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 148.4770909090909,
+            "aggregate_critical_us": 148.4770909090909,
+            "tail_critical_us": 148.4770909090909,
+            "mean_rank_us": [
+              148.4770909090909,
+              148.4770909090909
+            ],
+            "score_us": 148.4770909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 8.412079822616407,
+            "aggregate_critical_us": 6.10349445676275,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              6.002944567627495,
+              6.10349445676275
+            ],
+            "score_us": 8.537265188470066
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 149.9239822616408,
+            "aggregate_critical_us": 128.09269179600886,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              128.09269179600886,
+              84.82035476718403
+            ],
+            "score_us": 158.1747574279379
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 18.88572949002217,
+            "aggregate_critical_us": 15.258909090909091,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              15.258909090909091,
+              10.643982261640797
+            ],
+            "score_us": 19.453974722838137
+          }
+        }
+      },
+      "reference_objective_us": 165.52014301552109,
+      "predicted_objective_improvement_pct": 4.115846418408418
+    },
+    {
+      "layer_idx": 43,
+      "rank_heads": [
+        [
+          0,
+          3,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 266.9366151884701,
+        "mean_profile_score_us": 195.06677280118257,
+        "worst_profile_score_us": 482.5461423503327,
+        "mean_rank_us": [
+          146.82148115299336,
+          164.79830007390984
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 472.10892239467853,
+            "aggregate_critical_us": 392.4758492239468,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              385.1566563192905,
+              392.4758492239468
+            ],
+            "score_us": 482.5461423503327
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 55.24635033259423,
+            "aggregate_critical_us": 43.552168514412415,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              41.85437694013304,
+              43.552168514412415
+            ],
+            "score_us": 56.179659423503324
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              221.1690909090909,
+              293.8610909090909
+            ],
+            "score_us": 297.49569090909085
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 15.289055432372505,
+            "aggregate_critical_us": 12.404070953436806,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              11.632549889135255,
+              12.404070953436806
+            ],
+            "score_us": 15.317277605321507
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 276.3869977827051,
+            "aggregate_critical_us": 222.17462527716185,
+            "tail_critical_us": 593.1483636363637,
+            "mean_rank_us": [
+              196.69665631929047,
+              222.17462527716185
+            ],
+            "score_us": 287.6520838137472
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 32.15307317073171,
+            "aggregate_critical_us": 24.419556541019954,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              24.419556541019954,
+              24.321995565410198
+            ],
+            "score_us": 31.209782705099776
+          }
+        }
+      },
+      "reference_objective_us": 270.1457903547672,
+      "predicted_objective_improvement_pct": 1.1879419487094942
+    },
+    {
+      "layer_idx": 44,
+      "rank_heads": [
+        [
+          0,
+          2,
+          4,
+          5
+        ],
+        [
+          1,
+          3,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 298.6420966740577,
+        "mean_profile_score_us": 211.858496969697,
+        "worst_profile_score_us": 558.9928957871399,
+        "mean_rank_us": [
+          184.42246563192904,
+          174.2408662232077
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 559.0611884700666,
+            "aggregate_critical_us": 472.2064833702883,
+            "tail_critical_us": 891.3538181818183,
+            "mean_rank_us": [
+              472.2064833702883,
+              443.31995565410205
+            ],
+            "score_us": 558.9928957871399
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 64.99883813747228,
+            "aggregate_critical_us": 55.29513082039911,
+            "tail_critical_us": 110.50727272727272,
+            "mean_rank_us": [
+              55.29513082039911,
+              47.142873614190684
+            ],
+            "score_us": 66.07581152993347
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 16.731547671840353,
+            "aggregate_critical_us": 14.136257206208425,
+            "tail_critical_us": 26.725454545454543,
+            "mean_rank_us": [
+              14.136257206208425,
+              11.583769401330377
+            ],
+            "score_us": 16.820446563192906
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 290.77858980044346,
+            "aggregate_critical_us": 244.00591574279377,
+            "tail_critical_us": 593.1483636363637,
+            "mean_rank_us": [
+              244.00591574279377,
+              225.52862084257205
+            ],
+            "score_us": 303.23036230598666
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 31.69362305986696,
+            "aggregate_critical_us": 27.02991574279379,
+            "tail_critical_us": 53.60545454545455,
+            "mean_rank_us": [
+              27.02991574279379,
+              24.008886917960087
+            ],
+            "score_us": 32.17037472283814
+          }
+        }
+      },
+      "reference_objective_us": 301.50700776053213,
+      "predicted_objective_improvement_pct": 0.9501971804084364
+    },
+    {
+      "layer_idx": 45,
+      "rank_heads": [
+        [
+          0,
+          2,
+          5,
+          6
+        ],
+        [
+          1,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 390.40202666297114,
+        "mean_profile_score_us": 269.47468122690316,
+        "worst_profile_score_us": 753.1840629711752,
+        "mean_rank_us": [
+          241.96556984478937,
+          239.45959940872137
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 739.5044257206209,
+            "aggregate_critical_us": 659.9201330376941,
+            "tail_critical_us": 1187.4407272727274,
+            "mean_rank_us": [
+              659.9201330376941,
+              645.5256496674058
+            ],
+            "score_us": 753.1840629711752
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 94.73934368070952,
+            "aggregate_critical_us": 82.46455875831485,
+            "tail_critical_us": 146.31199999999998,
+            "mean_rank_us": [
+              82.46455875831485,
+              81.44493126385808
+            ],
+            "score_us": 95.03767671840355
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 22.01670066518847,
+            "aggregate_critical_us": 19.275068736141908,
+            "tail_critical_us": 34.602909090909094,
+            "mean_rank_us": [
+              18.652878048780487,
+              19.275068736141908
+            ],
+            "score_us": 22.209778270509975
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 409.6555654101996,
+            "aggregate_critical_us": 359.23621286031045,
+            "tail_critical_us": 593.1483636363637,
+            "mean_rank_us": [
+              359.23621286031045,
+              359.04109090909094
+            ],
+            "score_us": 407.8468603104213
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 45.19694013303769,
+            "aggregate_critical_us": 37.658545454545454,
+            "tail_critical_us": 70.44290909090908,
+            "mean_rank_us": [
+              37.658545454545454,
+              37.60976496674058
+            ],
+            "score_us": 44.70861818181818
+          }
+        }
+      },
+      "reference_objective_us": 390.4909097006652,
+      "predicted_objective_improvement_pct": 0.022761871143737705
+    },
+    {
+      "layer_idx": 46,
+      "rank_heads": [
+        [
+          0,
+          2,
+          6,
+          7
+        ],
+        [
+          1,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 426.70344878048775,
+        "mean_profile_score_us": 289.3893779748706,
+        "worst_profile_score_us": 838.6456611973392,
+        "mean_rank_us": [
+          259.82776792313376,
+          262.59022172949005
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 840.8023946784923,
+            "aggregate_critical_us": 746.921179600887,
+            "tail_critical_us": 1187.4407272727274,
+            "mean_rank_us": [
+              732.2827937915744,
+              746.921179600887
+            ],
+            "score_us": 838.6456611973392
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 104.39427050997782,
+            "aggregate_critical_us": 88.52878048780487,
+            "tail_critical_us": 146.31199999999998,
+            "mean_rank_us": [
+              88.52878048780487,
+              86.05526385809311
+            ],
+            "score_us": 102.36352328159644
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 293.8610909090909,
+            "aggregate_critical_us": 293.8610909090909,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              293.8610909090909,
+              293.8610909090909
+            ],
+            "score_us": 293.8610909090909
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 24.947476718403546,
+            "aggregate_critical_us": 20.62,
+            "tail_critical_us": 34.602909090909094,
+            "mean_rank_us": [
+              20.62,
+              19.085924611973393
+            ],
+            "score_us": 24.25873303769401
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 431.2429534368071,
+            "aggregate_critical_us": 388.01939689578717,
+            "tail_critical_us": 593.1483636363637,
+            "mean_rank_us": [
+              384.2751574279379,
+              388.01939689578717
+            ],
+            "score_us": 430.33128381374723
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 46.16462084257206,
+            "aggregate_critical_us": 41.59847450110865,
+            "tail_critical_us": 70.44290909090908,
+            "mean_rank_us": [
+              39.398784922394675,
+              41.59847450110865
+            ],
+            "score_us": 46.8759756097561
+          }
+        }
+      },
+      "reference_objective_us": 435.8292558758315,
+      "predicted_objective_improvement_pct": 2.0938950224910364
+    },
+    {
+      "layer_idx": 47,
+      "rank_heads": [
+        [
+          0,
+          1,
+          4,
+          6
+        ],
+        [
+          2,
+          3,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "predicted": {
+        "objective_us": 175.58867566518848,
+        "mean_profile_score_us": 130.41963466371027,
+        "worst_profile_score_us": 311.0957986696231,
+        "mean_rank_us": [
+          101.90121359940872,
+          101.36480709534368
+        ],
+        "profiles": {
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 320.5034323725056,
+            "aggregate_critical_us": 226.42709534368072,
+            "tail_critical_us": 595.2669090909092,
+            "mean_rank_us": [
+              226.42709534368072,
+              211.49602660753882
+            ],
+            "score_us": 311.0957986696231
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 36.7610022172949,
+            "aggregate_critical_us": 28.75508647450111,
+            "tail_critical_us": 74.70254545454544,
+            "mean_rank_us": [
+              28.75508647450111,
+              27.540337028824833
+            ],
+            "score_us": 37.41352771618625
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 249.53670066518845,
+            "aggregate_critical_us": 235.3528957871397,
+            "tail_critical_us": 293.8610909090909,
+            "mean_rank_us": [
+              219.39611529933478,
+              235.3528957871397
+            ],
+            "score_us": 249.09345676274944
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 10.388168514412417,
+            "aggregate_critical_us": 8.320496674057651,
+            "tail_critical_us": 18.848,
+            "mean_rank_us": [
+              8.320496674057651,
+              6.051725055432373
+            ],
+            "score_us": 10.520521507760533
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 157.46124168514413,
+            "aggregate_critical_us": 117.34777827050998,
+            "tail_critical_us": 298.12072727272727,
+            "mean_rank_us": [
+              114.09134368070953,
+              117.34777827050998
+            ],
+            "score_us": 155.6446266075388
+          },
+          "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.json": {
+            "samples": 41,
+            "mean_critical_us": 18.210731707317073,
+            "aggregate_critical_us": 14.417144124168512,
+            "tail_critical_us": 36.768,
+            "mean_rank_us": [
+              14.417144124168512,
+              10.400079822616409
+            ],
+            "score_us": 18.749876718403545
+          }
+        }
+      },
+      "reference_objective_us": 181.09633641906873,
+      "predicted_objective_improvement_pct": 3.041287782396201
+    }
+  ]
+}

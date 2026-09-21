@@ -19,6 +19,9 @@
     } else if ((val) == 20) {                 \
       constexpr int NumHead = 20;             \
       { __VA_ARGS__ }                         \
+    } else if ((val) == 16) {                 \
+      constexpr int NumHead = 16;             \
+      { __VA_ARGS__ }                         \
     } else if ((val) == 10) {                 \
       constexpr int NumHead = 10;             \
       { __VA_ARGS__ }                         \

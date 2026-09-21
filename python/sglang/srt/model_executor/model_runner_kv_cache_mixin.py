@@ -66,6 +66,8 @@ class DittoTokenToKVPoolPlaceholder:
         self.device = device
         self.start_layer = start_layer
         self.end_layer = end_layer
+        # The placeholder owns no KV tensors; Ditto accounts for them model-locally.
+        self.mem_usage = 0.0
 
     def get_cpu_copy(self, indices):
         _ = indices

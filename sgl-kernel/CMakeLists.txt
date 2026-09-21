@@ -546,7 +546,7 @@ endif()
 if(SGL_KERNEL_ENABLE_KVLIB)
   target_link_libraries(kvlib_cpu_gather PRIVATE kvlib_offload_core)
 endif()
-target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} ${TORCH_PYTHON_LIBRARY} gdrapi)
+target_link_libraries(kvlib_cpu_gather PRIVATE ${TORCH_LIBRARIES} ${TORCH_PYTHON_LIBRARY} CUDA::cudart gdrapi)
 target_include_directories(kvlib_cpu_gather PRIVATE
     ${PROJECT_SOURCE_DIR}/csrc
     ${PROJECT_SOURCE_DIR}/include

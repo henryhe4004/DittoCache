@@ -371,3 +371,9 @@ bash test_accuracy_livecodebench.sh
 ```
 
 The accuracy wrappers call `test_accuracy_benchmark.sh`. Ditto offloading configs live under `test/ditto/config/hata_offloading`; dense full-attention baselines live under `test/ditto/config/full_attn`.
+
+## Ditto TP/PP tests and directory guide
+
+- [Test scripts and Ditto CUDA Graph commands](test/ditto/README.md)
+- [TP + PP integration and validation results](DITTO_TP_PP.md)
+- [Directory audit and archived files](DIRECTORY_AUDIT.md)

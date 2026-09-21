@@ -479,7 +479,10 @@ class CustomLlamaModel(LlamaModel):
             torch.cuda.synchronize()
             tic = time.time()
 
-        for decoder_layer in self.layers:
+        start_layer = getattr(self, "start_layer", 0)
+        end_layer = getattr(self, "end_layer", len(self.layers))
+        for layer_idx in range(start_layer, end_layer):
+            decoder_layer = self.layers[layer_idx]
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
             layer_outputs = decoder_layer(
@@ -504,7 +507,8 @@ class CustomLlamaModel(LlamaModel):
             if seq_len == 1:
                 self.decoding_time_list.append(toc - tic)
 
-        hidden_states = self.norm(hidden_states)
+        if getattr(self, "is_last_pp_rank", True):
+            hidden_states = self.norm(hidden_states)
         hidden_states = hidden_states.view(bsz, seq_len, -1)
         if output_hidden_states:
             all_hidden_states += (hidden_states,)

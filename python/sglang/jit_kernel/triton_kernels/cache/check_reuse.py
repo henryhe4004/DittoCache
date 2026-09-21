@@ -128,7 +128,9 @@ def _check_reuse_with_importance(
                                   padding_option="zero")
         use_max_reuse_count = max_reuse_count > 0
         force_gather_by_reuse = use_max_reuse_count & (reuse_count_val >= max_reuse_count)
-        gather_flag = force_gather_by_reuse | ((cos < threshold_val) & (gpu_head_mask_val == 0))
+        gather_flag = (gpu_head_mask_val == 0) & (
+            force_gather_by_reuse | (cos < threshold_val)
+        )
 
         # Reuse count only increases when we skip gather on this head.
         # If max_reuse_count is disabled (<=0), never force-reset by reuse count.
@@ -152,6 +154,32 @@ def _check_reuse_with_importance(
         curr_q_data = tl.load(curr_query_ptr,
                             boundary_check=(1, 0))
         tl.store(prev_query_ptr, curr_q_data, boundary_check=(1, 0))
+        out_mask_ptr = tl.make_block_ptr(
+            base=out_mask + batch_id * NUM_KV_HEAD + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+        gpu_head_mask_ptr = tl.make_block_ptr(
+            base=gpu_head_mask + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+        gpu_head_mask_val = tl.load(
+            gpu_head_mask_ptr,
+            boundary_check=(1, 0),
+            padding_option="zero",
+        )
+        tl.store(
+            out_mask_ptr,
+            tl.cast(gpu_head_mask_val == 0, tl.int8),
+            boundary_check=(1, 0),
+        )
         reuse_count_ptr = tl.make_block_ptr(
             base=reuse_count + batch_id * NUM_KV_HEAD + head_kv_id,
             shape=(1, 1),
@@ -310,7 +338,9 @@ def _check_reuse_and_update_query_head_threshold_with_gpu_head(
                                   padding_option="zero")
         use_max_reuse_count = max_reuse_count > 0
         force_gather_by_reuse = use_max_reuse_count & (reuse_count_val >= max_reuse_count)
-        gather_flag = force_gather_by_reuse | ((cos < threshold_val) & (gpu_head_mask_val == 0))
+        gather_flag = (gpu_head_mask_val == 0) & (
+            force_gather_by_reuse | (cos < threshold_val)
+        )
 
         # Reuse count only increases when we skip gather on this head.
         # If max_reuse_count is disabled (<=0), never force-reset by reuse count.
@@ -334,6 +364,32 @@ def _check_reuse_and_update_query_head_threshold_with_gpu_head(
         curr_q_data = tl.load(curr_query_ptr,
                             boundary_check=(1, 0))
         tl.store(prev_query_ptr, curr_q_data, boundary_check=(1, 0))
+        out_mask_ptr = tl.make_block_ptr(
+            base=out_mask + batch_id * NUM_KV_HEAD + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+        gpu_head_mask_ptr = tl.make_block_ptr(
+            base=gpu_head_mask + head_kv_id,
+            shape=(1, 1),
+            strides=(1, 1),
+            offsets=(0, 0),
+            block_shape=(1, 1),
+            order=(1, 0),
+        )
+        gpu_head_mask_val = tl.load(
+            gpu_head_mask_ptr,
+            boundary_check=(1, 0),
+            padding_option="zero",
+        )
+        tl.store(
+            out_mask_ptr,
+            tl.cast(gpu_head_mask_val == 0, tl.int8),
+            boundary_check=(1, 0),
+        )
         reuse_count_ptr = tl.make_block_ptr(
             base=reuse_count + batch_id * NUM_KV_HEAD + head_kv_id,
             shape=(1, 1),

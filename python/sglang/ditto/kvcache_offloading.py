@@ -120,6 +120,36 @@ class OffloadingCache(CustomStaticCache):
                 "Ditto transfer_backend must be 'memcpy' or 'gdrcopy', "
                 f"got {self.transfer_backend!r}."
             )
+        self.prefetch_mode = self.config.offload_config.prefetch_mode
+        self.reuse_policy = self.config.offload_config.reuse_policy
+        self.threshold_mode = self.config.offload_config.threshold_mode
+        self.resident_policy = self.config.offload_config.resident_policy
+        self.similarity_aggregation = (
+            self.config.offload_config.similarity_aggregation
+        )
+        if USE_FIXED_THRESHOLDS:
+            self.threshold_mode = "fixed"
+        if not USE_INTRA_GQA_AGGREGATION:
+            self.similarity_aggregation = "min"
+        if DISABLE_PERSISTENT_CACHING:
+            self.resident_policy = "none"
+        if (
+            self.resident_policy == "none"
+            and self.config.offload_config.num_skip_layers != 0
+        ):
+            logger.warning(
+                "resident_policy=none overrides num_skip_layers=%d to 0",
+                self.config.offload_config.num_skip_layers,
+            )
+            self.config.offload_config.num_skip_layers = 0
+        # Keep the legacy boolean toggle and the policy string in sync so the
+        # Hopper-revision code paths (enable_layer_prefetch) and the TP/PP
+        # code paths (prefetch_mode) agree on whether cross-layer prefetch is
+        # active.
+        if not self.enable_layer_prefetch:
+            self.prefetch_mode = "none"
+        if self.prefetch_mode == "none":
+            self.enable_layer_prefetch = False
 
         # Debug switch for diagnosing potential CPUGather stalls.
         self.debug_cpugather = os.environ.get("DITTO_DEBUG_CPUGATHER", "0") == "1"
@@ -154,6 +184,18 @@ class OffloadingCache(CustomStaticCache):
         self._pending_overlap_prefetch = [None for _ in range(self.num_layers)]
         self._pending_overlap_head_mask = [None for _ in range(self.num_layers)]
         self._decode_overlap_metrics = [None for _ in range(self.num_layers)]
+        logger.info(
+            "Ditto ablation config: transfer_backend=%s prefetch_mode=%s "
+            "reuse_policy=%s threshold_mode=%s similarity_aggregation=%s "
+            "resident_policy=%s cuda_graph=%s",
+            self.transfer_backend,
+            self.prefetch_mode,
+            self.reuse_policy,
+            self.threshold_mode,
+            self.similarity_aggregation,
+            self.resident_policy,
+            bool(self.config.enable_cuda_graph),
+        )
 
     def _plan_topk_used_gpu_memory(self):
         raise NotImplementedError
@@ -181,10 +223,13 @@ class OffloadingCache(CustomStaticCache):
                 else:
                     return None
 
+        root, ext = os.path.splitext(out_path)
+        suffix = ""
+        if self.num_layers != self.total_num_layers:
+            suffix += f".layers{self.start_layer:02d}-{self.end_layer:02d}"
         if self.attn_tp_size > 1:
-            root, ext = os.path.splitext(out_path)
-            return f"{root}.tp{self.attn_tp_rank:02d}{ext or '.csv'}"
-        return out_path
+            suffix += f".tp{self.attn_tp_rank:02d}"
+        return f"{root}{suffix}{ext or '.csv'}" if suffix else out_path
 
     def _write_head_thresholds_csv(
         self,
@@ -203,20 +248,21 @@ class OffloadingCache(CustomStaticCache):
         hard_cpu = hard2reuse_head_mask.detach().cpu()
         diff_cpu = reuse_difficulty.detach().cpu()
 
-        for layer_idx in range(self.num_layers):
-            gpu_mask = self.layers_gpu_head_mask[layer_idx].detach().cpu().to(torch.bool)
+        for local_layer_idx in range(self.num_layers):
+            layer_idx = self.global_layer_idx(local_layer_idx)
+            gpu_mask = self.layers_gpu_head_mask[local_layer_idx].detach().cpu().to(torch.bool)
             for head_idx in range(self.num_key_value_heads):
                 global_head_idx = int(
-                    self.local_kv_head_ids_by_layer[layer_idx][head_idx]
+                    self.local_kv_head_ids_by_layer[local_layer_idx][head_idx]
                 )
                 rows.append(
                     {
                         "layer_idx": int(layer_idx),
                         "head_idx": global_head_idx,
-                        "reuse_threshold": float(thresholds_cpu[layer_idx, head_idx].item()),
-                        "head_cosine": float(cos_cpu[layer_idx, head_idx].item()),
-                        "reuse_difficulty": float(diff_cpu[layer_idx, head_idx].item()),
-                        "hard_to_reuse": int(bool(hard_cpu[layer_idx, head_idx].item())),
+                        "reuse_threshold": float(thresholds_cpu[local_layer_idx, head_idx].item()),
+                        "head_cosine": float(cos_cpu[local_layer_idx, head_idx].item()),
+                        "reuse_difficulty": float(diff_cpu[local_layer_idx, head_idx].item()),
+                        "hard_to_reuse": int(bool(hard_cpu[local_layer_idx, head_idx].item())),
                         "placed_on_gpu": int(bool(gpu_mask[head_idx].item())),
                         "offloaded_to_cpu": int(not bool(gpu_mask[head_idx].item())),
                     }
@@ -325,6 +371,21 @@ class OffloadingCache(CustomStaticCache):
         q_head_importance = pd.read_csv(q_head_importance_file, sep='\t', header=None).to_numpy()
         head_cos = pd.read_csv(cosine_file, sep=',', header=None).to_numpy()
 
+        for name, values in (
+            ("k_heads_importance", head_importance),
+            ("q_heads_importance", q_head_importance),
+            ("heads_cosine_similarity", head_cos),
+        ):
+            if values.shape[0] < self.end_layer:
+                raise ValueError(
+                    f"{name} only has {values.shape[0]} layers, "
+                    f"but PP stage needs global layers [{self.start_layer}, {self.end_layer})."
+                )
+        layer_slice = slice(self.start_layer, self.end_layer)
+        head_importance = head_importance[layer_slice]
+        q_head_importance = q_head_importance[layer_slice]
+        head_cos = head_cos[layer_slice]
+
         # TP-aware slicing: auxiliary stats are often stored in global-head layout.
         # Convert them to this TP rank's local head range when needed.
         kv_cols = head_importance.shape[1]
@@ -386,8 +447,13 @@ class OffloadingCache(CustomStaticCache):
         self.layers_reuse_thresholds = []
         for l in range(self.num_layers):
             reuse_thresholds = head_importance[l].clone()
-            if not self.use_adaptive_threshold:
-                reuse_thresholds[:] = self.config.offload_config.reuse_threshold_upper
+            if (
+                not self.use_adaptive_threshold
+                or self.threshold_mode == "fixed"
+            ):
+                reuse_thresholds[:] = (
+                    self.config.offload_config.fixed_similarity_threshold
+                )
             else:
                 # Keep threshold mapping identical to internal prototype offloading:
                 # angle-space interpolation between lower/upper with decay_p.
@@ -404,7 +470,7 @@ class OffloadingCache(CustomStaticCache):
 
         # Calculate reuse difficulty and hard-to-reuse heads
         hard2reuse_head_mask = stacked_reuse_thresholds > head_cos - self.config.offload_config.cosine_padding
-        if not self.enable_resident_cache:
+        if not self.enable_resident_cache or self.resident_policy == "none":
             hard2reuse_head_mask.zero_()
         num_hard2reuse_head = torch.sum(hard2reuse_head_mask, dim=1)
         reuse_difficulty = stacked_reuse_thresholds - head_cos
@@ -412,7 +478,7 @@ class OffloadingCache(CustomStaticCache):
 
         explicit_resident_heads = resolve_resident_kv_heads(
             self.total_num_key_value_heads,
-            self.num_layers,
+            self.total_num_layers,
         )
 
         # ----> 显存充足的理想情况下，哪些 head 应该被放到 GPU
@@ -424,7 +490,7 @@ class OffloadingCache(CustomStaticCache):
                                     descending=True)
         for l in range(self.num_layers):
             if explicit_resident_heads is not None:
-                resident = set(explicit_resident_heads[l])
+                resident = set(explicit_resident_heads[self.global_layer_idx(l)])
                 head_gpu_mask = torch.tensor(
                     [
                         original_head in resident
@@ -568,6 +634,7 @@ class OffloadingCache(CustomStaticCache):
         self.layers_num_gpu_buffer_heads = []
 
         for l in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(l)
             head_mask = layers_gpu_head_mask[l].to(self.layer_devices[l])
             self.layers_gpu_head_mask.append(head_mask)
 
@@ -593,7 +660,7 @@ class OffloadingCache(CustomStaticCache):
                 cpu_head_ids, l
             ).cpu().tolist()
             print(
-                f"[TP{self.attn_tp_rank}] Layer {l:02d} on-GPU heads: {gpu_global_head_ids}, "
+                f"[TP{self.attn_tp_rank}] Layer {global_layer_idx:02d} on-GPU heads: {gpu_global_head_ids}, "
                 f"offloaded heads: {cpu_global_head_ids}"
             )
 
@@ -1281,12 +1348,29 @@ class OffloadingCache(CustomStaticCache):
                 self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1,
                 self.num_key_value_heads,
                 self.head_dim,
-                debug=True,
+                debug=self.debug_cpugather,
                 transfer_backend=self.transfer_backend,
             )
 
     def update_metadata(self, q_len: int, is_prefill=False, layer_idx: int = 0):
-        super().update_metadata(q_len, is_prefill, layer_idx)
+        if self.cache_tensors["cache_length"][layer_idx] is not None:
+            super().update_metadata(q_len, is_prefill, layer_idx)
+        else:
+            # The full-attention base assumes every layer owns a GPU KV cache.
+            # With resident_policy=none, use the CPU length for rope offsets.
+            self.cur_q_len = q_len
+            for device_idx in self.unique_devices:
+                device = torch.device("cuda", int(device_idx))
+                rope_indptr = torch.arange(
+                    0,
+                    (self.curr_batch_size + 1) * q_len,
+                    q_len,
+                    dtype=torch.int32,
+                    device=device,
+                )
+                self.metadata_tensors[f"rope_indptr_{device_idx}"][
+                    : self.curr_batch_size + 1
+                ] = rope_indptr
         if self.layers_gpu_head_ids[layer_idx].numel() > 0:
             active_seq_lens = self.cache_length_host[layer_idx][
                 : self.curr_batch_size
@@ -1379,22 +1463,18 @@ class OffloadingCache(CustomStaticCache):
                 self.metadata_tensors[f'query_cache_valid_{device_idx}'].fill_(
                     not is_first_decode_layer_step
                 )
-                prefetch_tensor = torch.tensor(
-                    topk_prefetch_ks,
-                    dtype=torch.int32,
-                    device=device_idx,
-                )
-                current_tensor = torch.tensor(
-                    topk_current_ks,
-                    dtype=torch.int32,
-                    device=device_idx,
-                )
-                self.metadata_tensors[f'topk_prefetch_k_{device_idx}'][
-                    :self.curr_batch_size
-                ].copy_(prefetch_tensor)
-                self.metadata_tensors[f'topk_current_k_{device_idx}'][
-                    :self.curr_batch_size
-                ].copy_(current_tensor)
+                prefetch_metadata = self.metadata_tensors[
+                    f'topk_prefetch_k_{device_idx}'
+                ]
+                current_metadata = self.metadata_tensors[
+                    f'topk_current_k_{device_idx}'
+                ]
+                # Avoid CUDA allocations while SGLang captures the outer graph.
+                for row_idx, (prefetch_k, current_k) in enumerate(
+                    zip(topk_prefetch_ks, topk_current_ks)
+                ):
+                    prefetch_metadata[row_idx].fill_(prefetch_k)
+                    current_metadata[row_idx].fill_(current_k)
             self.first_decode_layer_step = False
 
             for l in range(self.num_layers):
@@ -1425,6 +1505,17 @@ class OffloadingCache(CustomStaticCache):
         # print("topk_current_k", self.metadata_tensors[f'topk_current_k_{self.layer_devices[0]}'])
 
     def record_decode_transfer_step(self) -> None:
+        # This method is the once-per-decode-step hook. Bootstrap state must
+        # advance even when optional transfer metrics are disabled.
+        # Python append methods run during capture, but not during replay.
+        # Advance host mirrors here exactly once for every executed decode step,
+        # including when metrics are disabled, so the next step computes fresh k.
+        for layer_idx in range(self.num_layers):
+            if self.layers_gpu_head_ids[layer_idx].numel() > 0:
+                self._increment_active_host_lengths(self.cache_length_host, layer_idx)
+            if not self.layers_full_gpu_mask[layer_idx]:
+                self._increment_active_host_lengths(self.cpu_cache_length_host, layer_idx)
+        self._decode_transfer_step_idx += 1
         if not transfer_stats_enabled():
             return
 
@@ -1514,7 +1605,6 @@ class OffloadingCache(CustomStaticCache):
         hit_tokens = int(sum(layer_hit_tokens))
         hit_rate = float(hit_tokens / selected_tokens) if selected_tokens > 0 else 0.0
 
-        self._decode_transfer_step_idx += 1
         step = {
             "step": int(self._decode_transfer_step_idx),
             "attn_tp_rank": int(self.attn_tp_rank),
@@ -1657,6 +1747,10 @@ class OffloadingCache(CustomStaticCache):
                 f"input kv states max append {max(row_lens) if row_lens else 0} + max current seq length {int(cpu_seq_offsets.max().item())}, " \
                 f"should be less than max_seq_len = {self.max_seq_len}"
 
+            producer_stream = torch.cuda.current_stream(device=key_states.device)
+            self.default_stream_event.record(producer_stream)
+            self.transfer_stream.wait_event(self.default_stream_event)
+
             with torch.cuda.stream(self.transfer_stream):
                 for bsz in range(key_states.shape[0]):
                     row_len = int(row_lens[bsz])
@@ -1672,6 +1766,8 @@ class OffloadingCache(CustomStaticCache):
                         1, bsz:bsz + 1, start:end,
                         ...].copy_(value_states[bsz:bsz + 1, :row_len, ...], non_blocking=True)
                 self.transfer_event.record(self.transfer_stream)
+                key_states.record_stream(self.transfer_stream)
+                value_states.record_stream(self.transfer_stream)
 
             self.prefill_copy_buffer = (key_states, value_states)
             cpu_seq_len_tensor.copy_(new_cpu_seq_lens)
@@ -1845,7 +1941,6 @@ class OffloadingCache(CustomStaticCache):
                 self.layers_gpu_head_ids[layer_idx],
                 self._active_cache_length_tensor('cache_length', layer_idx))
         self._active_cache_length_tensor('cache_length', layer_idx).add_(1)
-        self._increment_active_host_lengths(self.cache_length_host, layer_idx)
         torch.cuda.nvtx.range_pop()
 
     def needs_current_retrieval_query(self, layer_idx: int) -> bool:
@@ -1884,8 +1979,20 @@ class OffloadingCache(CustomStaticCache):
             reuse_count.zero_()
             return gather_mask
 
+        if self.reuse_policy == "always_gather":
+            gather_mask.copy_(
+                (~self.layers_gpu_head_mask[layer_idx]).repeat(
+                    self.curr_batch_size
+                )
+            )
+            reuse_count.zero_()
+            return gather_mask
+
         torch.cuda.nvtx.range_push("check reuse")
-        if USE_INTRA_GQA_AGGREGATION and self.num_key_value_heads < self.num_heads:
+        if (
+            self.similarity_aggregation == "importance"
+            and self.num_key_value_heads < self.num_heads
+        ):
             check_reuse_with_importance(
                 query_states,
                 self.metadata_tensors['cached_query'][layer_idx][:self.curr_batch_size],
@@ -1988,7 +2095,6 @@ class OffloadingCache(CustomStaticCache):
         )
         self._debug_ready_flag_snapshot("wait_ready_after_enqueue", layer_idx, total_heads)
         self._active_cache_length_tensor('cpu_cache_length', layer_idx).add_(1)
-        self._increment_active_host_lengths(self.cpu_cache_length_host, layer_idx)
         self._active_cache_length_tensor('gpu_buffer_ptr', layer_idx).add_(1)
         torch.cuda.nvtx.range_pop()
 
@@ -2072,7 +2178,7 @@ class OffloadingCache(CustomStaticCache):
 
         # Switch to static_launch_prefetch for internal prototype parity.
         # Keep the previous real_indices path commented below for fallback/debug.
-        if prefetch_k != prefetch_k_shape:
+        if prefetch_k != prefetch_k_shape and not self.config.enable_cuda_graph:
             indices = indices[..., :prefetch_k].contiguous()
             self._debug_cpugather_log(
                 "prefetch_k_clamped",
@@ -2092,7 +2198,7 @@ class OffloadingCache(CustomStaticCache):
             torch.cuda.nvtx.range_pop()
             return
 
-        if prefetch_k == 0:
+        if prefetch_k == 0 and not self.config.enable_cuda_graph:
             self.metadata_tensors["ready_flag"][prefetch_layer_idx][:total_heads] = True
             self._debug_cpugather_log(
                 "prefetch_skip_zero",
@@ -2257,6 +2363,15 @@ class OffloadingCache(CustomStaticCache):
     def compute_topk(self, query, layer_idx, mask, is_prefetch=False):
         raise NotImplementedError
 
+    def _needs_demand_transfer(self, layer_idx: int) -> bool:
+        if self.prefetch_mode == "none":
+            return True
+        return (
+            self.prefetch_mode == "cross_layer"
+            and self._decode_transfer_step_idx == 0
+            and layer_idx == 0
+        )
+
     def append_decode(
         self,
         key_states: torch.Tensor,
@@ -2287,30 +2402,39 @@ class OffloadingCache(CustomStaticCache):
             current_query_states)
         self._debug_stall_duration("step2_topk_append_exit", layer_idx, t_step)
 
-        # 3. compute prefetch top-k indices (checked)
+        # 3. Build either the normal next-layer prefetch plan or a same-layer
+        # demand plan. A demand plan is also used once to seed layer 0 when no
+        # resident layer exists.
         next_layer_idx = (layer_idx + 1) % self.num_layers
         should_prefetch = (
             self.enable_layer_prefetch
+            and self.prefetch_mode == "cross_layer"
             and (not self.layers_full_gpu_mask[next_layer_idx])
             and (not self.disable_prefetch)
-            and (int(self.topk_prefetch_k_host) > 0)
+            and (self.config.enable_cuda_graph or int(self.topk_prefetch_k_host) > 0)
         )
-        if should_prefetch:
+        needs_demand_transfer = (
+            self._needs_demand_transfer(layer_idx)
+            and not self.layers_full_gpu_mask[layer_idx]
+        )
+        prefetch_topk_indices = None
+        prefetch_gather_mask = None
+        if should_prefetch and not needs_demand_transfer:
             t_step = time.perf_counter()
             self._debug_stall_log("step3_prefetch_topk_enter", layer_idx, next_layer=next_layer_idx)
-            gather_mask = self.cache_query_and_update(
+            prefetch_gather_mask = self.cache_query_and_update(
                 prefetch_query_states, next_layer_idx)
             prefetch_topk_indices = self.compute_topk(
                 prefetch_query,
                 next_layer_idx,
-                gather_mask,
+                prefetch_gather_mask,
                 is_prefetch=True,
             )
             if self.record_overlap_stats:
                 self._record_prefetch_overlap_candidate(
                     next_layer_idx,
                     prefetch_topk_indices,
-                    gather_mask,
+                    prefetch_gather_mask,
                 )
             self._debug_stall_duration(
                 "step3_prefetch_topk_exit",
@@ -2318,6 +2442,22 @@ class OffloadingCache(CustomStaticCache):
                 t_step,
                 next_layer=next_layer_idx,
                 prefetch_shape=tuple(prefetch_topk_indices.shape),
+            )
+
+        if needs_demand_transfer:
+            demand_gather_mask = self.cache_query_and_update(
+                current_query_states, layer_idx
+            )
+            demand_topk_indices = self.compute_topk(
+                current_query,
+                layer_idx,
+                demand_gather_mask,
+                is_prefetch=True,
+            )
+            self.launch_prefetch(
+                demand_topk_indices,
+                demand_gather_mask,
+                layer_idx,
             )
 
         # Without layer prefetch, retrieve the current layer synchronously.
@@ -2345,7 +2485,7 @@ class OffloadingCache(CustomStaticCache):
                 layer_idx,
             )
 
-        # 4. append cpu kvcache, gpu recent buffer, and sync prefetch (checked)
+        # 4. append cpu kvcache, gpu recent buffer, and sync transfer (checked)
         if not self.layers_full_gpu_mask[layer_idx]:
             t_step = time.perf_counter()
             self._debug_stall_log("step4_cpu_append_wait_enter", layer_idx)
@@ -2354,13 +2494,30 @@ class OffloadingCache(CustomStaticCache):
             torch.cuda.nvtx.range_pop()
             self._debug_stall_duration("step4_cpu_append_wait_exit", layer_idx, t_step)
 
-        # 5. launch prefetching (checked)
-        if self.enable_layer_prefetch and not self.layers_full_gpu_mask[next_layer_idx]:
+        # A bootstrap demand plan and the next-layer plan share static top-k
+        # workspaces. Build the latter only after the former has completed.
+        if should_prefetch and needs_demand_transfer:
+            prefetch_gather_mask = self.cache_query_and_update(
+                prefetch_query_states, next_layer_idx
+            )
+            prefetch_topk_indices = self.compute_topk(
+                prefetch_query,
+                next_layer_idx,
+                prefetch_gather_mask,
+                is_prefetch=True,
+            )
+
+        # 5. launch next-layer prefetching (checked)
+        if (
+            self.enable_layer_prefetch
+            and self.prefetch_mode == "cross_layer"
+            and not self.layers_full_gpu_mask[next_layer_idx]
+        ):
             if should_prefetch:
                 t_step = time.perf_counter()
                 self._debug_stall_log("step5_launch_prefetch_enter", layer_idx, next_layer=next_layer_idx)
                 torch.cuda.nvtx.range_push("real indices")
-                self.launch_prefetch(prefetch_topk_indices, gather_mask,
+                self.launch_prefetch(prefetch_topk_indices, prefetch_gather_mask,
                                      next_layer_idx)
                 torch.cuda.nvtx.range_pop()
                 self._debug_stall_duration("step5_launch_prefetch_exit", layer_idx, t_step, next_layer=next_layer_idx)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 from typing import Optional, Tuple, Union
 
 import torch
@@ -261,6 +262,23 @@ def transformer_layer_forward_decode(
     return hidden_input_buffer
 
 
+def _run_local_decoder_layers(self, hidden_states, past_key_values):
+    start_layer = getattr(self, "start_layer", 0)
+    end_layer = getattr(self, "end_layer", len(self.layers))
+    for layer_idx in range(start_layer, end_layer):
+        hidden_states = self.layers[layer_idx](
+            hidden_states,
+            past_key_value=past_key_values,
+        )
+    return hidden_states
+
+
+def _finalize_decode_stage(self, hidden_states):
+    if getattr(self, "is_last_pp_rank", True):
+        return self.norm(hidden_states, is_prefill=False)
+    return hidden_states
+
+
 def llm_prepare_cuda_graph_metadata(
     self,
     bsz,
@@ -285,15 +303,23 @@ def llm_prepare_cuda_graph_metadata(
 def llm_prefill_forward(
     self,
     input_ids: torch.LongTensor = None,
+    inputs_embeds: Optional[torch.Tensor] = None,
     past_key_values: Optional[CustomStaticCache] = None,
 ) -> Union[Tuple, BaseModelOutputWithPast]:
+    sequence_length = (
+        inputs_embeds.shape[1] if inputs_embeds is not None else input_ids.shape[1]
+    )
     chunk_size = getattr(past_key_values.config, "chunk_prefill_size", 0)
-    chunk_size = input_ids.shape[1] if chunk_size <= 0 else chunk_size
+    chunk_size = sequence_length if chunk_size <= 0 else chunk_size
     original_extend_seq_lens = getattr(past_key_values, "_current_extend_seq_lens", None)
     final_hidden_states = None
-    for chunk_start in range(0, input_ids.shape[1], chunk_size):
-        chunk_input_ids = input_ids[:, chunk_start : chunk_start + chunk_size]
-        hidden_states = self.embed_tokens(chunk_input_ids)
+    intermediate_hidden_states = []
+    for chunk_start in range(0, sequence_length, chunk_size):
+        if inputs_embeds is None:
+            chunk_input_ids = input_ids[:, chunk_start : chunk_start + chunk_size]
+            hidden_states = self.embed_tokens(chunk_input_ids)
+        else:
+            hidden_states = inputs_embeds[:, chunk_start : chunk_start + chunk_size]
         bsz, q_len, _ = hidden_states.shape
         if original_extend_seq_lens is not None:
             chunk_extend_seq_lens = [
@@ -302,13 +328,16 @@ def llm_prefill_forward(
             ]
             past_key_values._current_extend_seq_lens = chunk_extend_seq_lens
         past_key_values.update_metadata(q_len)
-        hidden_states = hidden_states.view(bsz * q_len, -1)
-        for decoder_layer in self.layers:
-            hidden_states = decoder_layer(
-                hidden_states,
-                past_key_value=past_key_values,
-            )
+        # PP inputs are sliced across sequence chunks and may be noncontiguous
+        # when there is more than one request in the batch.
+        hidden_states = hidden_states.reshape(bsz * q_len, -1)
+        hidden_states = _run_local_decoder_layers(
+            self, hidden_states, past_key_values
+        )
         hidden_states = hidden_states.view(bsz, q_len, -1)
+        if not getattr(self, "is_last_pp_rank", True):
+            intermediate_hidden_states.append(hidden_states)
+            continue
         if final_hidden_states is None:
             final_hidden_states = torch.empty(
                 (bsz, hidden_states.shape[-1]),
@@ -325,6 +354,15 @@ def llm_prefill_forward(
 
     if original_extend_seq_lens is not None:
         past_key_values._current_extend_seq_lens = original_extend_seq_lens
+    if not getattr(self, "is_last_pp_rank", True):
+        hidden_states = torch.cat(intermediate_hidden_states, dim=1)
+        return BaseModelOutputWithPast(
+            last_hidden_state=hidden_states,
+            past_key_values=past_key_values,
+            hidden_states=None,
+            attentions=None,
+        )
+
     hidden_states = final_hidden_states.contiguous()
     hidden_states = self.norm(hidden_states, is_prefill=True)
     hidden_states = hidden_states.view(bsz, 1, -1)
@@ -340,9 +378,12 @@ def llm_prefill_forward(
 def llm_decode_forward(
     self,
     input_ids: torch.LongTensor = None,
+    inputs_embeds: Optional[torch.Tensor] = None,
     past_key_values: Optional[CustomStaticCache] = None,
 ) -> Union[Tuple, BaseModelOutputWithPast]:
-    hidden_states = self.embed_tokens(input_ids)
+    hidden_states = (
+        inputs_embeds if inputs_embeds is not None else self.embed_tokens(input_ids)
+    )
     bsz, q_len, _ = hidden_states.shape
     assert q_len == 1, "Only support decode with q_len == 1"
     past_key_values.update_metadata(q_len)
@@ -358,26 +399,32 @@ def llm_decode_forward(
                 hidden_states.device,
             )
             self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
-            input_buffer = self._graph_buffers[bsz]["input_hidden_states"]
-            for decoder_layer in self.layers:
-                input_buffer = decoder_layer(
-                    input_buffer,
-                    past_key_value=past_key_values,
-                )
-            hidden_states = self.norm(input_buffer, is_prefill=False)
+            hidden_states = _run_local_decoder_layers(
+                self,
+                self._graph_buffers[bsz]["input_hidden_states"],
+                past_key_values,
+            )
+            hidden_states = _finalize_decode_stage(self, hidden_states)
             self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
         elif bsz not in self._graphs:
             self._graphs[bsz] = torch.cuda.CUDAGraph()
             self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
-            with torch.cuda.graph(self._graphs[bsz]):
-                input_buffer = self._graph_buffers[bsz]["input_hidden_states"]
-                for decoder_layer in self.layers:
-                    input_buffer = decoder_layer(
-                        input_buffer,
-                        past_key_value=past_key_values,
+            distributed_capture = nullcontext()
+            if int(getattr(past_key_values, "attn_tp_size", 1)) > 1:
+                from sglang.srt.distributed.parallel_state import graph_capture
+
+                distributed_capture = graph_capture()
+            with distributed_capture:
+                with torch.cuda.graph(self._graphs[bsz]):
+                    hidden_states = _run_local_decoder_layers(
+                        self,
+                        self._graph_buffers[bsz]["input_hidden_states"],
+                        past_key_values,
                     )
-                hidden_states = self.norm(input_buffer, is_prefill=False)
-                self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
+                    hidden_states = _finalize_decode_stage(self, hidden_states)
+                    self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
+            # Capturing alone leaves the output from warmup in this buffer.
+            self._graphs[bsz].replay()
         else:
             self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
             self._graphs[bsz].replay()
@@ -392,13 +439,12 @@ def llm_decode_forward(
                 hidden_states.device,
             )
         self._graph_buffers[bsz]["input_hidden_states"].copy_(hidden_states)
-        input_buffer = self._graph_buffers[bsz]["input_hidden_states"]
-        for decoder_layer in self.layers:
-            input_buffer = decoder_layer(
-                input_buffer,
-                past_key_value=past_key_values,
-            )
-        hidden_states = self.norm(input_buffer, is_prefill=False)
+        hidden_states = _run_local_decoder_layers(
+            self,
+            self._graph_buffers[bsz]["input_hidden_states"],
+            past_key_values,
+        )
+        hidden_states = _finalize_decode_stage(self, hidden_states)
         self._graph_buffers[bsz]["output_hidden_states"].copy_(hidden_states)
         hidden_states = self._graph_buffers[bsz]["output_hidden_states"]
 

@@ -1,0 +1,59 @@
+variant=linear
+started_utc=2026-09-07T12:09:30Z
+hostname=086874ca0fe3
+repo_root=/jhe/sglang-litecache
+git_commit=25a629c7421601463d757c0375f4843dcde8cc30
+python=Python 3.13.15
+torch=2.9.1+cu128
+mapping_file=/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/timeline-v2/per-profile/robust-refine-256K-top5.json
+mapping_sha256=1d798f71d7060fc1dbd3aa560d5a49c2655c2b8b88326fe055b1ce0f3111a1c0
+resident_file=/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json
+resident_sha256=752f5c2a8d10197df05748ef38dc0a65077ba0bd34645075d8db5290151ea186
+8985d01728c0865c1b72efe668a8ba586c8d63bdf9cc7de41e5dd9f366dd5b47  /jhe/sglang-litecache/test/ditto/config/hata_offloading/Qwen2.5-14B-Instruct-1M-256K.yaml
+944740519ce36982fedce927aa0bdb7b2a3dfbcfccf9554321a406228828d1bc  /jhe/sglang-litecache/../myTransformer/speedup/data/RULER-Qwen2.5-14B-Instruct-1M-256K.jsonl
+
+0, NVIDIA A40, 00000000:06:00.0, 49140 MiB
+1, NVIDIA A40, 00000000:07:00.0, 49140 MiB
+
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV4	NODE	NODE	SYS	SYS	SYS	SYS	NODE	SYS	0-95	0		N/A
+GPU1	NV4	 X 	NODE	NODE	SYS	SYS	SYS	SYS	NODE	SYS	0-95	0		N/A
+GPU2	NODE	NODE	 X 	NV4	SYS	SYS	SYS	SYS	PIX	SYS	0-95	0		N/A
+GPU3	NODE	NODE	NV4	 X 	SYS	SYS	SYS	SYS	PIX	SYS	0-95	0		N/A
+GPU4	SYS	SYS	SYS	SYS	 X 	NV4	NODE	NODE	SYS	NODE	96-191	1		N/A
+GPU5	SYS	SYS	SYS	SYS	NV4	 X 	NODE	NODE	SYS	NODE	96-191	1		N/A
+GPU6	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NV4	SYS	PIX	96-191	1		N/A
+GPU7	SYS	SYS	SYS	SYS	NODE	NODE	NV4	 X 	SYS	PIX	96-191	1		N/A
+NIC0	NODE	NODE	PIX	PIX	SYS	SYS	SYS	SYS	 X 	SYS				
+NIC1	SYS	SYS	SYS	SYS	NODE	NODE	PIX	PIX	SYS	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+
+
+BSZ=1
+CUDA_DEVICE=0,1
+DECODE_STEPS=50
+DITTO_CUDA_GRAPH=1
+DITTO_RESIDENT_HEADS_FILE=/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json
+DITTO_TP_ENABLE_CUDA_GRAPH=1
+EPOCH=3
+MAX_TOTAL_TOKENS=262144
+MEM_FRACTION_STATIC=0.92
+PP_SIZE=1
+SGLANG_CUDA_GRAPH=0
+TOPK=0.10
+TP_SIZE=2
+WARMUP=1

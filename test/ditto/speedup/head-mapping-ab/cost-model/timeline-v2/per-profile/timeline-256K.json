@@ -1,0 +1,2731 @@
+{
+  "orders": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      5,
+      6,
+      2,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      7,
+      2,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      4,
+      2,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      7,
+      1,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      4,
+      7,
+      0,
+      2,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      4,
+      5,
+      2,
+      3,
+      6,
+      7
+    ],
+    [
+      2,
+      4,
+      5,
+      7,
+      0,
+      1,
+      3,
+      6
+    ],
+    [
+      0,
+      5,
+      6,
+      7,
+      1,
+      2,
+      3,
+      4
+    ],
+    [
+      3,
+      4,
+      6,
+      7,
+      0,
+      1,
+      2,
+      5
+    ],
+    [
+      1,
+      2,
+      4,
+      5,
+      0,
+      3,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      6,
+      1,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      6,
+      2,
+      4,
+      5,
+      7
+    ],
+    [
+      2,
+      3,
+      4,
+      5,
+      0,
+      1,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      4,
+      6,
+      7,
+      1,
+      2,
+      3,
+      5
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      7,
+      2,
+      4,
+      5,
+      6
+    ],
+    [
+      2,
+      3,
+      4,
+      7,
+      0,
+      1,
+      5,
+      6
+    ],
+    [
+      1,
+      2,
+      4,
+      6,
+      0,
+      3,
+      5,
+      7
+    ],
+    [
+      1,
+      2,
+      3,
+      6,
+      0,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      5,
+      1,
+      2,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      4,
+      2,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      7
+    ],
+    [
+      0,
+      1,
+      5,
+      7,
+      2,
+      3,
+      4,
+      6
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      1,
+      2,
+      3,
+      4,
+      0,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      1,
+      2,
+      6,
+      7,
+      0,
+      3,
+      4,
+      5
+    ],
+    [
+      1,
+      2,
+      5,
+      6,
+      0,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      5,
+      6,
+      0,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      2,
+      4,
+      6,
+      1,
+      3,
+      5,
+      7
+    ],
+    [
+      1,
+      4,
+      5,
+      7,
+      0,
+      2,
+      3,
+      6
+    ],
+    [
+      0,
+      1,
+      3,
+      6,
+      2,
+      4,
+      5,
+      7
+    ]
+  ],
+  "metadata": {
+    "objective": "normalized full-layer TP2 timeline regret",
+    "scope": "transfer timeline proxy; end-to-end prediction requires calibrated per-profile timing",
+    "transfer_json": [
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-256K-20260907/transfer/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-256K-20260907/transfer/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10-transfer.tp01.json"
+    ],
+    "resident_heads_file": "test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json",
+    "reference_mapping": null,
+    "timing_json": null,
+    "profiles": [
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-256K-20260907/transfer/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10-transfer.json"
+    ],
+    "profile_count": 1,
+    "profile_steps": 41,
+    "skip_steps": 10,
+    "skip_layers": 1,
+    "num_layers": 48,
+    "num_heads": 8,
+    "per_token_head_bytes": 512,
+    "search": {
+      "algorithm": "layerwise beam search plus full-timeline coordinate refinement",
+      "beam_width": 128,
+      "local_passes": 1
+    },
+    "cost_config": {
+      "h2d_gbps": [
+        22.0,
+        22.0
+      ],
+      "d2h_gbps": [
+        22.0,
+        22.0
+      ],
+      "h2d_launch_us": 2.0,
+      "d2h_launch_us": 1.0,
+      "active_head_us": 0.5,
+      "tail_quantile": 0.95,
+      "tail_weight": 0.1,
+      "worst_profile_weight": 0.25
+    },
+    "resolved_timing": {
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-256K-20260907/transfer/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "timeline_metrics": {
+      "objective": -0.08755260181297278,
+      "worst_profile_regret": -0.08755260181297278,
+      "reference_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reference_mean_timeline_us": 21015.748745011082,
+      "optimized_mean_timeline_us": 19116.093286031035,
+      "local_improvement_passes": 1,
+      "local_improvement_moves": 7,
+      "profiles": {
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-256K-20260907/transfer/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10-transfer.json": {
+          "label": "256K",
+          "samples": 41,
+          "reference_mean_timeline_us": 21015.748745011082,
+          "optimized_mean_timeline_us": 19116.093286031035,
+          "mean_regret": -0.09477401406977325,
+          "mean_critical_exposed_wait_us": 19064.718013303773,
+          "mean_rank_exposed_wait_us": [
+            13105.118634146344,
+            13425.013853658536
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "layer_idx": 0,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        0.0
+      ],
+      "mean_d2h_us": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "layer_idx": 1,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 2,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        87.27075831485588
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 3,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        218.17689578713964,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 4,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          6
+        ],
+        [
+          2,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        101.81588470066518,
+        189.0378625277162
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 5,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        319.99278048780485,
+        58.180505543237246
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 6,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 7,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        43.63537915742794,
+        101.8158847006652
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 8,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        14.545126385809311,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 9,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        29.090252771618623,
+        203.63176940133036
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 10,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          7
+        ],
+        [
+          2,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        232.62446119733923,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 11,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        43.63537915742794,
+        203.58298891352547
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 12,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        189.08664301552108,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 13,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        58.180505543237246,
+        407.2147583148558
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 14,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          4
+        ],
+        [
+          2,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        174.54151662971174,
+        87.221977827051
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 15,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          7
+        ],
+        [
+          1,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        72.72563192904656,
+        116.36101108647449
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 16,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        72.72563192904656,
+        116.36101108647449
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 17,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          7
+        ],
+        [
+          0,
+          2,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        130.85735698447894,
+        232.5756807095343
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 18,
+      "rank_heads": [
+        [
+          0,
+          1,
+          4,
+          5
+        ],
+        [
+          2,
+          3,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        276.16227937915744,
+        348.7415698447893
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 19,
+      "rank_heads": [
+        [
+          2,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          3,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        537.8769933481153,
+        101.7671042128603
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 20,
+      "rank_heads": [
+        [
+          0,
+          5,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        406.72695343680704,
+        726.5733924611973
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 21,
+      "rank_heads": [
+        [
+          3,
+          4,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        174.49273614190687,
+        232.57568070953437
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 22,
+      "rank_heads": [
+        [
+          1,
+          2,
+          4,
+          5
+        ],
+        [
+          0,
+          3,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        203.58298891352547,
+        305.252532150776
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 23,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          6
+        ],
+        [
+          1,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        218.03055432372506,
+        232.57568070953437
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 24,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          6
+        ],
+        [
+          2,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        436.109889135255,
+        465.1513614190688
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 25,
+      "rank_heads": [
+        [
+          2,
+          3,
+          4,
+          5
+        ],
+        [
+          0,
+          1,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        987.2637161862526,
+        1016.2564079822616
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 26,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        407.11719733924605,
+        363.43303769401325
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 27,
+      "rank_heads": [
+        [
+          0,
+          4,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          3,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        261.7147139689579,
+        319.89521951219507
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 28,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        247.12080709534365,
+        363.33547671840347
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 29,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          7
+        ],
+        [
+          2,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        653.8477605321507,
+        711.6868026607539
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 30,
+      "rank_heads": [
+        [
+          2,
+          3,
+          4,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        522.9904035476718,
+        581.170909090909
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 31,
+      "rank_heads": [
+        [
+          1,
+          2,
+          4,
+          6
+        ],
+        [
+          0,
+          3,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        377.73426164079825,
+        305.35009312638584
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 32,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          6
+        ],
+        [
+          0,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        508.7379600886918,
+        305.25253215077606
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 33,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        218.1768957871397,
+        130.9061374722838
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 34,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          5
+        ],
+        [
+          1,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        915.025889135255,
+        798.811219512195
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 35,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          4
+        ],
+        [
+          2,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        334.4891263858093,
+        450.55745454545456
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 36,
+      "rank_heads": [
+        [
+          0,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        784.5099955654102,
+        813.4539068736141
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 37,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          7
+        ],
+        [
+          2,
+          3,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        508.59161862527714,
+        654.0428824833702
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 38,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        624.7575077605321,
+        334.4891263858093
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 39,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          0,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        334.5379068736142,
+        363.6281596452328
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 40,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        377.88060310421287,
+        348.9854722838137
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 41,
+      "rank_heads": [
+        [
+          1,
+          2,
+          6,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        479.59892682926824,
+        450.4598935698447
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 42,
+      "rank_heads": [
+        [
+          1,
+          2,
+          5,
+          6
+        ],
+        [
+          0,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        232.72202217294898,
+        464.76111751662967
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 43,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        581.2196895787139,
+        798.8112195121951
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 44,
+      "rank_heads": [
+        [
+          1,
+          2,
+          5,
+          6
+        ],
+        [
+          0,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        958.3685853658535,
+        523.0879645232816
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 45,
+      "rank_heads": [
+        [
+          0,
+          2,
+          4,
+          6
+        ],
+        [
+          1,
+          3,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        1059.745445676275,
+        1103.283263858093
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 46,
+      "rank_heads": [
+        [
+          1,
+          4,
+          5,
+          7
+        ],
+        [
+          0,
+          2,
+          3,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        1030.7039733924612,
+        1408.1455521064302
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 47,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          6
+        ],
+        [
+          2,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        436.1586696230599,
+        159.94760975609756
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    }
+  ]
+}

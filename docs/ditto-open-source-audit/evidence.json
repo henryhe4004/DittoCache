@@ -1,0 +1,3578 @@
+{
+  "scope": "Nonignored tracked and untracked working tree; no imports executed. Excludes archives, results, head-mapping artifacts and third-party trees from reference sources.",
+  "limitations": "Imports are static and conditional imports count. Filename mentions are not proven calls. Dynamic paths, plugins, external users and generated inputs need manual review.",
+  "source_files_scanned": 3925,
+  "target_files": 213,
+  "parse_errors": [],
+  "vendor_candidate_files": 872,
+  "vendor_candidate_bytes": 4404678,
+  "imports": {
+    "python/sglang/ditto/__init__.py": [
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 170,
+        "module": "sglang.ditto"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 213,
+        "module": "sglang.ditto"
+      }
+    ],
+    "python/sglang/ditto/config_utils.py": [
+      {
+        "source": "python/sglang/ditto/kvcache_hash.py",
+        "line": 11,
+        "module": "sglang.ditto.config_utils"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_hash.py",
+        "line": 19,
+        "module": "sglang.ditto.config_utils"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_infinigen.py",
+        "line": 14,
+        "module": "sglang.ditto.config_utils"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_loki.py",
+        "line": 20,
+        "module": "sglang.ditto.config_utils"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_quest.py",
+        "line": 13,
+        "module": "sglang.ditto.config_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 21,
+        "module": "sglang.ditto.config_utils"
+      }
+    ],
+    "python/sglang/ditto/kvcache_full_attn.py": [
+      {
+        "source": "python/sglang/ditto/kvcache_offloading.py",
+        "line": 14,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 912,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1265,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/full_attn_ops.py",
+        "line": 13,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_full.py",
+        "line": 191,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_full.py",
+        "line": 202,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "test/ditto/auxiliary/attn_pattern/modeling_qwen2_fa_profile.py",
+        "line": 28,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 7,
+        "module": "sglang.ditto.kvcache_full_attn"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 170,
+        "module": "sglang.ditto.kvcache_full_attn"
+      }
+    ],
+    "python/sglang/ditto/kvcache_hash.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 913,
+        "module": "sglang.ditto.kvcache_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1266,
+        "module": "sglang.ditto.kvcache_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading.py",
+        "line": 204,
+        "module": "sglang.ditto.kvcache_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading.py",
+        "line": 214,
+        "module": "sglang.ditto.kvcache_hash"
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading.py": [
+      {
+        "source": "python/sglang/ditto/kvcache_hash.py",
+        "line": 10,
+        "module": "sglang.ditto.kvcache_offloading"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_duohead_base.py",
+        "line": 7,
+        "module": "sglang.ditto.kvcache_offloading"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/offloading_ops.py",
+        "line": 18,
+        "module": "sglang.ditto.kvcache_offloading"
+      },
+      {
+        "source": "test/ditto/test_cuda_graph_decode.py",
+        "line": 102,
+        "module": "sglang.ditto.kvcache_offloading"
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading_duohead_base.py": [
+      {
+        "source": "python/sglang/ditto/__init__.py",
+        "line": 8,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_hash.py",
+        "line": 18,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_infinigen.py",
+        "line": 13,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_loki.py",
+        "line": 19,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_quest.py",
+        "line": 12,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 32,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 35,
+        "module": "sglang.ditto.kvcache_offloading_duohead_base"
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading_hash.py": [
+      {
+        "source": "python/sglang/ditto/__init__.py",
+        "line": 9,
+        "module": "sglang.ditto.kvcache_offloading_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 914,
+        "module": "sglang.ditto.kvcache_offloading_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1267,
+        "module": "sglang.ditto.kvcache_offloading_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 531,
+        "module": "sglang.ditto.kvcache_offloading_hash"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 487,
+        "module": "sglang.ditto.kvcache_offloading_hash"
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading_infinigen.py": [
+      {
+        "source": "python/sglang/ditto/__init__.py",
+        "line": 10,
+        "module": "sglang.ditto.kvcache_offloading_infinigen"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 917,
+        "module": "sglang.ditto.kvcache_offloading_infinigen"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1270,
+        "module": "sglang.ditto.kvcache_offloading_infinigen"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 553,
+        "module": "sglang.ditto.kvcache_offloading_infinigen"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 509,
+        "module": "sglang.ditto.kvcache_offloading_infinigen"
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading_loki.py": [
+      {
+        "source": "python/sglang/ditto/__init__.py",
+        "line": 11,
+        "module": "sglang.ditto.kvcache_offloading_loki"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 920,
+        "module": "sglang.ditto.kvcache_offloading_loki"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1273,
+        "module": "sglang.ditto.kvcache_offloading_loki"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 542,
+        "module": "sglang.ditto.kvcache_offloading_loki"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 498,
+        "module": "sglang.ditto.kvcache_offloading_loki"
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading_quest.py": [
+      {
+        "source": "python/sglang/ditto/__init__.py",
+        "line": 12,
+        "module": "sglang.ditto.kvcache_offloading_quest"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 921,
+        "module": "sglang.ditto.kvcache_offloading_quest"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1274,
+        "module": "sglang.ditto.kvcache_offloading_quest"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 566,
+        "module": "sglang.ditto.kvcache_offloading_quest"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 520,
+        "module": "sglang.ditto.kvcache_offloading_quest"
+      }
+    ],
+    "python/sglang/ditto/tp_head_mapping.py": [
+      {
+        "source": "python/sglang/ditto/kvcache_full_attn.py",
+        "line": 12,
+        "module": "sglang.ditto.tp_head_mapping"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading.py",
+        "line": 15,
+        "module": "sglang.ditto.tp_head_mapping"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 22,
+        "module": "sglang.ditto.tp_head_mapping"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 171,
+        "module": "sglang.ditto.tp_head_mapping"
+      }
+    ],
+    "python/sglang/ditto/transfer_stats.py": [
+      {
+        "source": "python/sglang/ditto/kvcache_offloading.py",
+        "line": 16,
+        "module": "sglang.ditto.transfer_stats"
+      },
+      {
+        "source": "python/sglang/srt/observability/req_time_stats.py",
+        "line": 40,
+        "module": "sglang.ditto.transfer_stats"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 213,
+        "module": "sglang.ditto.transfer_stats"
+      }
+    ],
+    "python/sglang/srt/models/ditto/__init__.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 922,
+        "module": "sglang.srt.models.ditto"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1275,
+        "module": "sglang.srt.models.ditto"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 156,
+        "module": "sglang.srt.models.ditto"
+      }
+    ],
+    "python/sglang/srt/models/ditto/awq_linear.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/common_utils.py",
+        "line": 8,
+        "module": "sglang.srt.models.ditto.awq_linear"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 38,
+        "module": "sglang.srt.models.ditto.awq_linear"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/offloading_ops.py",
+        "line": 19,
+        "module": "sglang.srt.models.ditto.awq_linear"
+      }
+    ],
+    "python/sglang/srt/models/ditto/common_utils.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/full_attn_ops.py",
+        "line": 14,
+        "module": "sglang.srt.models.ditto.common_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/llama_utils.py",
+        "line": 10,
+        "module": "sglang.srt.models.ditto.common_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/qwen2_utils.py",
+        "line": 10,
+        "module": "sglang.srt.models.ditto.common_utils"
+      }
+    ],
+    "python/sglang/srt/models/ditto/ditto.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/__init__.py",
+        "line": 1,
+        "module": "sglang.srt.models.ditto.ditto"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 10,
+        "module": "sglang.srt.models.ditto.ditto"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 156,
+        "module": "sglang.srt.models.ditto.ditto"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 200,
+        "module": "sglang.srt.models.ditto.ditto"
+      }
+    ],
+    "python/sglang/srt/models/ditto/full_attn_ops.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_full.py",
+        "line": 20,
+        "module": "sglang.srt.models.ditto.full_attn_ops"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_full.py",
+        "line": 31,
+        "module": "sglang.srt.models.ditto.full_attn_ops"
+      },
+      {
+        "source": "test/ditto/test_cuda_graph_decode.py",
+        "line": 13,
+        "module": "sglang.srt.models.ditto.full_attn_ops"
+      },
+      {
+        "source": "test/ditto/test_pp_partition.py",
+        "line": 268,
+        "module": "sglang.srt.models.ditto.full_attn_ops"
+      }
+    ],
+    "python/sglang/srt/models/ditto/llama_utils.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_full.py",
+        "line": 29,
+        "module": "sglang.srt.models.ditto.llama_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading.py",
+        "line": 20,
+        "module": "sglang.srt.models.ditto.llama_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 33,
+        "module": "sglang.srt.models.ditto.llama_utils"
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_llama_full.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 922,
+        "module": "sglang.srt.models.ditto.modeling_llama_full"
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_llama_offloading.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 922,
+        "module": "sglang.srt.models.ditto.modeling_llama_offloading"
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 922,
+        "module": "sglang.srt.models.ditto.modeling_llama_offloading_duohead"
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_qwen2_full.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1275,
+        "module": "sglang.srt.models.ditto.modeling_qwen2_full"
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_qwen2_offloading.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1275,
+        "module": "sglang.srt.models.ditto.modeling_qwen2_offloading"
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 1275,
+        "module": "sglang.srt.models.ditto.modeling_qwen2_offloading_duohead"
+      }
+    ],
+    "python/sglang/srt/models/ditto/offloading_ops.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/full_attn_ops.py",
+        "line": 15,
+        "module": "sglang.srt.models.ditto.offloading_ops"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading.py",
+        "line": 26,
+        "module": "sglang.srt.models.ditto.offloading_ops"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading.py",
+        "line": 30,
+        "module": "sglang.srt.models.ditto.offloading_ops"
+      },
+      {
+        "source": "test/ditto/test_cuda_graph_decode.py",
+        "line": 14,
+        "module": "sglang.srt.models.ditto.offloading_ops"
+      }
+    ],
+    "python/sglang/srt/models/ditto/qwen2_utils.py": [
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_full.py",
+        "line": 40,
+        "module": "sglang.srt.models.ditto.qwen2_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading.py",
+        "line": 39,
+        "module": "sglang.srt.models.ditto.qwen2_utils"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 36,
+        "module": "sglang.srt.models.ditto.qwen2_utils"
+      }
+    ],
+    "sgl-kernel/python/sgl_kernel/kvlib.py": [
+      {
+        "source": "python/sglang/ditto/kvcache_full_attn.py",
+        "line": 10,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_hash.py",
+        "line": 20,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading.py",
+        "line": 22,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_hash.py",
+        "line": 10,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_infinigen.py",
+        "line": 10,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_loki.py",
+        "line": 10,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/ditto/kvcache_offloading_quest.py",
+        "line": 9,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py",
+        "line": 14,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/modeling_qwen2_offloading_duohead.py",
+        "line": 34,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/python/sgl_kernel/__init__.py",
+        "line": 121,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_append_offload_wait.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_block_id_to_token_id.py",
+        "line": 2,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_block_id_to_token_id_head_mask.py",
+        "line": 2,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cpu_gather_head_sparse_v3.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cpu_gather_v3.py",
+        "line": 3,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_fa_gather_gqa_kheadwise.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_fa_gather_gqa_qheadwise.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_fa_gather_mha.py",
+        "line": 3,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_graph_kvcache_append.py",
+        "line": 3,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_topk.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_topk_masked.py",
+        "line": 3,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_cuda_topk_static.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_gather_engine.py",
+        "line": 3,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_gpu_gather.py",
+        "line": 2,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_hamming.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_hamming_masked.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_hamming_static.py",
+        "line": 5,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_index_attn.py",
+        "line": 5,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_kvcache_append_head_sparse_kernel.py",
+        "line": 2,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_kvcache_append_kernel.py",
+        "line": 4,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_mixed_attn_complex.py",
+        "line": 5,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_mixed_attn_simple.py",
+        "line": 5,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_mixed_attn_simple_all_buffer.py",
+        "line": 5,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_mixed_attn_simple_all_cached.py",
+        "line": 5,
+        "module": "sgl_kernel.kvlib"
+      },
+      {
+        "source": "sgl-kernel/tests/kvlib/test_real_indices.py",
+        "line": 2,
+        "module": "sgl_kernel.kvlib"
+      }
+    ],
+    "test/ditto/auxiliary/attn_pattern/modeling_qwen2_fa_profile.py": [
+      {
+        "source": "test/ditto/auxiliary/attn_pattern/profile_heads_cosine.py",
+        "line": 210,
+        "module": "modeling_qwen2_fa_profile"
+      }
+    ],
+    "test/ditto/dataloader.py": [
+      {
+        "source": "test/ditto/run_pred.py",
+        "line": 24,
+        "module": "dataloader"
+      }
+    ],
+    "test/ditto/math_grader.py": [
+      {
+        "source": "test/ditto/eval_longbench_infinitebench.py",
+        "line": 16,
+        "module": "math_grader"
+      }
+    ],
+    "test/ditto/speedup/build_tp_head_mapping_cost_model.py": [
+      {
+        "source": "test/ditto/speedup/build_tp_head_mapping_robust_refine.py",
+        "line": 8,
+        "module": "build_tp_head_mapping_cost_model"
+      },
+      {
+        "source": "test/ditto/speedup/build_tp_head_mapping_timeline.py",
+        "line": 15,
+        "module": "build_tp_head_mapping_cost_model"
+      }
+    ],
+    "test/ditto/speedup/build_tp_head_mapping_robust_refine.py": [
+      {
+        "source": "test/ditto/speedup/test_build_tp_head_mapping_robust_refine.py",
+        "line": 12,
+        "module": "build_tp_head_mapping_robust_refine"
+      }
+    ],
+    "test/ditto/utils.py": [
+      {
+        "source": "test/ditto/dataloader.py",
+        "line": 11,
+        "module": "utils"
+      }
+    ]
+  },
+  "filename_mentions": {
+    "python/sglang/ditto/kvcache_full_attn.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 156,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/ditto/kvcache_hash.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 158,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/ditto/kvcache_offloading.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 157,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/ditto/tp_head_mapping.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 138,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/ditto/transfer_stats.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 174,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/ditto.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 113,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/llama_utils.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 130,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/minimal_custom_config_template.json": [
+      {
+        "source": "python/sglang/srt/models/ditto/minimal_selftest.py",
+        "line": 164,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/minimal_selftest.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 57,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_tp_pp_graph.py",
+        "line": 125,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_tp_pp_smoke.py",
+        "line": 54,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_ditto.sh",
+        "line": 14,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/modeling_llama_offloading_duohead.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 131,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/ditto/ditto.py",
+        "line": 894,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/offloading_ops.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 223,
+        "ambiguous_basename": false
+      }
+    ],
+    "python/sglang/srt/models/ditto/qwen2_utils.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 129,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cp_async.cuh": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/ham_dist.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/prefetch.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cpu_gather_engine.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cpu_gather_engine_v3.cc",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/kvlib_bindings.cc",
+        "line": 11,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/py_cpu_gather_engine_v3.cc",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib_bindings.cc",
+        "line": 11,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cpu_gather_engine_v3.cc": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 104,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/build_ditto_gather.py",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 412,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 369,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 381,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 388,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_api.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/kvlib_bindings.cc",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib_bindings.cc",
+        "line": 14,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_common_kernel.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h",
+        "line": 20,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_hdim128_fp16_sm80.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 379,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h",
+        "line": 14,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_hdim128_fp16_sm80.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_split_hdim128_fp16_sm80.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_hdim128_fp16_sm80.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_split_hdim128_fp16_sm80.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_hdim128_fp16_sm80.cu",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_split_hdim128_fp16_sm80.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_split_hdim128_fp16_sm80.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 380,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_hdim128_fp16_sm80.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 381,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h",
+        "line": 15,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_split_hdim128_fp16_sm80.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 382,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_hdim128_fp16_sm80.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 383,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h",
+        "line": 16,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_split_hdim128_fp16_sm80.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 384,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/block_info.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_common_kernel.h",
+        "line": 15,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h",
+        "line": 15,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h",
+        "line": 15,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h",
+        "line": 15,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/flash.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_api.h",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h",
+        "line": 11,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/include/utils.h",
+        "line": 24,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/kernel_traits.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_common_kernel.h",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h",
+        "line": 13,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/mask.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h",
+        "line": 16,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/softmax.h": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h",
+        "line": 17,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/static_switch.h": [
+      {
+        "source": "python/sglang/jit_kernel/csrc/fast-hadamard-transform/hadamard_jit.cuh",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_api.h",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_launch_template.h",
+        "line": 9,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/cuda-attn/include/utils.h": [
+      {
+        "source": ".claude/skills/add-jit-kernel/SKILL.md",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": ".claude/skills/add-jit-kernel/SKILL.md",
+        "line": 196,
+        "ambiguous_basename": false
+      },
+      {
+        "source": ".claude/skills/add-sgl-kernel/SKILL.md",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": ".claude/skills/add-sgl-kernel/SKILL.md",
+        "line": 59,
+        "ambiguous_basename": false
+      },
+      {
+        "source": ".claude/skills/add-sgl-kernel/SKILL.md",
+        "line": 345,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/json_schema/bench_sglang.py",
+        "line": 11,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/kernels/fused_moe_triton/common_utils.py",
+        "line": 11,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/multi_turn_chat/long_prompt_multi_turn.py",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "docs/developer_guide/development_jit_kernel_guide.md",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "docs/developer_guide/development_jit_kernel_guide.md",
+        "line": 65,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "docs/developer_guide/development_jit_kernel_guide.md",
+        "line": 160,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "examples/runtime/token_in_token_out/token_in_token_out_llm_engine.py",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "examples/runtime/token_in_token_out/token_in_token_out_llm_server.py",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/bench_one_batch.py",
+        "line": 89,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/benchmark/utils.py",
+        "line": 54,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/benchmark/utils.py",
+        "line": 77,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/add_constant.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/diffusion/timestep_embedding.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/concat_mla.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/fused_add_rmsnorm.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/fused_metadata_copy.cuh",
+        "line": 31,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/kvcache.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/pos_enc.cuh",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/qknorm.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/qknorm_across_heads.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/rmsnorm.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/elementwise/rope.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/fast-hadamard-transform/hadamard_jit.cuh",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/gemm/per_tensor_quant_fp8.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/gemm/per_token_group_quant_8bit.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/hicache.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/hisparse.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/csrc/nsa/fused_store_index_cache.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/include/sgl_kernel/deepseek_v4/kvcacheio.cuh",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/include/sgl_kernel/tensor.h",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/jit_kernel/include/sgl_kernel/utils.cuh",
+        "line": 3,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/lang/backend/runtime_endpoint.py",
+        "line": 453,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/registry.py",
+        "line": 120,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/adapter_loader.py",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/bridge_loader.py",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/component_loader.py",
+        "line": 26,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/image_encoder_loader.py",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/scheduler_loader.py",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/text_encoder_loader.py",
+        "line": 36,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/transformer_loader.py",
+        "line": 23,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/vae_loader.py",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/vl_encoder_loader.py",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/component_loaders/vocoder_loader.py",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/loader/weights_updater.py",
+        "line": 57,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/pipelines/diffusers_pipeline.py",
+        "line": 41,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/pipelines_core/__init__.py",
+        "line": 19,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/pipelines_core/composed_pipeline_base.py",
+        "line": 38,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/pipelines_core/lora_pipeline.py",
+        "line": 28,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/runtime/postprocess/rife_interpolator.py",
+        "line": 360,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/test/server/test_update_weights_from_disk.py",
+        "line": 157,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/configs/model_config.py",
+        "line": 30,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/disaggregation/encode_receiver.py",
+        "line": 29,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/layers/sampler.py",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/lora/lora.py",
+        "line": 33,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/lora/lora_manager.py",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/lora/mem_pool.py",
+        "line": 21,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/lora/utils.py",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/managers/detokenizer_manager.py",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/managers/scheduler.py",
+        "line": 211,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/managers/tokenizer_manager.py",
+        "line": 111,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/managers/tp_worker.py",
+        "line": 46,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/ernie45_vl.py",
+        "line": 44,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/gemma3_mm.py",
+        "line": 48,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/gemma3n_mm.py",
+        "line": 39,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/glm4v.py",
+        "line": 61,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/glm4v_moe.py",
+        "line": 27,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/glm_ocr.py",
+        "line": 54,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/qwen2_vl.py",
+        "line": 53,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/qwen3_5.py",
+        "line": 76,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/qwen3_vl.py",
+        "line": 75,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/qwen3_vl_moe.py",
+        "line": 33,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/roberta.py",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/server_args.py",
+        "line": 69,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/utils/offloader.py",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/test/kl_test_utils.py",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/test/runners.py",
+        "line": 36,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/test/test_programs.py",
+        "line": 557,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/test/test_utils.py",
+        "line": 1277,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/playground/load_tokenizer.py",
+        "line": 4,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/playground/reference_hf.py",
+        "line": 41,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/cmake/flashmla.cmake",
+        "line": 38,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/cmake/flashmla.cmake",
+        "line": 47,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/allreduce/custom_all_reduce.cuh",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/allreduce/mscclpp_allreduce.cuh",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/attention/cascade.cu",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/attention/cutlass_mla_kernel.cu",
+        "line": 29,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/attention/merge_attn_states.cu",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/cpu/vec_pack.h",
+        "line": 2,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/cutlass_extensions/gemm/collective/sm90_mma_array_tma_gmma_rs_warpspecialized_mixed_input_.hpp",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/elementwise/activation.cu",
+        "line": 25,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/elementwise/cast.cu",
+        "line": 1,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/elementwise/concat_mla.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/elementwise/fused_add_rms_norm_kernel.cu",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/elementwise/pos_enc.cu",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/elementwise/rope.cu",
+        "line": 23,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/bmm_fp8.cu",
+        "line": 21,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/dsv3_fused_a_gemm.cu",
+        "line": 26,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/dsv3_router_gemm_bf16_out.cu",
+        "line": 26,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/dsv3_router_gemm_entry.cu",
+        "line": 26,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/dsv3_router_gemm_float_out.cu",
+        "line": 26,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/fp8_blockwise_gemm_kernel.cu",
+        "line": 35,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/fp8_gemm_kernel.cu",
+        "line": 52,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/int8_gemm_kernel.cu",
+        "line": 34,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/nvfp4_expert_quant.cu",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/nvfp4_quant_kernels.cu",
+        "line": 23,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/nvfp4_scaled_mm_kernels.cu",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/per_tensor_quant_fp8.cu",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/per_token_group_quant_8bit.cu",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/per_token_group_quant_8bit_v2.cu",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/per_token_quant_fp8.cu",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/qserve_w4a8_per_chn_gemm.cu",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/gemm/qserve_w4a8_per_group_gemm.cu",
+        "line": 20,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvcacheio/transfer.cu",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvcacheio/transfer.cu",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_common_kernel.h",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_fwd_kernel.h",
+        "line": 18,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_gather_fwd_kernel.h",
+        "line": 18,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/flash_mixed_fwd_kernel.h",
+        "line": 18,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/include/mask.h",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/cuda-attn/include/softmax.h",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/topk/select_radix_masked.cuh",
+        "line": 23,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/fp8_blockwise_moe_kernel.cu",
+        "line": 28,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/moe_align_kernel.cu",
+        "line": 22,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/moe_sum.cu",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/moe_sum_reduce.cu",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/moe_topk_sigmoid_kernels.cu",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/moe_topk_softmax_kernels.cu",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/nvfp4_blockwise_moe.cu",
+        "line": 30,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/moe/prepare_moe_input.cu",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/quantization/gguf/gguf_kernel.cu",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/spatial/greenctx_stream.cu",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/speculative/eagle_utils.cu",
+        "line": 21,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/speculative/ngram_utils.cu",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/speculative/packbit.cu",
+        "line": 21,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/speculative/speculative_sampling.cu",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/include/hip/hip_act_and_mul.cuh",
+        "line": 18,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/python/sgl_kernel/_fa4_interface.py",
+        "line": 355,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/python/sgl_kernel/_fa4_interface.py",
+        "line": 356,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_fim_completion.py",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_forward_split_prefill.py",
+        "line": 24,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_sagemaker_server.py",
+        "line": 11,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_tokenizer_batch_encode.py",
+        "line": 36,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_tokenizer_manager.py",
+        "line": 34,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_tokenizer_manager.py",
+        "line": 130,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_tokenizer_manager.py",
+        "line": 188,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/manual/test_tokenizer_manager.py",
+        "line": 310,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/ascend/basic_function/test_ascend_fim_completion.py",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/core/test_srt_engine.py",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/basic/test_openai_server.py",
+        "line": 19,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/features/test_openai_server_ebnf.py",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/features/test_openai_server_hidden_states.py",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/function_call/test_openai_function_calling.py",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/function_call/test_tool_choice.py",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/validation/test_large_max_new_tokens.py",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/openai_server/validation/test_openai_server_ignore_eos.py",
+        "line": 4,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/sessions/test_session_control.py",
+        "line": 19,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/sessions/test_session_latency.py",
+        "line": 28,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/registered/spec/eagle/test_eagle_infer_a.py",
+        "line": 10,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/ham_dist.cu": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 43,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 257,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 376,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/kvcache_append.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 377,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/kvlib_bindings.cc": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 375,
+        "ambiguous_basename": true
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 400,
+        "ambiguous_basename": true
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 401,
+        "ambiguous_basename": true
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/operator.h": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 104,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 109,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/ham_dist.cu",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/kvcache_append.cu",
+        "line": 1,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/kvlib_bindings.cc",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/kvlib_bindings.cc",
+        "line": 15,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/prefetch.cu",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/py_cpu_gather_engine_v3.cc",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib/topk.cu",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/csrc/kvlib_bindings.cc",
+        "line": 13,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/prefetch.cu": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 105,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/build_ditto_gather.py",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 413,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/py_cpu_gather_engine_v3.cc": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 104,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/build_ditto_gather.py",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 534,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 412,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/topk.cu": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 298,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 378,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 372,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 379,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "sgl-kernel/setup_rocm.py",
+        "line": 49,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib/topk/select_radix_masked.cuh": [
+      {
+        "source": "sgl-kernel/csrc/kvlib/topk.cu",
+        "line": 9,
+        "ambiguous_basename": false
+      }
+    ],
+    "sgl-kernel/csrc/kvlib_bindings.cc": [
+      {
+        "source": "sgl-kernel/CMakeLists.txt",
+        "line": 375,
+        "ambiguous_basename": true
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 400,
+        "ambiguous_basename": true
+      },
+      {
+        "source": "sgl-kernel/log",
+        "line": 401,
+        "ambiguous_basename": true
+      }
+    ],
+    "test/ditto/analyze_overlap_stats.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 71,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/analyze_recall.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 71,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/auxiliary/attn_pattern/profile_heads_cosine.py": [
+      {
+        "source": "test/ditto/auxiliary/attn_pattern/run_profile_awq.sh",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_q_similarity_awq_gpu1.sh",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_q_similarity_fp16_gpu2.sh",
+        "line": 6,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/auxiliary/hash_weights/build_dataset.py": [
+      {
+        "source": "benchmark/json_decode_regex/README.md",
+        "line": 6,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/json_jump_forward/README.md",
+        "line": 18,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/long_json_decode/README.md",
+        "line": 32,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/multi_document_qa/README.md",
+        "line": 34,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/auxiliary/hash_weights/run_build_dataset_awq.sh",
+        "line": 39,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/auxiliary/hash_weights/learn_hash_weights.py": [
+      {
+        "source": "test/ditto/auxiliary/hash_weights/run_training_awq.sh",
+        "line": 33,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-32K.yaml": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 170,
+        "ambiguous_basename": true
+      }
+    ],
+    "test/ditto/config/hata_offloading/Qwen2.5-14B-Instruct-1M-32K.yaml": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 170,
+        "ambiguous_basename": true
+      }
+    ],
+    "test/ditto/dataloader.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 73,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/eval_livecodebench.py": [
+      {
+        "source": "test/ditto/test_accuracy_livecodebench_benchmark.sh",
+        "line": 103,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/eval_longbench_infinitebench.py": [
+      {
+        "source": "test/ditto/multi_news_e_nway",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_gov_report_nway",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_infinitebench_nway.sh",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_kv_retrieval_fill8.sh",
+        "line": 11,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_longbench_nway.sh",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_longbench_v2_nway.sh",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_math500_nway.sh",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_multinews_nway.sh",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy.sh",
+        "line": 176,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_benchmark.sh",
+        "line": 106,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/math_grader.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 73,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/run_longbench_v2_nway.sh": [
+      {
+        "source": "test/ditto/run_longbench_v2_4nway_pp2.sh",
+        "line": 31,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/run_math500_nway.sh": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 72,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/run_pred.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 244,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 72,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/multi_news_e_nway",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_gov_report_nway",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/launch_client.py",
+        "line": 93,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy.sh",
+        "line": 175,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_benchmark.sh",
+        "line": 105,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_livecodebench_benchmark.sh",
+        "line": 102,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/run_tp_pp_batch_smoke.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 181,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 34,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 44,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 47,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/run_tp_pp_graph.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 121,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 126,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 130,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 9,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 16,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 22,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/run_tp_pp_smoke.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 40,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 183,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 33,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/build_qsac_tp_head_mapping.py": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 47,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 96,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 194,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 332,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 69,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/build_tp_head_mapping_cost_model.py": [
+      {
+        "source": "DIRECTORY_AUDIT.md",
+        "line": 46,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/test_build_tp_head_mapping_cost_model.py",
+        "line": 10,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/build_tp_head_mapping_robust_refine.py": [
+      {
+        "source": "test/ditto/speedup/run_robust_mapping_experiment.sh",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/test_build_tp_head_mapping_robust_refine.py",
+        "line": 52,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/build_tp_head_mapping_timeline.py": [
+      {
+        "source": "test/ditto/speedup/test_build_tp_head_mapping_timeline.py",
+        "line": 16,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/ditto_latency_server.sh": [
+      {
+        "source": "test/ditto/speedup/run_latency_experiment.sh",
+        "line": 100,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/ditto_server.sh": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 66,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/ditto_latency_server.sh",
+        "line": 12,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/export_speedup_csv.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 71,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 89,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 98,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_offloading_perf_from32k.sh",
+        "line": 118,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/flash_server.sh": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 66,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/full_latency_server.sh",
+        "line": 11,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/full_latency_server.sh": [
+      {
+        "source": "test/ditto/speedup/run_latency_experiment.sh",
+        "line": 99,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/launch_client.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 66,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/sweep_ruler_throughput.py",
+        "line": 20,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/n2n_offloading.py": [
+      {
+        "source": "DIRECTORY_AUDIT.md",
+        "line": 26,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 47,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 236,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 65,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_llama_fullattn_bsz.sh",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_llama_fullattn_seqlen.sh",
+        "line": 44,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_llama_offloading_bsz.sh",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_llama_offloading_seqlen.sh",
+        "line": 44,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_ablation_bsz.sh",
+        "line": 87,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_fullattn_bsz.sh",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_fullattn_seqlen.sh",
+        "line": 51,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_offloading_bsz.sh",
+        "line": 52,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_offloading_perf_from32k.sh",
+        "line": 59,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_n2n_qwen_offloading_seqlen.sh",
+        "line": 173,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_robust_mapping_experiment.sh",
+        "line": 13,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/parse_decode_step_times.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 71,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/plot_serving_gen_throughput_8k.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 71,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_latency_benchmark.py": [
+      {
+        "source": "test/ditto/speedup/run_latency_experiment.sh",
+        "line": 128,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_llama_fullattn_bsz.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 40,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_llama_fullattn_seqlen.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 41,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_llama_offloading_bsz.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 38,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_llama_offloading_seqlen.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 39,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_qwen_ablation_bsz.sh": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 68,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 31,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 45,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 72,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 81,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_qwen_fullattn_bsz.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 34,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_qwen_fullattn_seqlen.sh": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 438,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 35,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_qwen_offloading_bsz.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 32,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_qwen_offloading_perf_from32k.sh": [
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 101,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_n2n_qwen_offloading_seqlen.sh": [
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 225,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DITTO_TP_HANDOFF.md",
+        "line": 322,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 33,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 109,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/README.md",
+        "line": 115,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/run_robust_mapping_experiment.sh": [
+      {
+        "source": "DIRECTORY_AUDIT.md",
+        "line": 28,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 70,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/summarize_robust_mapping_experiment.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 70,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/speedup/run_robust_mapping_experiment.sh",
+        "line": 15,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/sweep_ruler_throughput.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 66,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/test_build_tp_head_mapping_cost_model.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 36,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/test_build_tp_head_mapping_robust_refine.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 38,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/speedup/test_build_tp_head_mapping_timeline.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 37,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/summarize_accuracy.py": [
+      {
+        "source": "test/ditto/README.md",
+        "line": 72,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/multi_news_e_nway",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_gov_report_nway",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_infinitebench_nway.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_longbench_nway.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_longbench_v2_nway.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_math500_nway.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_multinews_nway.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy.sh",
+        "line": 177,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_benchmark.sh",
+        "line": 107,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy.sh": [
+      {
+        "source": "test/ditto/run_longbench_nway.sh",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_longbench_v2_nway.sh",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_pred.py",
+        "line": 740,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_qwen25_14b_1m_offloading_32k.sh",
+        "line": 33,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_quantization_accuracy.sh",
+        "line": 37,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_aime24.sh": [
+      {
+        "source": "test/ditto/run_qwen_4gpu_aime24_gpqa_math500_aime25_top03_s1024.sh",
+        "line": 1,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_aime25.sh": [
+      {
+        "source": "test/ditto/run_qwen_4gpu_aime24_gpqa_math500_aime25_top03_s1024.sh",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_flash_attn_then_offloading_4gpu.sh",
+        "line": 24,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_benchmark.sh": [
+      {
+        "source": "test/ditto/test_accuracy_aime24.sh",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_aime25.sh",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_gpqa.sh",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_infinitebench.sh",
+        "line": 209,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_math500.sh",
+        "line": 198,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_mmlu_pro.sh",
+        "line": 13,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_multinews.sh",
+        "line": 196,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_flash_attn_then_offloading_4gpu.sh": [
+      {
+        "source": "test/ditto/test_accuracy_flash_attn_then_offloading_4gpu_llama_then_qwen.sh",
+        "line": 16,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_gpqa.sh": [
+      {
+        "source": "test/ditto/run_qwen_4gpu_aime24_gpqa_math500_aime25_top03_s1024.sh",
+        "line": 3,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_flash_attn_then_offloading_4gpu.sh",
+        "line": 25,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_infinitebench.sh": [
+      {
+        "source": "test/ditto/run_infinitebench_nway.sh",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_infinitebench_offloading_gpu4_7.sh",
+        "line": 30,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_kv_retrieval_fill8.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_livecodebench_benchmark.sh": [
+      {
+        "source": "test/ditto/test_accuracy_livecodebench.sh",
+        "line": 16,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_math500.sh": [
+      {
+        "source": "test/ditto/run_math500_nway.sh",
+        "line": 8,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/run_qwen_4gpu_aime24_gpqa_math500_aime25_top03_s1024.sh",
+        "line": 5,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/test_accuracy_flash_attn_then_offloading_4gpu.sh",
+        "line": 26,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_mmlu_pro.sh": [
+      {
+        "source": "test/ditto/test_accuracy_flash_attn_then_offloading_4gpu.sh",
+        "line": 27,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_accuracy_multinews.sh": [
+      {
+        "source": "test/ditto/run_multinews_nway.sh",
+        "line": 8,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_cuda_graph_decode.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 152,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 36,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 41,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_ditto.sh": [
+      {
+        "source": "test/ditto/test_overlap.sh",
+        "line": 10,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_overlap.sh": [
+      {
+        "source": "DIRECTORY_AUDIT.md",
+        "line": 13,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/test_pp_partition.py": [
+      {
+        "source": "DITTO_TP_PP.md",
+        "line": 35,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 35,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 41,
+        "ambiguous_basename": false
+      }
+    ],
+    "test/ditto/utils.py": [
+      {
+        "source": ".claude/skills/add-jit-kernel/SKILL.md",
+        "line": 530,
+        "ambiguous_basename": false
+      },
+      {
+        "source": ".claude/skills/add-jit-kernel/SKILL.md",
+        "line": 544,
+        "ambiguous_basename": false
+      },
+      {
+        "source": ".claude/skills/write-sglang-test/SKILL.md",
+        "line": 190,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "DIRECTORY_AUDIT.md",
+        "line": 44,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "benchmark/dspy/README.md",
+        "line": 7,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "docs/basic_usage/sampling_params.md",
+        "line": 190,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "docs/developer_guide/development_jit_kernel_guide.md",
+        "line": 29,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/README.md",
+        "line": 17,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/.claude/skills/diffusion-kernel/use-efficient-diffusion-kernels.md",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/.claude/skills/diffusion-kernel/use-efficient-diffusion-kernels.md",
+        "line": 56,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/.claude/skills/diffusion-kernel/use-efficient-diffusion-kernels.md",
+        "line": 72,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/multimodal_gen/test/run_suite.py",
+        "line": 226,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/mem_cache/storage/nixl/README.md",
+        "line": 23,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/mem_cache/storage/nixl/README.md",
+        "line": 222,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/model_loader/ci_weight_validation.py",
+        "line": 12,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/model_loader/ci_weight_validation.py",
+        "line": 14,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "python/sglang/srt/models/qwen3_moe.py",
+        "line": 105,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/ci/cuda/warmup_deep_gemm.py",
+        "line": 143,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "scripts/code_sync/utils.py",
+        "line": 24,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/README.md",
+        "line": 30,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/README.md",
+        "line": 140,
+        "ambiguous_basename": false
+      },
+      {
+        "source": "test/ditto/README.md",
+        "line": 73,
+        "ambiguous_basename": false
+      }
+    ]
+  },
+  "shadowed_definitions": [
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "hamming_score_norm",
+      "definitions": [
+        [
+          8,
+          20
+        ],
+        [
+          384,
+          396
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "hamming_score",
+      "definitions": [
+        [
+          23,
+          31
+        ],
+        [
+          399,
+          409
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "hamming_score_head_mask",
+      "definitions": [
+        [
+          34,
+          45
+        ],
+        [
+          412,
+          423
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "static_hamming_score_mask",
+      "definitions": [
+        [
+          48,
+          75
+        ],
+        [
+          426,
+          443
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "batch_topk",
+      "definitions": [
+        [
+          78,
+          79
+        ],
+        [
+          446,
+          448
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "batch_topk_masked",
+      "definitions": [
+        [
+          82,
+          91
+        ],
+        [
+          451,
+          463
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "kvcache_append",
+      "definitions": [
+        [
+          94,
+          95
+        ],
+        [
+          466,
+          472
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "kvcache_append_head_sparse",
+      "definitions": [
+        [
+          98,
+          105
+        ],
+        [
+          475,
+          484
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "kvcache_append2",
+      "definitions": [
+        [
+          108,
+          109
+        ],
+        [
+          487,
+          493
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "kvcache_append_tensor_pos",
+      "definitions": [
+        [
+          112,
+          118
+        ],
+        [
+          496,
+          504
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "kvcache_append_tensor_pos_head_sparse",
+      "definitions": [
+        [
+          121,
+          128
+        ],
+        [
+          507,
+          516
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "real_indices_and_launch_prefetch",
+      "definitions": [
+        [
+          131,
+          160
+        ],
+        [
+          519,
+          548
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "static_launch_prefetch",
+      "definitions": [
+        [
+          163,
+          194
+        ],
+        [
+          551,
+          582
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "decode_append_offload_wait",
+      "definitions": [
+        [
+          197,
+          224
+        ],
+        [
+          585,
+          612
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "decode_append_offload_tensor_pos_wait",
+      "definitions": [
+        [
+          227,
+          254
+        ],
+        [
+          615,
+          642
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "wait_kv_data",
+      "definitions": [
+        [
+          257,
+          266
+        ],
+        [
+          645,
+          654
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "gather_gpu_kvcache",
+      "definitions": [
+        [
+          269,
+          294
+        ],
+        [
+          657,
+          682
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "block_id_to_token_id",
+      "definitions": [
+        [
+          297,
+          300
+        ],
+        [
+          685,
+          694
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "block_id_to_token_id_head_mask",
+      "definitions": [
+        [
+          303,
+          313
+        ],
+        [
+          697,
+          707
+        ]
+      ],
+      "decorated": false
+    },
+    {
+      "path": "sgl-kernel/python/sgl_kernel/kvlib.py",
+      "symbol": "create_tensor",
+      "definitions": [
+        [
+          316,
+          317
+        ],
+        [
+          715,
+          717
+        ]
+      ],
+      "decorated": false
+    }
+  ],
+  "exact_duplicate_files": [
+    [
+      "test/ditto/config/full_attn/Llama-3-8B-Instruct-Gradient-1048k-128K.yaml",
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-128K.yaml"
+    ],
+    [
+      "test/ditto/config/full_attn/Llama-3-8B-Instruct-Gradient-1048k-16K.yaml",
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-16K.yaml"
+    ],
+    [
+      "test/ditto/config/full_attn/Llama-3-8B-Instruct-Gradient-1048k-4K.yaml",
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-4K.yaml"
+    ],
+    [
+      "test/ditto/config/full_attn/Llama-3-8B-Instruct-Gradient-1048k-64K.yaml",
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-64K.yaml"
+    ],
+    [
+      "test/ditto/config/full_attn/Llama-3-8B-Instruct-Gradient-1048k-8K.yaml",
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-8K.yaml"
+    ],
+    [
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-1M-256K.yaml",
+      "test/ditto/config/full_attn/Qwen2.5-14B-Instruct-AWQ-256K.yaml"
+    ]
+  ],
+  "similar_shell_pairs": [
+    {
+      "a": "test/ditto/multi_news_e_nway",
+      "b": "test/ditto/run_gov_report_nway",
+      "line_similarity": 0.9872
+    },
+    {
+      "a": "test/ditto/test_accuracy_math500.sh",
+      "b": "test/ditto/test_accuracy_multinews.sh",
+      "line_similarity": 0.9695
+    },
+    {
+      "a": "test/ditto/test_accuracy_infinitebench.sh",
+      "b": "test/ditto/test_accuracy_math500.sh",
+      "line_similarity": 0.914
+    },
+    {
+      "a": "test/ditto/speedup/run_n2n_llama_fullattn_seqlen.sh",
+      "b": "test/ditto/speedup/run_n2n_llama_offloading_seqlen.sh",
+      "line_similarity": 0.913
+    },
+    {
+      "a": "test/ditto/test_accuracy_infinitebench.sh",
+      "b": "test/ditto/test_accuracy_multinews.sh",
+      "line_similarity": 0.9037
+    },
+    {
+      "a": "test/ditto/speedup/run_n2n_llama_fullattn_bsz.sh",
+      "b": "test/ditto/speedup/run_n2n_llama_offloading_bsz.sh",
+      "line_similarity": 0.9014
+    },
+    {
+      "a": "test/ditto/speedup/run_n2n_llama_fullattn_bsz.sh",
+      "b": "test/ditto/speedup/run_n2n_qwen_fullattn_bsz.sh",
+      "line_similarity": 0.9014
+    },
+    {
+      "a": "test/ditto/speedup/run_n2n_llama_offloading_bsz.sh",
+      "b": "test/ditto/speedup/run_n2n_qwen_fullattn_bsz.sh",
+      "line_similarity": 0.8592
+    }
+  ]
+}

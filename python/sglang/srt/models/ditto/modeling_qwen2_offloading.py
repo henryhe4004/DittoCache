@@ -185,19 +185,24 @@ class CustomQwen2Model(Qwen2Model):
         return_dict: Optional[bool] = None,
         cache_position: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
-        _ = attention_mask, position_ids, inputs_embeds, use_cache, output_attentions, output_hidden_states, return_dict, cache_position
+        _ = attention_mask, position_ids, use_cache, output_attentions, output_hidden_states, return_dict, cache_position
 
-        seq_len = input_ids.shape[1]
+        model_inputs = inputs_embeds if inputs_embeds is not None else input_ids
+        if model_inputs is None:
+            raise ValueError("Ditto requires input_ids or inputs_embeds.")
+        seq_len = model_inputs.shape[1]
         if seq_len > 1:
             return llm_sparse_offloading_prefill_forward(
                 self,
                 input_ids=input_ids,
+                inputs_embeds=inputs_embeds,
                 past_key_values=past_key_values,
             )
 
         return llm_sparse_offloading_decode_forward(
             self,
             input_ids=input_ids,
+            inputs_embeds=inputs_embeds,
             past_key_values=past_key_values,
         )
 

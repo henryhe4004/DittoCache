@@ -76,11 +76,13 @@ def build_args():
     parser = argparse.ArgumentParser(description="Ditto minimal smoke test.")
     parser.add_argument("--model-path", type=str, required=True)
     parser.add_argument("--prompt", type=str, default="Hello Ditto")
+    parser.add_argument("--prompt-file", type=Path, default=None)
+    parser.add_argument("--output-file", type=Path, default=None)
     parser.add_argument(
         "--variant",
         type=str,
         default="offloading",
-        choices=["offloading", "loki", "hash", "infinigen", "quest"],
+        choices=["fullattn", "offloading", "loki", "hash", "infinigen", "quest"],
     )
     parser.add_argument(
         "--offloading-method",
@@ -90,6 +92,8 @@ def build_args():
         help="Only used when --variant offloading.",
     )
     parser.add_argument("--max-new-tokens", type=int, default=16)
+    parser.add_argument("--ignore-eos", action="store_true")
+    parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--max-batch-size", type=int, default=1)
     parser.add_argument("--gpu-memory-budget", type=float, default=16.0)
@@ -112,6 +116,8 @@ def build_args():
         help="Force gather for a KV head after this many consecutive reuses.",
     )
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--tp-size", type=int, default=1)
+    parser.add_argument("--pp-size", type=int, default=1)
     parser.add_argument("--attention-backend", type=str, default=None)
     parser.add_argument("--mem-fraction-static", type=float, default=0.92)
     parser.add_argument("--max-total-tokens", type=int, default=512)
@@ -228,6 +234,10 @@ def build_ditto_override(args) -> dict:
 
 def main():
     args = build_args()
+    if args.repeat < 1:
+        raise ValueError("--repeat must be positive")
+    if args.prompt_file is not None:
+        args.prompt = args.prompt_file.read_text()
     torch = __import__("torch")
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError(
@@ -257,6 +267,8 @@ def main():
         trust_remote_code=True,
         log_level="info",
         device=args.device,
+        tp_size=args.tp_size,
+        pp_size=args.pp_size,
         attention_backend=args.attention_backend,
         json_model_override_args=json.dumps(model_override),
         # Minimize SGLang runtime features for bring-up.
@@ -281,7 +293,9 @@ def main():
         f"num_overlapped_heads={model_override.get('custom_config', {}).get('offload_config', {}).get('num_overlapped_heads')}, "
         f"max_reuse_count={model_override.get('custom_config', {}).get('offload_config', {}).get('max_reuse_count')}, "
         f"ditto_enable_cuda_graph={model_override.get('custom_config', {}).get('enable_cuda_graph')}, "
-        f"engine_disable_cuda_graph={args.disable_cuda_graph}",
+        f"engine_disable_cuda_graph={args.disable_cuda_graph}, "
+        f"tp_size={args.tp_size}, "
+        f"pp_size={args.pp_size}",
         flush=True,
     )
 
@@ -289,6 +303,7 @@ def main():
         "temperature": 0.0,
         "top_p": 1.0,
         "max_new_tokens": args.max_new_tokens,
+        "ignore_eos": args.ignore_eos,
     }
 
     print(
@@ -301,7 +316,11 @@ def main():
     stop_event, heartbeat_thread = _start_generate_heartbeat(args.generate_heartbeat_sec)
     t0 = time.perf_counter()
     try:
-        out = engine.generate(prompt=args.prompt, sampling_params=sampling_params)
+        outputs = [
+            engine.generate(prompt=args.prompt, sampling_params=sampling_params)
+            for _ in range(args.repeat)
+        ]
+        out = outputs[0] if args.repeat == 1 else {"runs": outputs}
     except Exception as exc:
         elapsed = time.perf_counter() - t0
         print(
@@ -314,6 +333,7 @@ def main():
         stop_event.set()
         if heartbeat_thread is not None:
             heartbeat_thread.join(timeout=1.0)
+        engine.shutdown()
 
     elapsed = time.perf_counter() - t0
     print(
@@ -321,6 +341,9 @@ def main():
         flush=True,
     )
     print(out, flush=True)
+    if args.output_file is not None:
+        args.output_file.parent.mkdir(parents=True, exist_ok=True)
+        args.output_file.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n")
 
 
 if __name__ == "__main__":

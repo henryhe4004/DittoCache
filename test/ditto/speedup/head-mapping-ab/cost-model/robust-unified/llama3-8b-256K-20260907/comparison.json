@@ -1,0 +1,82 @@
+{
+  "candidate": "robust-split-trust-region",
+  "candidate_stats": {
+    "result": "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/robust-unified/llama3-8b-256K-20260907/paired/candidate/result.json",
+    "epoch_decode_latency_ms": [
+      22.80349221546203,
+      29.125665710307658,
+      28.91027999576181
+    ],
+    "mean_decode_latency_ms": 26.946479307177167,
+    "median_decode_latency_ms": 28.91027999576181,
+    "stdev_decode_latency_ms": 3.5895479218275237,
+    "mean_decode_tps": 37.59222789554309,
+    "mean_prefill_latency_s": 268.30964232919115,
+    "runtime_meta": {
+      "ditto_enabled": true,
+      "variant": "offloading",
+      "offloading_method": "hash",
+      "max_total_tokens": 262144,
+      "sglang_cuda_graph_enabled": false,
+      "ditto_cuda_graph_enabled": true,
+      "transfer_stats_enabled": false,
+      "ignore_eos": true,
+      "tp_size": 2,
+      "pp_size": 1
+    },
+    "controls": {
+      "config_file": "/jhe/sglang-litecache/test/ditto/config/hata_offloading/Llama-3-8B-Instruct-Gradient-1048k-256K.yaml",
+      "data": "/jhe/myTransformer/speedup/data/RULER-Llama-3-8B-Instruct-Gradient-1048k-256K.jsonl",
+      "batch_size": 1,
+      "max_seq_len": 256000,
+      "warmup": 1,
+      "epoch": 3,
+      "input_tokens": 255841
+    }
+  },
+  "linear_stats": {
+    "result": "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/robust-unified/llama3-8b-256K-20260907/paired/linear/result.json",
+    "epoch_decode_latency_ms": [
+      22.846221970394254,
+      28.19550985004753,
+      28.839463647454977
+    ],
+    "mean_decode_latency_ms": 26.627065155965585,
+    "median_decode_latency_ms": 28.19550985004753,
+    "stdev_decode_latency_ms": 3.2900988615404487,
+    "mean_decode_tps": 37.97075400188511,
+    "mean_prefill_latency_s": 268.2544389056663,
+    "runtime_meta": {
+      "ditto_enabled": true,
+      "variant": "offloading",
+      "offloading_method": "hash",
+      "max_total_tokens": 262144,
+      "sglang_cuda_graph_enabled": false,
+      "ditto_cuda_graph_enabled": true,
+      "transfer_stats_enabled": false,
+      "ignore_eos": true,
+      "tp_size": 2,
+      "pp_size": 1
+    },
+    "controls": {
+      "config_file": "/jhe/sglang-litecache/test/ditto/config/hata_offloading/Llama-3-8B-Instruct-Gradient-1048k-256K.yaml",
+      "data": "/jhe/myTransformer/speedup/data/RULER-Llama-3-8B-Instruct-Gradient-1048k-256K.jsonl",
+      "batch_size": 1,
+      "max_seq_len": 256000,
+      "warmup": 1,
+      "epoch": 3,
+      "input_tokens": 255841
+    }
+  },
+  "candidate_minus_linear_latency_ms": 0.319414151211582,
+  "latency_improvement_pct": -1.1995845180106894,
+  "tps_improvement_pct": -0.9968885693532159,
+  "prefill_delta_s": 0.05520342352485841,
+  "all_candidate_epochs_faster_than_all_linear_epochs": false,
+  "difference_of_means_standard_error_ms": 2.811263346006919,
+  "conservative_df2_95pct_latency_delta_ci_ms": [
+    -11.776475674896123,
+    12.415303977319287
+  ],
+  "decision": "reject"
+}

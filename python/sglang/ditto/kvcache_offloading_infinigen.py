@@ -49,6 +49,7 @@ class InfiniGenOffloadingCache(OffloadingCache):
         self.partial_idx = [None for _ in range(self.num_layers)]
 
         for layer in range(self.num_layers):
+            global_layer_idx = self.global_layer_idx(layer)
             self.layers_partial_key_cache_data[layer] = torch.zeros(
                 (gpu_partial_key_numel,),
                 dtype=self.dtype,
@@ -62,14 +63,14 @@ class InfiniGenOffloadingCache(OffloadingCache):
                 ).repeat(self.num_key_value_heads, 1, 1)
             else:
                 skewing_matrix = torch.load(
-                    os.path.join(self.aux_data_path, f"skewing_martix_{layer:02d}.pt"),
+                    os.path.join(self.aux_data_path, f"skewing_martix_{global_layer_idx:02d}.pt"),
                     weights_only=True,
                 )
                 skewing_matrix = skewing_matrix.view(-1, self.head_dim, self.head_dim)
                 skewing_matrix = self._slice_local_kv_head_tensor(
                     skewing_matrix,
                     layer_idx=layer,
-                    tensor_name=f"skewing_matrix_layer_{layer:02d}",
+                    tensor_name=f"skewing_matrix_layer_{global_layer_idx:02d}",
                     head_dim=0,
                 ).to(self.dtype).to(self.layer_devices[layer])
             self.layers_skewing_matrix[layer] = skewing_matrix

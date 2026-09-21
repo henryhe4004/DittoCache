@@ -129,9 +129,17 @@ def _detect_tp_rank_suffix() -> tuple[int, int]:
 
 def _with_tp_rank_suffix(path: Path) -> Path:
     rank, size = _detect_tp_rank_suffix()
-    if size <= 1:
+    suffix = f".tp{rank:02d}" if size > 1 else ""
+    try:
+        from sglang.srt.distributed import get_pp_group
+
+        pp_group = get_pp_group()
+        if pp_group.world_size > 1:
+            suffix = f".pp{pp_group.rank_in_group:02d}" + suffix
+    except (AssertionError, RuntimeError):
+        pass
+    if not suffix:
         return path
-    suffix = f".tp{rank:02d}"
     if path.stem.endswith(suffix):
         return path
     return path.with_name(f"{path.stem}{suffix}{path.suffix}")

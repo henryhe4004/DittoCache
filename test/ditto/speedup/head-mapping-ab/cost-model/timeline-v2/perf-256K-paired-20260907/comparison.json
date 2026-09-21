@@ -1,0 +1,62 @@
+{
+  "candidate": "timeline-256K",
+  "candidate_result": "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/timeline-v2/perf-256K-paired-20260907/timeline-256K/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10.json",
+  "linear_result": "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/timeline-v2/perf-256K-paired-20260907/linear/qwen2.5-14b-1m-offloading-bsz1-seq256K-topk0.10.json",
+  "candidate_stats": {
+    "epoch_decode_latency_ms": [
+      51.777570229023695,
+      51.93729598540813,
+      51.399069163016975
+    ],
+    "mean_decode_latency_ms": 51.70464512581626,
+    "median_decode_latency_ms": 51.777570229023695,
+    "stdev_decode_latency_ms": 0.27642463908573695,
+    "mean_decode_tps": 19.340991324165895,
+    "mean_prefill_latency_s": 494.72967602002126,
+    "runtime_meta": {
+      "ditto_enabled": true,
+      "variant": "offloading",
+      "offloading_method": "hash",
+      "max_total_tokens": 262144,
+      "sglang_cuda_graph_enabled": false,
+      "ditto_cuda_graph_enabled": true,
+      "transfer_stats_enabled": false,
+      "tp_size": 2,
+      "pp_size": 1
+    }
+  },
+  "linear_stats": {
+    "epoch_decode_latency_ms": [
+      50.22872134577483,
+      51.25942484010011,
+      52.66686142422259
+    ],
+    "mean_decode_latency_ms": 51.385002536699176,
+    "median_decode_latency_ms": 51.25942484010011,
+    "stdev_decode_latency_ms": 1.2239113852504424,
+    "mean_decode_tps": 19.468269041502346,
+    "mean_prefill_latency_s": 494.65504240586114,
+    "runtime_meta": {
+      "ditto_enabled": true,
+      "variant": "offloading",
+      "offloading_method": "hash",
+      "max_total_tokens": 262144,
+      "sglang_cuda_graph_enabled": false,
+      "ditto_cuda_graph_enabled": true,
+      "transfer_stats_enabled": false,
+      "tp_size": 2,
+      "pp_size": 1
+    }
+  },
+  "candidate_minus_linear_latency_ms": 0.31964258911708754,
+  "latency_improvement_pct": -0.6220542441129564,
+  "tps_improvement_pct": -0.6537700761435006,
+  "prefill_delta_s": 0.07463361416012049,
+  "all_candidate_epochs_faster_than_all_linear_epochs": false,
+  "difference_of_means_standard_error_ms": 0.724423830833704,
+  "conservative_df2_95pct_latency_delta_ci_ms": [
+    -2.7973015625638924,
+    3.4365867407980675
+  ],
+  "decision": "reject"
+}

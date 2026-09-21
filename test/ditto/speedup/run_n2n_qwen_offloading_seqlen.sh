@@ -31,8 +31,12 @@ DITTO_CUDA_GRAPH="${DITTO_CUDA_GRAPH:-1}"
 # benchmark's graph switch authoritative while allowing an explicit opt-out.
 DITTO_TP_ENABLE_CUDA_GRAPH="${DITTO_TP_ENABLE_CUDA_GRAPH:-${DITTO_CUDA_GRAPH}}"
 export DITTO_TP_ENABLE_CUDA_GRAPH
+CHUNKED_PREFILL_SIZE="${CHUNKED_PREFILL_SIZE:-}"
 RECORD_MAX_GPU_MEMORY="${RECORD_MAX_GPU_MEMORY:-1}"
 GPU_MEM_MONITOR_INTERVAL_SEC="${GPU_MEM_MONITOR_INTERVAL_SEC:-0.2}"
+RECORD_TRANSFER_STATS="${RECORD_TRANSFER_STATS:-0}"
+RECORD_HEAD_MASKS="${RECORD_HEAD_MASKS:-0}"
+TRANSFER_STATS_DIR="${TRANSFER_STATS_DIR:-${LOG_DIR}/transfer-stats}"
 
 start_gpu_mem_monitor() {
   local gpu_ids_csv="$1"
@@ -178,6 +182,7 @@ for method in ${METHODS}; do
       --batch_size "${BSZ}"
       --max_seq_len "${seq}"
       --max-running-requests "${BSZ}"
+      --pp-size "${PP_SIZE}"
       --mem-fraction-static "${MEM_FRACTION_STATIC}"
       --tp-size "${TP_SIZE}"
       --pp-size "${PP_SIZE}"
@@ -185,6 +190,9 @@ for method in ${METHODS}; do
     )
     if [[ -n "${MAX_TOTAL_TOKENS}" ]]; then
       cmd+=(--max-total-tokens "${MAX_TOTAL_TOKENS}")
+    fi
+    if [[ -n "${CHUNKED_PREFILL_SIZE}" ]]; then
+      cmd+=(--chunked-prefill-size "${CHUNKED_PREFILL_SIZE}")
     fi
     if [[ -n "${KV_CACHE_DTYPE:-}" ]]; then
       cmd+=(--kv-cache-dtype "${KV_CACHE_DTYPE}")
@@ -210,6 +218,15 @@ for method in ${METHODS}; do
       cmd+=(--ditto-enable-cuda-graph)
     else
       cmd+=(--ditto-disable-cuda-graph)
+    fi
+    if [[ "${RECORD_TRANSFER_STATS}" == "1" ]]; then
+      mkdir -p "${TRANSFER_STATS_DIR}"
+      export DITTO_TRANSFER_STATS_FILE="${TRANSFER_STATS_DIR}/${run_name}-transfer.json"
+      export DITTO_RECORD_HEAD_MASKS="${RECORD_HEAD_MASKS}"
+      cmd+=(--record-transfer-stats)
+    else
+      unset DITTO_TRANSFER_STATS_FILE
+      unset DITTO_RECORD_HEAD_MASKS
     fi
 
     echo "[RUN] ${run_name}"

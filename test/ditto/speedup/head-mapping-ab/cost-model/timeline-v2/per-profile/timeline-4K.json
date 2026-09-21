@@ -1,0 +1,2741 @@
+{
+  "orders": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      4,
+      2,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      5,
+      3,
+      4,
+      6,
+      7
+    ],
+    [
+      1,
+      2,
+      5,
+      7,
+      0,
+      3,
+      4,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      4,
+      2,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      1,
+      3,
+      4,
+      6,
+      0,
+      2,
+      5,
+      7
+    ],
+    [
+      0,
+      2,
+      6,
+      7,
+      1,
+      3,
+      4,
+      5
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      7,
+      2,
+      4,
+      5,
+      6
+    ],
+    [
+      1,
+      3,
+      5,
+      6,
+      0,
+      2,
+      4,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      5,
+      1,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      5,
+      6,
+      2,
+      3,
+      4,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      6,
+      1,
+      2,
+      5,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      6,
+      1,
+      2,
+      5,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      4,
+      1,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      2,
+      3,
+      7,
+      1,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      7,
+      3,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      3,
+      4,
+      2,
+      5,
+      6,
+      7
+    ],
+    [
+      3,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2,
+      4
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      3,
+      4,
+      5,
+      1,
+      2,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      1,
+      3,
+      4,
+      6,
+      0,
+      2,
+      5,
+      7
+    ],
+    [
+      1,
+      2,
+      4,
+      7,
+      0,
+      3,
+      5,
+      6
+    ],
+    [
+      1,
+      2,
+      3,
+      7,
+      0,
+      4,
+      5,
+      6
+    ],
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      5,
+      3,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      3,
+      5,
+      2,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      4,
+      3,
+      5,
+      6,
+      7
+    ],
+    [
+      2,
+      3,
+      5,
+      7,
+      0,
+      1,
+      4,
+      6
+    ],
+    [
+      0,
+      2,
+      3,
+      7,
+      1,
+      4,
+      5,
+      6
+    ],
+    [
+      1,
+      2,
+      3,
+      5,
+      0,
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      7
+    ],
+    [
+      0,
+      1,
+      2,
+      6,
+      3,
+      4,
+      5,
+      7
+    ]
+  ],
+  "metadata": {
+    "objective": "normalized full-layer TP2 timeline regret",
+    "scope": "transfer timeline proxy; end-to-end prediction requires calibrated per-profile timing",
+    "transfer_json": [
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10-transfer.tp01.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.tp00.json",
+      "test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10-transfer.tp01.json"
+    ],
+    "resident_heads_file": "test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json",
+    "reference_mapping": null,
+    "timing_json": null,
+    "profiles": [
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json"
+    ],
+    "profile_count": 1,
+    "profile_steps": 41,
+    "skip_steps": 10,
+    "skip_layers": 1,
+    "num_layers": 48,
+    "num_heads": 8,
+    "per_token_head_bytes": 512,
+    "search": {
+      "algorithm": "layerwise beam search plus full-timeline coordinate refinement",
+      "beam_width": 128,
+      "local_passes": 1
+    },
+    "cost_config": {
+      "h2d_gbps": [
+        22.0,
+        22.0
+      ],
+      "d2h_gbps": [
+        22.0,
+        22.0
+      ],
+      "h2d_launch_us": 2.0,
+      "d2h_launch_us": 1.0,
+      "active_head_us": 0.5,
+      "tail_quantile": 0.95,
+      "tail_weight": 0.1,
+      "worst_profile_weight": 0.25
+    },
+    "resolved_timing": {
+      "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+        "pre_wait_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "post_launch_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tp_sync_us": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "timeline_metrics": {
+      "objective": -0.056784270177463216,
+      "worst_profile_regret": -0.056784270177463216,
+      "reference_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reference_mean_timeline_us": 422.4534900221729,
+      "optimized_mean_timeline_us": 395.73504212860314,
+      "local_improvement_passes": 1,
+      "local_improvement_moves": 8,
+      "profiles": {
+        "/jhe/sglang-litecache/test/ditto/speedup/head-mapping-ab/cost-model/profile-linear-multilen-20260906/transfer/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10-transfer.json": {
+          "label": "4K",
+          "samples": 41,
+          "reference_mean_timeline_us": 422.4534900221729,
+          "optimized_mean_timeline_us": 395.73504212860314,
+          "mean_regret": -0.06309363353051471,
+          "mean_critical_exposed_wait_us": 344.3597694013304,
+          "mean_rank_exposed_wait_us": [
+            240.7500931263859,
+            241.70681152993353
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "layer_idx": 0,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        0.0
+      ],
+      "mean_d2h_us": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "layer_idx": 1,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 2,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        1.4454811529933482,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 3,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.0,
+        3.854616407982262
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 4,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        3.131875831485588,
+        2.842181818181818
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 5,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        6.022838137472284,
+        2.168221729490022
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 6,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        0.24091352549889136,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 7,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          4
+        ],
+        [
+          2,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        1.927308203991131,
+        3.08309534368071
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 8,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        1.8785277161862528,
+        1.6863946784922397
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 9,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        2.5524878048780493,
+        3.854616407982262
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 10,
+      "rank_heads": [
+        [
+          1,
+          2,
+          5,
+          7
+        ],
+        [
+          0,
+          3,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        5.778935698447894,
+        4.720709534368071
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 11,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        3.3727893569844793,
+        4.912842572062085
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 12,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        4.095529933481154,
+        0.0
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 13,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        1.445481152993348,
+        6.745578713968959
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 14,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          4
+        ],
+        [
+          2,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        4.961623059866962,
+        2.119441241685144
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 15,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        3.6594944567627503,
+        4.671929046563193
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 16,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        2.4091352549889136,
+        2.168221729490022
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 17,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          6
+        ],
+        [
+          0,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        3.802847006651885,
+        6.065640798226164
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 18,
+      "rank_heads": [
+        [
+          0,
+          2,
+          6,
+          7
+        ],
+        [
+          1,
+          3,
+          4,
+          5
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        8.761481152993348,
+        7.654474501108648
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 19,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        6.788381374722838,
+        10.350314855875832
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 20,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          7
+        ],
+        [
+          2,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        12.463778270509978,
+        10.011840354767184
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 21,
+      "rank_heads": [
+        [
+          1,
+          3,
+          5,
+          6
+        ],
+        [
+          0,
+          2,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        7.029294900221729,
+        6.44990687361419
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 22,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          5
+        ],
+        [
+          1,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        9.142758314855877,
+        6.309543237250555
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 23,
+      "rank_heads": [
+        [
+          0,
+          1,
+          5,
+          6
+        ],
+        [
+          2,
+          3,
+          4,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        7.797827050997784,
+        7.175636363636364
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 24,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        8.810261640798226,
+        10.2009844789357
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 25,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          6
+        ],
+        [
+          1,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        15.20242128603104,
+        18.035636363636364
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 26,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          6
+        ],
+        [
+          1,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        10.399095343680708,
+        1.927308203991131
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 27,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        1.6863946784922397,
+        7.029294900221729
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 28,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        6.837161862527716,
+        2.3603547671840355
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 29,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          7
+        ],
+        [
+          1,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        9.386660753880268,
+        13.668345898004434
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 30,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        9.33788026607539,
+        7.27319733924612
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 31,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          4
+        ],
+        [
+          2,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        4.336443458980044,
+        5.202536585365855
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 32,
+      "rank_heads": [
+        [
+          3,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          4
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        2.842181818181818,
+        8.282643015521066
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 33,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        3.854616407982262,
+        1.6863946784922397
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 34,
+      "rank_heads": [
+        [
+          0,
+          3,
+          4,
+          5
+        ],
+        [
+          1,
+          2,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        11.55189356984479,
+        10.252753880266075
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 35,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        5.925277161862528,
+        7.178625277161863
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 36,
+      "rank_heads": [
+        [
+          1,
+          3,
+          4,
+          6
+        ],
+        [
+          0,
+          2,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        15.687237250554324,
+        10.926713968957872
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 37,
+      "rank_heads": [
+        [
+          1,
+          2,
+          4,
+          7
+        ],
+        [
+          0,
+          3,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        7.55990243902439,
+        9.005383592017738
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 38,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          7
+        ],
+        [
+          0,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        6.504665188470067,
+        9.725135254988915
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 39,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": false,
+      "mean_h2d_us": [
+        6.022838137472284,
+        5.781924611973393
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 40,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        7.032283813747229,
+        4.769490022172949
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 41,
+      "rank_heads": [
+        [
+          0,
+          1,
+          3,
+          5
+        ],
+        [
+          2,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        6.16619068736142,
+        8.471787139689578
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 42,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          4
+        ],
+        [
+          3,
+          5,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        7.270208425720621,
+        2.6500487804878055
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 43,
+      "rank_heads": [
+        [
+          2,
+          3,
+          5,
+          7
+        ],
+        [
+          0,
+          1,
+          4,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        9.478243902439026,
+        12.274634146341464
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 44,
+      "rank_heads": [
+        [
+          0,
+          2,
+          3,
+          7
+        ],
+        [
+          1,
+          4,
+          5,
+          6
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        14.003831485587584,
+        9.530013303769401
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 45,
+      "rank_heads": [
+        [
+          1,
+          2,
+          3,
+          5
+        ],
+        [
+          0,
+          4,
+          6,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        16.739485587583147,
+        18.95349889135255
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 46,
+      "rank_heads": [
+        [
+          0,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        17.55978713968958,
+        20.15507760532151
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    },
+    {
+      "layer_idx": 47,
+      "rank_heads": [
+        [
+          0,
+          1,
+          2,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          7
+        ]
+      ],
+      "resident_heads": [],
+      "reference_rank_heads": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "changed_from_reference": true,
+      "mean_h2d_us": [
+        6.98649223946785,
+        5.199547671840355
+      ],
+      "mean_d2h_us": [
+        1.0930909090909091,
+        1.0930909090909091
+      ]
+    }
+  ]
+}

@@ -327,3 +327,11 @@ test/ditto/auxiliary/infinigen_skewing/**/*.pt
 test/ditto/auxiliary/loki_pca/**/*.pt
 test/ditto/config/.generated
 test/ditto/speedup/nsys/
+
+# Local Ditto validation output and archived historical measurements
+/test/ditto/results/
+/test/ditto/archive/history/
+
+# Local native-library backups; retain the release audit table
+/sgl-kernel/python/sgl_kernel/**/*.so.*
+!/docs/ditto-open-source-audit/inventory.csv
