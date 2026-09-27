@@ -1,0 +1,492 @@
+{
+  "base_commit": "251df09024ded932d74414bd96ca179235ad54eb",
+  "excluded_tree": "sgl-kernel/",
+  "execution": "partially_completed",
+  "groups": [
+    {
+      "id": "A01",
+      "proposed_action": "delete_candidate",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/speedup/ditto_server_override.json",
+          "tracked": true,
+          "bytes": 835,
+          "sha256": "b5fe769d4bae1181079d1435e0e6055f967570a1248bd94d529e12414c766652"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:06:14.073161+00:00"
+    },
+    {
+      "id": "A02",
+      "proposed_action": "delete_candidate",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/archive/legacy/export_head_threshold.py",
+          "tracked": true,
+          "bytes": 497,
+          "sha256": "9689366f9817a967e6330cd97ed8f3bfc83329f080384d5ece86ac2e12e2c6b3"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:06:14.073161+00:00"
+    },
+    {
+      "id": "A03",
+      "proposed_action": "delete_candidate",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/archive/legacy/serve_llama3_ditto.sh",
+          "tracked": true,
+          "bytes": 527,
+          "sha256": "4688e80d7337f6556bdd349a06effecb5609deddf5bcd563fc1223ade917922c"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:06:14.073161+00:00"
+    },
+    {
+      "id": "A04",
+      "proposed_action": "delete_candidate",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/archive/legacy/overlap_script.sh",
+          "tracked": true,
+          "bytes": 203,
+          "sha256": "1db78bec19926d6435d86c579add70d2d048322e376832b4a6a6a8d80125acea"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:06:14.073161+00:00"
+    },
+    {
+      "id": "B01",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_q_similarity_awq_gpu1.sh",
+          "tracked": true,
+          "bytes": 395,
+          "sha256": "131efbfccd41a88bb7c5a256a15ee614c8aadccd21157bc3d8135f9faa12db3a"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B02",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_q_similarity_fp16_gpu2.sh",
+          "tracked": true,
+          "bytes": 394,
+          "sha256": "28100ed5e6cc68e25791ebcfdd15b1253314672279c469cd4e46583215b77d8e"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B03",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_infinitebench_offloading_gpu4_7.sh",
+          "tracked": true,
+          "bytes": 919,
+          "sha256": "56d9c58aac50976df022d5797b26abce1a123a7cf91d97e228857434e718fc0b"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B04",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_longbench_v2_4nway_pp2.sh",
+          "tracked": true,
+          "bytes": 1048,
+          "sha256": "8a19d977449ee28ae663e615032cb55a0d3d66223649c961429dfc42220669f3"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B05",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_qwen_4gpu_aime24_gpqa_math500_aime25_top03_s1024.sh",
+          "tracked": true,
+          "bytes": 912,
+          "sha256": "0d0a0b6bd1467f7aa4bb37164d43095330cbb26d9ce273e9a7dd779a8c5892b0"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B06",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_qwen25_14b_1m_offloading_32k.sh",
+          "tracked": true,
+          "bytes": 1323,
+          "sha256": "9f7d4b1664be2fab27012bf502137c10f1f67fd6fcb96208a72bb33660c5ea60"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B07",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_when_model_idle.sh",
+          "tracked": true,
+          "bytes": 1748,
+          "sha256": "fc0c93eba49d596596cc0c9fac9815dfdf2e849d7644b9ce5ff16f1aed731d34"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B08",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/run_when_results_ready.sh",
+          "tracked": true,
+          "bytes": 2139,
+          "sha256": "dfc1e47be916f3ab9efb2fc3e5c7512732c7d71e4ac28341d5b84f7710970651"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "B09",
+      "proposed_action": "review_experiment_entrypoint",
+      "decision": "approved_by_user",
+      "files": [
+        {
+          "path": "test/ditto/eval_math.py",
+          "tracked": true,
+          "bytes": 15192,
+          "sha256": "216512abb5c75e92331961ea55e90d0902c00d5f13ba48663cda50036f64b285"
+        }
+      ],
+      "execution": "deleted",
+      "completed_at": "2026-09-21T09:17:18.448067+00:00",
+      "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
+    },
+    {
+      "id": "C01",
+      "proposed_action": "merge_before_removal",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/multi_news_e_nway",
+          "tracked": true,
+          "bytes": 7938,
+          "sha256": "540997cdce5504a91f1162f9f939d95bbb4a101dd6d5c93f0d02211b14331cf7"
+        },
+        {
+          "path": "test/ditto/run_gov_report_nway",
+          "tracked": true,
+          "bytes": 7942,
+          "sha256": "008aeeaccb6d6acea40e1f1f53d1b1309b59236e0fe57c2c3495201bfe47303b"
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "proposed_action": "merge_before_removal",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/test_accuracy_math500.sh",
+          "tracked": true,
+          "bytes": 7350,
+          "sha256": "27d0074239427b051b5cb60ad6472dd3e7a28869162698a9698310188e9ec182"
+        },
+        {
+          "path": "test/ditto/test_accuracy_multinews.sh",
+          "tracked": true,
+          "bytes": 7205,
+          "sha256": "c43ea2a83d81c82ea61d78a70d7b9efaecdfc4613f767784b3226eca1dc9ffe0"
+        },
+        {
+          "path": "test/ditto/test_accuracy_infinitebench.sh",
+          "tracked": true,
+          "bytes": 7954,
+          "sha256": "e9e4fc08276579c751e8ffff54cc4eebac9c13a85ea41940b206361eac278fa6"
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "proposed_action": "merge_before_removal",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/speedup/run_n2n_llama_fullattn_bsz.sh",
+          "tracked": true,
+          "bytes": 2318,
+          "sha256": "f5484dbfc2d5436b3d643730c4ae237e69dfd10c48bad611761d69f45e32af23"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_llama_fullattn_seqlen.sh",
+          "tracked": true,
+          "bytes": 2219,
+          "sha256": "75ceffe77b818aaa8ef360bdef4a6f0146239a783ec92ca0aee87124812f2286"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_llama_offloading_bsz.sh",
+          "tracked": true,
+          "bytes": 2335,
+          "sha256": "60db51d059c847d12eac64ca323d6e30c701f9ecfbf3b871164432213f21ad1c"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_llama_offloading_seqlen.sh",
+          "tracked": true,
+          "bytes": 2230,
+          "sha256": "60bd9d36d486bfcb59218d8cbeab9a92b31fcd2308490d5feae92c1adee022cb"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_qwen_fullattn_bsz.sh",
+          "tracked": true,
+          "bytes": 2298,
+          "sha256": "71d2691ab0e39a3b6c52d24ad8903a54aaaf14ac60e287a25f1fdcd8fca332e5"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_qwen_fullattn_seqlen.sh",
+          "tracked": true,
+          "bytes": 3090,
+          "sha256": "5ad28dce3d7008c82b0a3a96d1b47203d24e39fd0b96caf6076cf744a5d4c03e"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_qwen_offloading_bsz.sh",
+          "tracked": true,
+          "bytes": 3625,
+          "sha256": "856a435ae26f6efa555891d842c8f04fb16b22d921d00b20827b599c72e1ca18"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_qwen_offloading_seqlen.sh",
+          "tracked": true,
+          "bytes": 8943,
+          "sha256": "4a6c1d7e6194cea9cd2aa79df9f8691cdf908364645eff94065f439c5437cb61"
+        },
+        {
+          "path": "test/ditto/speedup/run_n2n_qwen_offloading_perf_from32k.sh",
+          "tracked": true,
+          "bytes": 3766,
+          "sha256": "18d244e930df0722c51fb41fbb90d9add9e1b6529a0f407093e9d81f3851dc5e"
+        }
+      ]
+    },
+    {
+      "id": "D01",
+      "proposed_action": "review_archive_outputs",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/balanced-128K-result.json",
+          "tracked": true,
+          "bytes": 1499,
+          "sha256": "ab063083c2620ab8b69f669e219cacaff28504896023d89be8de7c44ca324410"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/linear-128K-result.json",
+          "tracked": true,
+          "bytes": 1502,
+          "sha256": "9c12220290dee40cfc83456d214ea81db49e874e46ecdefe6b52c22d39f4bd6f"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/linear-16K-result.json",
+          "tracked": true,
+          "bytes": 1498,
+          "sha256": "58297cb1d49e632476d8460ea6f0dde21fe16d4874c35053afc844aa86f74d32"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/linear-32K-result.json",
+          "tracked": true,
+          "bytes": 1490,
+          "sha256": "8e4c60aa5a48074cbd40edb297f8217c0880749a58bdbf622e83e36acccaf1d3"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/linear-4K-result.json",
+          "tracked": true,
+          "bytes": 1493,
+          "sha256": "0199044c6d5f44b4ae49633ce4a7ad22380eb9608b63b4dd357593d49d08102a"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/linear-64K-result.json",
+          "tracked": true,
+          "bytes": 1497,
+          "sha256": "32276693fed110aa2504ae2812ba38ff4baab08958c08b250e7fb2dc39f81ea9"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/linear-8K-result.json",
+          "tracked": true,
+          "bytes": 1494,
+          "sha256": "69a0cd9df28ab86e8f29b70594f8e20040548f91c2b25db1d607f1e5138f951a"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/qsac-resident-layerwise-128K-result.json",
+          "tracked": true,
+          "bytes": 1497,
+          "sha256": "0969ffe6a50f21c3be0eb84bb15e8e7935f6ba3b030136192ad7d4b5ef543b0d"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/perf/qsac-resident-stepwise-layerwise-128K-result.json",
+          "tracked": true,
+          "bytes": 1498,
+          "sha256": "721172310cb3993cc683a344a62f08fe2b475fd2ed0152eb05b4423b31f72666"
+        }
+      ]
+    },
+    {
+      "id": "D02",
+      "proposed_action": "review_archive_outputs",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-final/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1499,
+          "sha256": "436eea532cbe604c9390182b51d4d09bab82972c9d5e04da14178cc8b86e50ea"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-final/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1488,
+          "sha256": "df6e0acd1c625d446d9f04166108b93ae55ea663c98eebfc597d573f89af62c1"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-final/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1500,
+          "sha256": "d496304812be2d4fbc3e726c27e2ebfa4d5aa39ad2cd7335ee59c97c1790efa1"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-final/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1494,
+          "sha256": "def5d905feb8991ab2fbff643cecdcf7ec978c8085e24556d08adb581e1c9542"
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "proposed_action": "review_archive_outputs",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-rerun-20260906/qwen2.5-14b-1m-offloading-bsz1-seq16K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1464,
+          "sha256": "caa50653a0bbfe55740622ec456b5a29d421178c89539692faa4d85d3bde39a1"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-rerun-20260906/qwen2.5-14b-1m-offloading-bsz1-seq32K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1477,
+          "sha256": "766396c2c108f8b3952aa68d660f1b1db59d852ad500e80110c5eb6f5b5db525"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-rerun-20260906/qwen2.5-14b-1m-offloading-bsz1-seq4K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1469,
+          "sha256": "cfc8f7005d22129d80c610a3b40361a7e18bc3128af21e910cb501c2335f1fb6"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-rerun-20260906/qwen2.5-14b-1m-offloading-bsz1-seq64K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1475,
+          "sha256": "6a554b38fe9495b084e669a709f4d9ae2e52baf80ff24c490151a4fd3c70ebd7"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/multilen-rerun-20260906/qwen2.5-14b-1m-offloading-bsz1-seq8K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1468,
+          "sha256": "cc4f4e7edc9a482aa6ad1a5d9b6e31e9b32b7c98a8dc4cfbc64c183f6a596c2f"
+        }
+      ]
+    },
+    {
+      "id": "D04",
+      "proposed_action": "review_archive_outputs",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/resident-formal/l25-head5/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1498,
+          "sha256": "00da44ee5f32cbb65b312ec6465a37f078ab90a33fff44eafee5302a947df277"
+        },
+        {
+          "path": "test/ditto/speedup/head-mapping-ab/resident-formal/l25-none/qwen2.5-14b-1m-offloading-bsz1-seq128K-topk0.10.json",
+          "tracked": true,
+          "bytes": 1498,
+          "sha256": "64ac7786772f396b36db94cb08c9149743cf87abb2d01860dc491c5b2501a485"
+        }
+      ]
+    },
+    {
+      "id": "E01",
+      "proposed_action": "optional_local_output_cleanup",
+      "decision": "pending_user_review",
+      "files": [
+        {
+          "path": "test/ditto/speedup/online_client_results.jsonl",
+          "tracked": false,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "completed_groups": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09"
+  ]
+}

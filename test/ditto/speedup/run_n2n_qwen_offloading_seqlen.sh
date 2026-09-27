@@ -21,6 +21,7 @@ TP_SIZE="${TP_SIZE:-1}"
 PP_SIZE="${PP_SIZE:-1}"
 MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-}"
 MEM_FRACTION_STATIC="${MEM_FRACTION_STATIC:-0.92}"
+GPU_MEMORY_BUDGET="${GPU_MEMORY_BUDGET:-}"
 SGLANG_LOG_LEVEL="${SGLANG_LOG_LEVEL:-warning}"
 DISABLE_SGLANG_BATCH_LOG="${DISABLE_SGLANG_BATCH_LOG:-1}"
 # Keep SGLang global cuda graph off by default (can hang in offloading path),
@@ -182,12 +183,14 @@ for method in ${METHODS}; do
       --batch_size "${BSZ}"
       --max_seq_len "${seq}"
       --max-running-requests "${BSZ}"
-      --pp-size "${PP_SIZE}"
       --mem-fraction-static "${MEM_FRACTION_STATIC}"
       --tp-size "${TP_SIZE}"
       --pp-size "${PP_SIZE}"
       --result-json "${result_json}"
     )
+    if [[ -n "${GPU_MEMORY_BUDGET}" ]]; then
+      cmd+=(--gpu-memory-budget "${GPU_MEMORY_BUDGET}")
+    fi
     if [[ -n "${MAX_TOTAL_TOKENS}" ]]; then
       cmd+=(--max-total-tokens "${MAX_TOTAL_TOKENS}")
     fi
