@@ -8,6 +8,12 @@ import time
 from datetime import datetime
 from functools import partial
 
+_ablation_bootstrap = argparse.ArgumentParser(add_help=False)
+_ablation_bootstrap.add_argument("--ablation-profile")
+_ablation_bootstrap_args, _ = _ablation_bootstrap.parse_known_args()
+if _ablation_bootstrap_args.ablation_profile:
+    os.environ["USE_INTRA_GQA_AGGREGATION"] = "0"
+
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 SGLANG_PY_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", "..", "python"))
 if os.path.isdir(SGLANG_PY_ROOT) and SGLANG_PY_ROOT not in sys.path:
@@ -19,7 +25,7 @@ import yaml
 from tqdm import tqdm
 from transformers import AutoConfig, AutoTokenizer
 
-from sglang import Engine
+from ablation_profiles import apply_ablation_profile, summarize_ablation_config
 
 from dataloader import (
     AIME24Manager,
@@ -322,6 +328,11 @@ def yaml_cfg_to_runtime(raw_cfg: dict, config_file: str) -> dict:
     set_if("reuse_threshold_upper", offload.get("reuse_threshold_upper"))
     set_if("decay_p", offload.get("decay_p"))
     set_if("cosine_padding", offload.get("cosine_padding"))
+    set_if("enable_similarity", offload.get("enable_similarity"))
+    set_if("use_adaptive_threshold", offload.get("use_adaptive_threshold"))
+    set_if("enable_resident_cache", offload.get("enable_resident_cache"))
+    set_if("enable_layer_prefetch", offload.get("enable_layer_prefetch"))
+    set_if("transfer_backend", offload.get("transfer_backend"))
     set_if("num_omp_threads", offload.get("num_omp_threads"))
     set_if("num_overlapped_heads", offload.get("num_overlapped_heads"))
     set_if("num_skip_layers", offload.get("num_skip_layers"))
@@ -351,6 +362,7 @@ def load_method_cfg(args):
             cfg["topk"] = args.topk
         if args.selective_start_len is not None:
             cfg["selective_start_len"] = args.selective_start_len
+        cfg = apply_ablation_profile(cfg, args.ablation_profile)
         return cfg, "yaml"
 
     key = args.method.lower()
@@ -408,6 +420,7 @@ def load_method_cfg(args):
     method_cfg["aux_data_path"] = resolve_path(
         method_cfg.get("aux_data_path"), args.config_file
     )
+    method_cfg = apply_ablation_profile(method_cfg, args.ablation_profile)
 
     return method_cfg, resolved_key
 
@@ -459,6 +472,14 @@ def build_engine(args):
     cfg_key = None
     if ditto_enabled:
         cfg, cfg_key = load_method_cfg(args)
+        if "enable_intra_gqa_aggregation" in cfg:
+            os.environ["USE_INTRA_GQA_AGGREGATION"] = (
+                "1" if bool(cfg["enable_intra_gqa_aggregation"]) else "0"
+            )
+
+    # Ditto reads process-wide feature flags when its offloading module is
+    # imported, so Engine must be imported after resolving the profile.
+    from sglang import Engine
 
     if args.max_total_tokens is not None:
         max_total_tokens = int(args.max_total_tokens)
@@ -532,7 +553,9 @@ def build_engine(args):
             "architectures": [architecture],
             "ditto_variant": variant,
             "custom_config": {
-                "enable_cuda_graph": False,
+                "enable_cuda_graph": bool(
+                    cfg.get("enable_ditto_cuda_graph", False)
+                ),
                 "new_config": True,
                 "is_profiling": False,
                 "profile_reserve_ratio": float(cfg.get("profile_reserve_ratio", 0.85)),
@@ -557,6 +580,17 @@ def build_engine(args):
                     "reuse_threshold_upper": float(cfg.get("reuse_threshold_upper", 0.95)),
                     "reuse_threshold_lower": float(cfg.get("reuse_threshold_lower", 0.7)),
                     "decay_p": float(decay_p),
+                    "enable_similarity": bool(cfg.get("enable_similarity", True)),
+                    "use_adaptive_threshold": bool(
+                        cfg.get("use_adaptive_threshold", True)
+                    ),
+                    "enable_resident_cache": bool(
+                        cfg.get("enable_resident_cache", True)
+                    ),
+                    "enable_layer_prefetch": bool(
+                        cfg.get("enable_layer_prefetch", True)
+                    ),
+                    "transfer_backend": str(cfg.get("transfer_backend", "gdrcopy")),
                     "cosine_padding": float(cfg.get("cosine_padding", 0.02)),
                     "num_skip_layers": int(cfg.get("num_skip_layers", 0)),
                     "num_overlapped_heads": int(cfg.get("num_overlapped_heads", 0)),
@@ -575,6 +609,8 @@ def build_engine(args):
             f"kvcache_max_tokens={model_override['custom_config']['kvcache_manager_config']['max_tokens']} "
             f"profile_reserve_ratio={model_override['custom_config']['profile_reserve_ratio']}"
         )
+        if args.ablation_profile:
+            log(f"[Ditto ablation] {summarize_ablation_config(cfg)}")
 
     if ditto_enabled and args.batch_size != 1:
         raise ValueError(
@@ -1026,6 +1062,16 @@ def main():
         ),
     )
     parser.add_argument("--topk", type=float, default=None)
+    parser.add_argument(
+        "--ablation-profile",
+        type=str.upper,
+        choices=("B0", "B1", "B2", "B3", "B4", "B5", "B6"),
+        default=None,
+        help=(
+            "Apply a cumulative Ditto ablation profile to the selected HATA "
+            "configuration."
+        ),
+    )
     parser.add_argument("--selective-start-len", type=int, default=None)
     parser.add_argument("--dataset_limit", type=int, default=0)
     parser.add_argument(

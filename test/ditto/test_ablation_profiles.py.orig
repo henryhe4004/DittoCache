@@ -1,0 +1,81 @@
+import unittest
+
+from ablation_profiles import ABLATION_PROFILES, apply_ablation_profile
+
+
+class AblationProfileTest(unittest.TestCase):
+    def setUp(self):
+        self.base = {
+            "num_skip_layers": 48,
+            "reuse_threshold_lower": -1.0,
+            "reuse_threshold_upper": 0.8,
+        }
+
+    def test_profiles_are_cumulative(self):
+        expected = {
+            "B0": ("memcpy", False, False, False, False, False),
+            "B1": ("gdrcopy", False, False, False, False, False),
+            "B2": ("gdrcopy", True, False, False, False, False),
+            "B3": ("gdrcopy", True, False, True, False, False),
+            "B4": ("gdrcopy", True, True, True, False, False),
+            "B5": ("gdrcopy", True, True, True, True, False),
+            "B6": ("gdrcopy", True, True, True, True, True),
+        }
+
+        for profile, values in expected.items():
+            with self.subTest(profile=profile):
+                cfg = apply_ablation_profile(self.base, profile)
+                self.assertEqual(
+                    (
+                        cfg["transfer_backend"],
+                        cfg["enable_layer_prefetch"],
+                        cfg["enable_similarity"],
+                        cfg["enable_ditto_cuda_graph"],
+                        cfg["use_adaptive_threshold"],
+                        cfg["enable_resident_cache"],
+                    ),
+                    values,
+                )
+
+    def test_thresholds_follow_each_stage(self):
+        always_gather = apply_ablation_profile(self.base, "B2")
+        graph = apply_ablation_profile(self.base, "B3")
+        qsac = apply_ablation_profile(self.base, "B4")
+        adaptive = apply_ablation_profile(self.base, "B5")
+
+        self.assertEqual(
+            (
+                always_gather["reuse_threshold_lower"],
+                always_gather["reuse_threshold_upper"],
+            ),
+            (1.0, 1.0),
+        )
+        self.assertEqual(
+            (qsac["reuse_threshold_lower"], qsac["reuse_threshold_upper"]),
+            (0.8, 0.8),
+        )
+        self.assertEqual(
+            (graph["reuse_threshold_lower"], graph["reuse_threshold_upper"]),
+            (0.8, 0.8),
+        )
+        self.assertEqual(
+            (adaptive["reuse_threshold_lower"], adaptive["reuse_threshold_upper"]),
+            (-1.0, 0.8),
+        )
+
+    def test_profiles_keep_cpu_offloading_enabled(self):
+        for profile in ABLATION_PROFILES:
+            with self.subTest(profile=profile):
+                self.assertEqual(
+                    apply_ablation_profile(self.base, profile)["num_skip_layers"],
+                    1,
+                )
+                self.assertFalse(
+                    apply_ablation_profile(self.base, profile)[
+                        "enable_intra_gqa_aggregation"
+                    ]
+                )
+
+
+if __name__ == "__main__":
+    unittest.main()

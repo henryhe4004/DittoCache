@@ -1,0 +1,75 @@
+from __future__ import annotations
+
+from typing import Any
+
+
+ABLATION_PROFILES = (
+    "B0",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+)
+
+
+def apply_ablation_profile(cfg: dict[str, Any], profile: str | None) -> dict[str, Any]:
+    """Apply one cumulative Ditto ablation stage to a resolved method config."""
+    if not profile:
+        return cfg
+
+    normalized = profile.strip().upper().replace("_", "-")
+    if normalized not in ABLATION_PROFILES:
+        choices = ", ".join(ABLATION_PROFILES)
+        raise ValueError(f"Unknown Ditto ablation profile {profile!r}; choose one of: {choices}")
+
+    stage = ABLATION_PROFILES.index(normalized)
+    result = dict(cfg)
+    adaptive_lower = float(result.get("reuse_threshold_lower", -1.0))
+    adaptive_upper = float(result.get("reuse_threshold_upper", 0.8))
+
+    result.update(
+        {
+            "enable_layer_prefetch": stage >= 2,
+            "enable_similarity": stage >= 3,
+            "transfer_backend": "gdrcopy" if stage >= 1 else "memcpy",
+            "enable_ditto_cuda_graph": stage >= 4,
+            "use_adaptive_threshold": stage >= 5,
+            "enable_resident_cache": stage >= 6,
+            "enable_intra_gqa_aggregation": False,
+            "ablation_profile": normalized,
+            "num_skip_layers": 1,
+        }
+    )
+
+    if stage < 3:
+        # Similarity is disabled; 1.0 keeps always-gather explicit in config dumps.
+        result["reuse_threshold_lower"] = 1.0
+        result["reuse_threshold_upper"] = 1.0
+    elif stage < 5:
+        result["reuse_threshold_lower"] = 0.8
+        result["reuse_threshold_upper"] = 0.8
+    else:
+        result["reuse_threshold_lower"] = adaptive_lower
+        result["reuse_threshold_upper"] = adaptive_upper
+
+    return result
+
+
+def summarize_ablation_config(cfg: dict[str, Any]) -> str:
+    fields = (
+        "ablation_profile",
+        "enable_layer_prefetch",
+        "enable_similarity",
+        "transfer_backend",
+        "enable_ditto_cuda_graph",
+        "use_adaptive_threshold",
+        "enable_resident_cache",
+        "enable_intra_gqa_aggregation",
+        "reuse_threshold_lower",
+        "reuse_threshold_upper",
+        "num_skip_layers",
+    )
+    return " ".join(f"{field}={cfg.get(field)}" for field in fields)
+

@@ -393,10 +393,13 @@ class HashOffloadingCache(OffloadingCache):
             and self._pending_overlap_head_mask[layer_idx] is not None
         )
         encode_current_query = (
-            self.layers_gpu_head_ids[layer_idx].numel() > 0
+            self.needs_current_retrieval_query(layer_idx)
             or need_overlap_current_query
         )
-        encode_prefetch_query = not self.layers_full_gpu_mask[next_layer_idx]
+        encode_prefetch_query = (
+            self.enable_layer_prefetch
+            and not self.layers_full_gpu_mask[next_layer_idx]
+        )
 
         if encode_current_query and encode_prefetch_query:
             prefetch_query_code, current_query_code = self._decode_append_hash_qqk(

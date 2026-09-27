@@ -61,6 +61,17 @@ def ensure_ditto_custom_config(custom_config: Optional[Any], hf_config: Optional
             reuse_threshold_lower=float(_get(ofc, "reuse_threshold_lower", 0.7)),
             decay_p=float(_get(ofc, "decay_p", 2.0)),
             cosine_padding=float(_get(ofc, "cosine_padding", 0.02)),
+            enable_similarity=bool(_get(ofc, "enable_similarity", True)),
+            use_adaptive_threshold=bool(
+                _get(ofc, "use_adaptive_threshold", True)
+            ),
+            enable_resident_cache=bool(
+                _get(ofc, "enable_resident_cache", True)
+            ),
+            enable_layer_prefetch=bool(
+                _get(ofc, "enable_layer_prefetch", True)
+            ),
+            transfer_backend=str(_get(ofc, "transfer_backend", "gdrcopy")),
             # <=0 means disabled: do not force gather refresh by reuse count.
             max_reuse_count=int(_get(ofc, "max_reuse_count", 0)),
             num_skip_layers=int(_get(ofc, "num_skip_layers", 0)),

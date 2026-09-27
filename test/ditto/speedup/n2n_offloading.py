@@ -12,15 +12,26 @@ from numbers import Integral, Real
 from pathlib import Path
 from typing import Any
 
+_ablation_bootstrap = argparse.ArgumentParser(add_help=False)
+_ablation_bootstrap.add_argument("--ablation-profile")
+_ablation_bootstrap_args, _ = _ablation_bootstrap.parse_known_args()
+if _ablation_bootstrap_args.ablation_profile:
+    os.environ["USE_INTRA_GQA_AGGREGATION"] = "0"
+
 import yaml
 from transformers import AutoConfig, AutoTokenizer
 
 THIS_DIR = Path(__file__).resolve().parent
 SGLANG_PY_ROOT = (THIS_DIR.parent.parent.parent / "python").resolve()
+if str(THIS_DIR.parent) not in sys.path:
+    sys.path.insert(0, str(THIS_DIR.parent))
+from ablation_profiles import (
+    ABLATION_PROFILES,
+    apply_ablation_profile,
+    summarize_ablation_config,
+)
 if SGLANG_PY_ROOT.is_dir() and str(SGLANG_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(SGLANG_PY_ROOT))
-
-from sglang import Engine
 
 
 def log(msg: str) -> None:
@@ -82,6 +93,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--method", type=str, default="offloading")
     parser.add_argument("--topk", type=float, default=None)
     parser.add_argument("--offloading-method", type=str, default="hash")
+    parser.add_argument(
+        "--ablation-profile",
+        type=str.upper,
+        choices=ABLATION_PROFILES,
+        default=None,
+        help="Apply a cumulative Ditto speedup ablation profile (B0-B6).",
+    )
 
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument(
@@ -117,6 +135,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-running-requests", type=int, default=None)
     parser.add_argument("--page-size", type=int, default=1)
     parser.add_argument("--decode-log-interval", type=int, default=40)
+    parser.add_argument("--watchdog-timeout", type=float, default=300.0)
+    parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument(
         "--disable-cuda-graph",
         dest="disable_cuda_graph",
@@ -308,6 +328,11 @@ def yaml_cfg_to_runtime(raw_cfg: dict[str, Any], config_file: str) -> dict[str, 
     set_if("reuse_threshold_upper", offload.get("reuse_threshold_upper"))
     set_if("decay_p", offload.get("decay_p"))
     set_if("cosine_padding", offload.get("cosine_padding"))
+    set_if("enable_similarity", offload.get("enable_similarity"))
+    set_if("use_adaptive_threshold", offload.get("use_adaptive_threshold"))
+    set_if("enable_resident_cache", offload.get("enable_resident_cache"))
+    set_if("enable_layer_prefetch", offload.get("enable_layer_prefetch"))
+    set_if("transfer_backend", offload.get("transfer_backend"))
     set_if("num_omp_threads", offload.get("num_omp_threads"))
     set_if("num_overlapped_heads", offload.get("num_overlapped_heads"))
     set_if("num_skip_layers", offload.get("num_skip_layers"))
@@ -327,6 +352,7 @@ def load_method_cfg(
     method: str,
     config_file: str | None,
     topk_override: float | None,
+    ablation_profile: str | None,
 ) -> tuple[dict[str, Any], str | None]:
     if not config_file:
         return {}, None
@@ -339,6 +365,7 @@ def load_method_cfg(
         cfg = yaml_cfg_to_runtime(raw_cfg, config_file)
         if topk_override is not None:
             cfg["topk"] = topk_override
+        cfg = apply_ablation_profile(cfg, ablation_profile)
         return cfg, "yaml"
 
     key = method.lower()
@@ -392,6 +419,7 @@ def load_method_cfg(
         method_cfg["topk"] = topk_override
     method_cfg["attn_pattern_path"] = resolve_path(method_cfg.get("attn_pattern_path"), config_file)
     method_cfg["aux_data_path"] = resolve_path(method_cfg.get("aux_data_path"), config_file)
+    method_cfg = apply_ablation_profile(method_cfg, ablation_profile)
     return method_cfg, resolved_key
 
 
@@ -449,6 +477,89 @@ def load_first_prompt(data_file: str) -> str:
     raise ValueError(f"No usable prompt found in data file: {data_file}")
 
 
+def _read_prompts(data_file: Path, limit: int) -> list[str]:
+    prompts: list[str] = []
+    with data_file.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            obj = json.loads(line)
+            prompt = obj.get("input") or obj.get("prompt") or obj.get("text")
+            if prompt:
+                prompts.append(str(prompt))
+                if len(prompts) >= limit:
+                    break
+    return prompts
+
+
+def load_prompt_batch(data_path: str, batch_size: int) -> list[str]:
+    path = Path(data_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Data path does not exist: {data_path}")
+    if path.is_file():
+        prompt = load_first_prompt(str(path))
+        return [prompt] * batch_size
+
+    files = sorted(path.rglob("*.jsonl"))
+    if not files:
+        raise ValueError(f"No JSONL files found under data directory: {data_path}")
+    per_file_limit = (batch_size + len(files) - 1) // len(files)
+    buckets = [_read_prompts(file, per_file_limit) for file in files]
+    prompt_batch: list[str] = []
+    for row_idx in range(per_file_limit):
+        for bucket in buckets:
+            if row_idx < len(bucket):
+                prompt_batch.append(bucket[row_idx])
+                if len(prompt_batch) == batch_size:
+                    return prompt_batch
+    raise ValueError(
+        f"Requested {batch_size} prompts but found only {len(prompt_batch)} "
+        f"under {data_path}"
+    )
+
+
+def fit_prompts_to_token_budget(
+    prompts: list[str], tokenizer: Any, max_prompt_tokens: int
+) -> tuple[list[str], list[int], int]:
+    if max_prompt_tokens <= 0:
+        raise ValueError(
+            f"max_prompt_tokens must be > 0, got {max_prompt_tokens}."
+        )
+
+    fitted_prompts: list[str] = []
+    token_counts: list[int] = []
+    truncated_count = 0
+    for prompt in prompts:
+        token_ids = tokenizer(prompt, add_special_tokens=False)["input_ids"]
+        if len(token_ids) > max_prompt_tokens:
+            truncated_count += 1
+            keep_tokens = max_prompt_tokens
+            while True:
+                fitted_prompt = tokenizer.decode(
+                    token_ids[:keep_tokens],
+                    skip_special_tokens=False,
+                    clean_up_tokenization_spaces=False,
+                )
+                fitted_ids = tokenizer(
+                    fitted_prompt, add_special_tokens=False
+                )["input_ids"]
+                if len(fitted_ids) <= max_prompt_tokens:
+                    prompt = fitted_prompt
+                    token_ids = fitted_ids
+                    break
+                keep_tokens -= max(len(fitted_ids) - max_prompt_tokens, 1)
+                if keep_tokens <= 0:
+                    raise RuntimeError(
+                        "Tokenizer round-trip could not fit prompt within "
+                        f"{max_prompt_tokens} tokens."
+                    )
+        fitted_prompts.append(prompt)
+        token_counts.append(len(token_ids))
+
+    return fitted_prompts, token_counts, truncated_count
+
+
 def extract_completion_tokens(output: Any) -> int:
     def _one(item: Any) -> int:
         if not isinstance(item, dict):
@@ -483,15 +594,15 @@ def _iter_output_items(output: Any) -> list[dict[str, Any]]:
 
 def _extract_internal_forward_timing(
     items: list[dict[str, Any]], batch_size: int, completion_tokens: int
-) -> tuple[float, float, float, float]:
+) -> tuple[float, float, float, float, dict[str, Any]]:
     if not items:
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, {"source": "empty_items"}
 
     prefill_candidates: list[float] = []
     decode_forward_latency_candidates: list[float] = []
     decode_forward_steps_candidates: list[int] = []
-    decode_forward_latency_drop10_candidates: list[float] = []
-    decode_forward_steps_drop10_candidates: list[int] = []
+    decode_forward_latency_drop20_candidates: list[float] = []
+    decode_forward_steps_drop20_candidates: list[int] = []
     sample_meta_keys: list[str] | None = None
     sample_meta_values: dict[str, Any] | None = None
 
@@ -510,9 +621,9 @@ def _extract_internal_forward_timing(
                 "decode_forward_latency",
                 "decode_forward_steps",
                 "decode_forward_latency_ms_per_step",
-                "decode_forward_latency_drop_first_10",
-                "decode_forward_steps_drop_first_10",
-                "decode_forward_latency_ms_per_step_drop_first_10",
+                "decode_forward_latency_drop_first_20",
+                "decode_forward_steps_drop_first_20",
+                "decode_forward_latency_ms_per_step_drop_first_20",
                 "decode_throughput",
             ]
             sample_meta_values = {k: meta.get(k) for k in inspect_keys}
@@ -543,20 +654,21 @@ def _extract_internal_forward_timing(
         if parsed_decode_steps is not None and parsed_decode_steps > 0:
             decode_forward_steps_candidates.append(parsed_decode_steps)
 
-        decode_forward_latency_drop10 = meta.get("decode_forward_latency_drop_first_10")
-        parsed_decode_latency_drop10 = _as_float(decode_forward_latency_drop10)
-        if parsed_decode_latency_drop10 is not None and parsed_decode_latency_drop10 > 0.0:
-            decode_forward_latency_drop10_candidates.append(parsed_decode_latency_drop10)
+        decode_forward_latency_drop20 = meta.get("decode_forward_latency_drop_first_20")
+        parsed_decode_latency_drop20 = _as_float(decode_forward_latency_drop20)
+        if parsed_decode_latency_drop20 is not None and parsed_decode_latency_drop20 > 0.0:
+            decode_forward_latency_drop20_candidates.append(parsed_decode_latency_drop20)
 
-        decode_steps_drop10 = meta.get("decode_forward_steps_drop_first_10")
-        parsed_decode_steps_drop10 = _as_int(decode_steps_drop10)
-        if parsed_decode_steps_drop10 is not None and parsed_decode_steps_drop10 > 0:
-            decode_forward_steps_drop10_candidates.append(parsed_decode_steps_drop10)
+        decode_steps_drop20 = meta.get("decode_forward_steps_drop_first_20")
+        parsed_decode_steps_drop20 = _as_int(decode_steps_drop20)
+        if parsed_decode_steps_drop20 is not None and parsed_decode_steps_drop20 > 0:
+            decode_forward_steps_drop20_candidates.append(parsed_decode_steps_drop20)
 
     prefill_latency = max(prefill_candidates) if prefill_candidates else 0.0
-    if decode_forward_latency_drop10_candidates and decode_forward_steps_drop10_candidates:
-        decode_forward_latency_sum = max(decode_forward_latency_drop10_candidates)
-        decode_forward_steps = max(decode_forward_steps_drop10_candidates)
+    if decode_forward_latency_drop20_candidates and decode_forward_steps_drop20_candidates:
+        decode_forward_latency_sum = max(decode_forward_latency_drop20_candidates)
+        decode_forward_steps = max(decode_forward_steps_drop20_candidates)
+        timing_source = "meta_drop_first_20"
     else:
         decode_forward_latency_sum = (
             max(decode_forward_latency_candidates)
@@ -566,6 +678,7 @@ def _extract_internal_forward_timing(
         decode_forward_steps = (
             max(decode_forward_steps_candidates) if decode_forward_steps_candidates else 0
         )
+        timing_source = "meta_full_decode" if decode_forward_latency_candidates else "missing"
 
     # In both internal prototype and this benchmark setup, the first generated token belongs
     # to prefill. Decode stage starts from token #2 for each request.
@@ -601,11 +714,25 @@ def _extract_internal_forward_timing(
         if decode_tokens > 0 and decode_forward_latency_sum > 0.0
         else 0.0
     )
+    timing_debug = {
+        "source": timing_source,
+        "prefill_candidates": len(prefill_candidates),
+        "decode_latency_candidates": len(decode_forward_latency_candidates),
+        "decode_steps_candidates": len(decode_forward_steps_candidates),
+        "decode_latency_drop20_candidates": len(decode_forward_latency_drop20_candidates),
+        "decode_steps_drop20_candidates": len(decode_forward_steps_drop20_candidates),
+        "decode_forward_latency_sum_s": decode_forward_latency_sum,
+        "decode_forward_steps": decode_forward_steps,
+        "decode_latency_ms_per_step": decode_latency_ms_per_step,
+        "sample_meta_keys": sample_meta_keys,
+        "sample_meta_values": sample_meta_values,
+    }
     return (
         prefill_latency,
         decode_forward_latency_sum,
         decode_latency_ms_per_step,
         decode_throughput,
+        timing_debug,
     )
 
 
@@ -645,7 +772,7 @@ def generate_with_internal_forward_timing(
     sampling_params: dict[str, Any],
     batch_size: int,
     transfer_stats_path: str | None = None,
-) -> tuple[Any, float, int, float, float, float, dict | None]:
+) -> tuple[Any, float, int, float, float, float, dict | None, dict[str, Any]]:
     outputs_for_meta: list[dict[str, Any]] = []
     last_chunk: Any = None
     t0 = time.perf_counter()
@@ -694,6 +821,7 @@ def generate_with_internal_forward_timing(
         decode_forward_latency_sum,
         decode_latency_ms_per_step,
         decode_throughput,
+        timing_debug,
     ) = _extract_internal_forward_timing(
         outputs_for_meta,
         batch_size=batch_size,
@@ -715,7 +843,7 @@ def generate_with_internal_forward_timing(
         decode_forward_latency_sum = decode_elapsed
 
         # Align with internal prototype timer semantics:
-        # use per-step decode forward latencies and drop first 10 decode steps.
+        # use per-step decode forward latencies and drop first 20 decode steps.
         decode_step_latencies_ms: list[float] = []
         if len(token_timestamps) >= 2:
             for i in range(1, len(token_timestamps)):
@@ -726,7 +854,7 @@ def generate_with_internal_forward_timing(
         if not decode_step_latencies_ms and decode_tokens > 0 and decode_elapsed > 0.0:
             decode_step_latencies_ms = [decode_elapsed / decode_tokens * 1000.0] * decode_tokens
 
-        dropped = 10
+        dropped = 20
         if len(decode_step_latencies_ms) > dropped:
             used_lat_ms = decode_step_latencies_ms[dropped:]
         else:
@@ -743,12 +871,22 @@ def generate_with_internal_forward_timing(
         else:
             decode_latency_ms_per_step = 0.0
             decode_throughput = 0.0
+        timing_debug = dict(timing_debug)
+        timing_debug.update({
+            "source": "stream_fallback_drop_first_20",
+            "stream_decode_step_count": len(decode_step_latencies_ms),
+            "stream_used_step_count": len(used_lat_ms),
+            "stream_decode_elapsed_s": decode_elapsed,
+        })
         log(
             "[WARN] Internal forward timing is unavailable; "
             "falling back to stream-based timing for this run."
         )
 
     internal_elapsed = max(prefill_latency + decode_forward_latency_sum, 0.0)
+    if os.environ.get("DITTO_TIMING_DEBUG", "0") == "1":
+        log(f"[TIMING_DEBUG] {json.dumps(timing_debug, sort_keys=True, default=str)}")
+
     transfer_stats = load_transfer_stats_file(transfer_stats_path)
     if transfer_stats is None:
         transfer_stats = extract_transfer_stats_from_meta(outputs_for_meta)
@@ -760,6 +898,7 @@ def generate_with_internal_forward_timing(
         decode_latency_ms_per_step,
         decode_throughput,
         transfer_stats,
+        timing_debug,
     )
 
 
@@ -770,6 +909,16 @@ def build_engine_for_bench(
 ) -> tuple[Engine, dict[str, Any]]:
     method = args.method.lower()
     ditto_enabled = is_ditto_method(method)
+    intra_gqa_aggregation_value: bool | None = None
+    if ditto_enabled and "enable_intra_gqa_aggregation" in cfg:
+        intra_gqa_aggregation_value = bool(cfg["enable_intra_gqa_aggregation"])
+        os.environ["USE_INTRA_GQA_AGGREGATION"] = (
+            "1" if intra_gqa_aggregation_value else "0"
+        )
+
+    # Import after applying process-wide Ditto feature flags. The offloading
+    # module reads USE_INTRA_GQA_AGGREGATION when it is first imported.
+    from sglang import Engine
 
     if args.max_total_tokens is not None:
         max_total_tokens = int(args.max_total_tokens)
@@ -818,11 +967,18 @@ def build_engine_for_bench(
             )
 
         decay_p = float(cfg.get("decay_p", cfg.get("deacy_p", 2.0)))
-        ditto_enable_cuda_graph = (
-            bool(cfg.get("_yaml_enable_cuda_graph", False))
-            if args.ditto_enable_cuda_graph is None
-            else bool(args.ditto_enable_cuda_graph)
+        profile_graph = bool(
+            cfg.get(
+                "enable_ditto_cuda_graph",
+                cfg.get("_yaml_enable_cuda_graph", False),
+            )
         )
+        if args.ablation_profile:
+            ditto_enable_cuda_graph = profile_graph
+        elif args.ditto_enable_cuda_graph is None:
+            ditto_enable_cuda_graph = profile_graph
+        else:
+            ditto_enable_cuda_graph = bool(args.ditto_enable_cuda_graph)
         ditto_enable_cuda_graph_value = ditto_enable_cuda_graph
 
         architecture = resolve_ditto_architecture(args.model)
@@ -864,6 +1020,17 @@ def build_engine_for_bench(
                     ),
                     "decay_p": decay_p,
                     "cosine_padding": float(cfg.get("cosine_padding", 0.02)),
+                    "enable_similarity": bool(cfg.get("enable_similarity", True)),
+                    "use_adaptive_threshold": bool(
+                        cfg.get("use_adaptive_threshold", True)
+                    ),
+                    "enable_resident_cache": bool(
+                        cfg.get("enable_resident_cache", True)
+                    ),
+                    "enable_layer_prefetch": bool(
+                        cfg.get("enable_layer_prefetch", True)
+                    ),
+                    "transfer_backend": str(cfg.get("transfer_backend", "gdrcopy")),
                     "num_skip_layers": int(cfg.get("num_skip_layers", args.num_skip_layers)),
                     "num_overlapped_heads": int(
                         cfg.get("num_overlapped_heads", args.num_overlapped_heads)
@@ -881,6 +1048,8 @@ def build_engine_for_bench(
             f"ditto_enable_cuda_graph={ditto_enable_cuda_graph_value}"
         )
 
+        if args.ablation_profile:
+            log(f"[Ditto ablation] {summarize_ablation_config(cfg)}")
     engine_kwargs = {
         "model_path": args.model,
         "model_impl": "auto",
@@ -901,6 +1070,8 @@ def build_engine_for_bench(
         "disable_piecewise_cuda_graph": True,
         "allow_auto_truncate": args.allow_auto_truncate,
         "decode_log_interval": decode_log_interval,
+        "watchdog_timeout": args.watchdog_timeout,
+        "random_seed": args.random_seed,
         "enable_metrics": True,
     }
     if model_override is not None:
@@ -914,7 +1085,10 @@ def build_engine_for_bench(
         "max_total_tokens": max_total_tokens,
         "sglang_cuda_graph_enabled": not bool(args.disable_cuda_graph),
         "ditto_cuda_graph_enabled": ditto_enable_cuda_graph_value,
+        "ablation_profile": args.ablation_profile,
         "transfer_stats_enabled": bool(args.record_transfer_stats),
+        "intra_gqa_aggregation_enabled": intra_gqa_aggregation_value,
+        "random_seed": args.random_seed,
     }
     return engine, runtime_meta
 
@@ -942,6 +1116,7 @@ def main() -> int:
             "status": "skipped",
             "reason": "ditto_batch_size_only_one",
             "method": args.method,
+            "ablation_profile": args.ablation_profile,
             "batch_size": args.batch_size,
             "max_seq_len": args.max_seq_len,
             "data": args.data,
@@ -957,27 +1132,43 @@ def main() -> int:
             out_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
         return 0
 
-    cfg, cfg_key = load_method_cfg(args.method, args.config_file, args.topk)
+    cfg, cfg_key = load_method_cfg(
+        args.method, args.config_file, args.topk, args.ablation_profile
+    )
 
-    prompt = load_first_prompt(args.data)
+    prompts = load_prompt_batch(args.data, args.batch_size)
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True, use_fast=True)
-    input_tokens = len(tokenizer(prompt, add_special_tokens=False)["input_ids"])
+    original_input_token_counts = [
+        len(tokenizer(prompt, add_special_tokens=False)["input_ids"])
+        for prompt in prompts
+    ]
+    max_prompt_tokens = args.max_seq_len - (args.num_decode_steps + 1)
+    prompts, input_token_counts, truncated_count = fit_prompts_to_token_budget(
+        prompts, tokenizer, max_prompt_tokens
+    )
+    input_tokens = max(input_token_counts)
+    min_input_tokens = min(input_token_counts)
+    total_input_tokens = sum(input_token_counts)
     expected_total_tokens = input_tokens + args.num_decode_steps + 1
     log(
-        f"[DATA] prompt_tokens={input_tokens} expected_total_tokens={expected_total_tokens} "
+        f"[DATA] prompts={len(prompts)} prompt_tokens_min={min_input_tokens} "
+        f"prompt_tokens_max={input_tokens} total_prompt_tokens={total_input_tokens} "
+        f"original_prompt_tokens_max={max(original_input_token_counts)} "
+        f"truncated_prompts={truncated_count} prompt_token_budget={max_prompt_tokens} "
+        f"expected_max_total_tokens={expected_total_tokens} "
         f"max_seq_len={args.max_seq_len}"
     )
     if expected_total_tokens > args.max_seq_len:
-        log(
-            f"[WARN] expected_total_tokens={expected_total_tokens} exceeds max_seq_len={args.max_seq_len}. "
-            "This may trigger truncation or runtime errors depending on backend behavior."
+        raise RuntimeError(
+            f"expected_max_total_tokens={expected_total_tokens} exceeds "
+            f"max_seq_len={args.max_seq_len} after prompt fitting."
         )
 
     prompt_batch: str | list[str]
     if args.batch_size == 1:
-        prompt_batch = prompt
+        prompt_batch = prompts[0]
     else:
-        prompt_batch = [prompt] * args.batch_size
+        prompt_batch = prompts
 
     log(
         f"[RUN] method={args.method} warmup={args.warmup} epoch={args.epoch} "
@@ -1003,6 +1194,8 @@ def main() -> int:
     epoch_decode_latencies_ms: list[float] = []
     epoch_decode_tps: list[float] = []
     epoch_transfer_stats: list[dict] = []
+    epoch_timing_debug: list[dict[str, Any]] = []
+    warmup_timing_debug: list[dict[str, Any]] = []
     sampling_params = {
         "temperature": 0.0,
         "top_p": 1.0,
@@ -1025,6 +1218,7 @@ def main() -> int:
                 decode_latency_ms_per_step,
                 decode_throughput,
                 transfer_stats,
+                timing_debug,
             ) = generate_with_internal_forward_timing(
                 engine=engine,
                 prompt=prompt_batch,
@@ -1064,6 +1258,7 @@ def main() -> int:
                     )
                 log(transfer_log)
             if phase == "warmup":
+                warmup_timing_debug.append(timing_debug)
                 print("Warmup end", flush=True)
             if args.print_output:
                 print(out, flush=True)
@@ -1074,6 +1269,7 @@ def main() -> int:
                 epoch_prefill_latencies.append(prefill_latency)
                 epoch_decode_latencies_ms.append(decode_latency_ms_per_step)
                 epoch_decode_tps.append(decode_throughput)
+                epoch_timing_debug.append(timing_debug)
                 if transfer_stats is not None:
                     epoch_transfer_stats.append(transfer_stats)
     finally:
@@ -1096,7 +1292,11 @@ def main() -> int:
     result = {
         "status": "ok",
         "method": args.method,
+        "ablation_profile": args.ablation_profile,
         "config_file": args.config_file,
+        "input_tokens_min": min_input_tokens,
+        "input_tokens_max": input_tokens,
+        "total_input_tokens": total_input_tokens,
         "data": args.data,
         "batch_size": args.batch_size,
         "max_seq_len": args.max_seq_len,
@@ -1115,6 +1315,8 @@ def main() -> int:
         "epoch_prefill_latency_s": epoch_prefill_latencies,
         "epoch_decode_latency_ms_per_step": epoch_decode_latencies_ms,
         "epoch_decode_tokens_per_s": epoch_decode_tps,
+        "warmup_timing_debug": warmup_timing_debug,
+        "epoch_timing_debug": epoch_timing_debug,
         "runtime_meta": runtime_meta,
     }
     if args.record_transfer_stats:

@@ -115,7 +115,7 @@ class InfiniGenOffloadingCache(OffloadingCache):
     def append_topk_cache_decode(self, key_states, value_states, layer_idx, prefetch_query_states=None, current_query_states=None):
         del value_states
         next_layer_idx = (layer_idx + 1) % self.num_layers
-        encode_current_query = self.layers_gpu_head_ids[layer_idx].numel() > 0
+        encode_current_query = self.needs_current_retrieval_query(layer_idx)
         encode_prefetch_query = not self.layers_full_gpu_mask[next_layer_idx]
 
         prefetch_query_code = None

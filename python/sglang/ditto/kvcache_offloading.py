@@ -96,6 +96,28 @@ class OffloadingCache(CustomStaticCache):
             getattr(self.config.offload_config, "max_reuse_count", 0)
         )
         self.max_reuse_count = 0 if raw_max_reuse_count <= 0 else raw_max_reuse_count
+        self.enable_similarity = bool(
+            getattr(self.config.offload_config, "enable_similarity", True)
+        )
+        self.use_adaptive_threshold = bool(
+            getattr(self.config.offload_config, "use_adaptive_threshold", True)
+        )
+        if USE_FIXED_THRESHOLDS:
+            self.use_adaptive_threshold = False
+        self.enable_resident_cache = bool(
+            getattr(self.config.offload_config, "enable_resident_cache", True)
+        ) and not DISABLE_PERSISTENT_CACHING
+        self.enable_layer_prefetch = bool(
+            getattr(self.config.offload_config, "enable_layer_prefetch", True)
+        )
+        self.transfer_backend = str(
+            getattr(self.config.offload_config, "transfer_backend", "gdrcopy")
+        ).strip().lower()
+        if self.transfer_backend not in {"memcpy", "gdrcopy"}:
+            raise ValueError(
+                "Ditto transfer_backend must be 'memcpy' or 'gdrcopy', "
+                f"got {self.transfer_backend!r}."
+            )
 
         # Debug switch for diagnosing potential CPUGather stalls.
         self.debug_cpugather = os.environ.get("DITTO_DEBUG_CPUGATHER", "0") == "1"
@@ -279,6 +301,13 @@ class OffloadingCache(CustomStaticCache):
             ready_total=total_heads,
         )
 
+    def _wait_for_memcpy_on_cpu(self, layer_idx: int, total_heads: int):
+        ready = self.metadata_tensors["ready_flag"][layer_idx][:total_heads]
+        while not bool(ready.all().item()):
+            # Yield while the CPU worker finishes the host gather and H2D copy.
+            # The gdrcopy backend keeps its existing GPU-side wait path.
+            time.sleep(0)
+
     def _init_kv_placement(self):
         # Read head importance and cosine similarity data
         cosine_file = os.path.join(self.config.offload_config.attn_pattern_path, "heads_cosine_similarity.csv")
@@ -355,7 +384,7 @@ class OffloadingCache(CustomStaticCache):
         self.layers_reuse_thresholds = []
         for l in range(self.num_layers):
             reuse_thresholds = head_importance[l].clone()
-            if USE_FIXED_THRESHOLDS:
+            if not self.use_adaptive_threshold:
                 reuse_thresholds[:] = self.config.offload_config.reuse_threshold_upper
             else:
                 # Keep threshold mapping identical to internal prototype offloading:
@@ -373,8 +402,8 @@ class OffloadingCache(CustomStaticCache):
 
         # Calculate reuse difficulty and hard-to-reuse heads
         hard2reuse_head_mask = stacked_reuse_thresholds > head_cos - self.config.offload_config.cosine_padding
-        if DISABLE_PERSISTENT_CACHING:
-            hard2reuse_head_mask[:] = False
+        if not self.enable_resident_cache:
+            hard2reuse_head_mask.zero_()
         num_hard2reuse_head = torch.sum(hard2reuse_head_mask, dim=1)
         reuse_difficulty = stacked_reuse_thresholds - head_cos
         print(f"#Hard-to-reuse-heads:{num_hard2reuse_head.sum().item()}")
@@ -1210,7 +1239,9 @@ class OffloadingCache(CustomStaticCache):
                 self.config.sparse_attention_config.sink_budget + self.config.sparse_attention_config.recent_budget + 1,
                 self.num_key_value_heads,
                 self.head_dim,
-                debug=True)
+                debug=True,
+                transfer_backend=self.transfer_backend,
+            )
 
     def update_metadata(self, q_len: int, is_prefill=False, layer_idx: int = 0):
         super().update_metadata(q_len, is_prefill, layer_idx)
@@ -1758,6 +1789,15 @@ class OffloadingCache(CustomStaticCache):
         self._increment_active_host_lengths(self.cache_length_host, layer_idx)
         torch.cuda.nvtx.range_pop()
 
+    def needs_current_retrieval_query(self, layer_idx: int) -> bool:
+        return (
+            self.layers_gpu_head_ids[layer_idx].numel() > 0
+            or (
+                not self.enable_layer_prefetch
+                and not self.layers_full_gpu_mask[layer_idx]
+            )
+        )
+
     def append_topk_cache_decode(
         self,
         key_states: torch.Tensor,
@@ -1777,6 +1817,13 @@ class OffloadingCache(CustomStaticCache):
             :self.curr_batch_size * self.num_key_value_heads]
         reuse_count = self.metadata_tensors['reuse_count'][layer_idx][
             :self.curr_batch_size * self.num_key_value_heads]
+        if not self.enable_similarity:
+            active_heads = self.curr_batch_size * self.num_key_value_heads
+            gather_mask.copy_(
+                ~self.layers_gpu_bh_mask[layer_idx][:active_heads]
+            )
+            reuse_count.zero_()
+            return gather_mask
 
         torch.cuda.nvtx.range_push("check reuse")
         if USE_INTRA_GQA_AGGREGATION and self.num_key_value_heads < self.num_heads:
@@ -1839,6 +1886,16 @@ class OffloadingCache(CustomStaticCache):
             stream_ready=self._safe_stream_query(stream),
         )
         t0 = time.perf_counter()
+        if self.transfer_backend == "memcpy":
+            # static_launch_prefetch resets ready flags asynchronously. Wait for
+            # that reset before checking them on CPU, otherwise a previous
+            # decode step's true flags can make this wait return too early.
+            self._debug_cpugather_log("memcpy_launch_sync_enter", layer_idx)
+            stream.synchronize()
+            self._debug_cpugather_log("memcpy_launch_sync_exit", layer_idx)
+            self._debug_cpugather_log("memcpy_cpu_wait_enter", layer_idx)
+            self._wait_for_memcpy_on_cpu(layer_idx, total_heads)
+            self._debug_cpugather_log("memcpy_cpu_wait_exit", layer_idx)
         torch.cuda.nvtx.range_push(
             f"wait_op:decode_append_offload_tensor_pos_wait[layer={layer_idx}]"
         )
@@ -2174,7 +2231,8 @@ class OffloadingCache(CustomStaticCache):
         # 3. compute prefetch top-k indices (checked)
         next_layer_idx = (layer_idx + 1) % self.num_layers
         should_prefetch = (
-            (not self.layers_full_gpu_mask[next_layer_idx])
+            self.enable_layer_prefetch
+            and (not self.layers_full_gpu_mask[next_layer_idx])
             and (not self.disable_prefetch)
             and (int(self.topk_prefetch_k_host) > 0)
         )
@@ -2203,6 +2261,31 @@ class OffloadingCache(CustomStaticCache):
                 prefetch_shape=tuple(prefetch_topk_indices.shape),
             )
 
+        # Without layer prefetch, retrieve the current layer synchronously.
+        if (
+            not self.enable_layer_prefetch
+            and not self.layers_full_gpu_mask[layer_idx]
+        ):
+            if current_query is None:
+                raise RuntimeError(
+                    "Current-layer HATA query was not produced for synchronous "
+                    f"retrieval at layer={layer_idx}."
+                )
+            current_gather_mask = self.cache_query_and_update(
+                current_query_states, layer_idx
+            )
+            current_prefetch_topk_indices = self.compute_topk(
+                current_query,
+                layer_idx,
+                current_gather_mask,
+                is_prefetch=True,
+            )
+            self.launch_prefetch(
+                current_prefetch_topk_indices,
+                current_gather_mask,
+                layer_idx,
+            )
+
         # 4. append cpu kvcache, gpu recent buffer, and sync prefetch (checked)
         if not self.layers_full_gpu_mask[layer_idx]:
             t_step = time.perf_counter()
@@ -2213,7 +2296,7 @@ class OffloadingCache(CustomStaticCache):
             self._debug_stall_duration("step4_cpu_append_wait_exit", layer_idx, t_step)
 
         # 5. launch prefetching (checked)
-        if not self.layers_full_gpu_mask[next_layer_idx]:
+        if self.enable_layer_prefetch and not self.layers_full_gpu_mask[next_layer_idx]:
             if should_prefetch:
                 t_step = time.perf_counter()
                 self._debug_stall_log("step5_launch_prefetch_enter", layer_idx, next_layer=next_layer_idx)

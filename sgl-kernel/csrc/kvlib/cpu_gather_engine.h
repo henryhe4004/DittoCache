@@ -1,11 +1,15 @@
 #pragma once
+#include <cuda_runtime_api.h>
 #include <gdrapi.h>
 #include <torch/script.h>
+
 #include <atomic>
+#include <cstddef>
 #include <condition_variable>
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -38,7 +42,14 @@ class CPUGatherEngineV3 {
   std::vector<void*> _user_space_gpu_kv_buffer_mapped = {};
   int64_t* __restrict__ _cpu_indices_buffer = nullptr;
 
-  gdr_t _g;
+  bool _use_gdrcopy = true;
+  std::string _transfer_backend = "gdrcopy";
+  int _cuda_device = -1;
+  cudaStream_t _memcpy_stream = nullptr;
+  char* _memcpy_staging = nullptr;
+  size_t _memcpy_staging_capacity = 0;
+
+  gdr_t _g = nullptr;
   std::vector<std::optional<gdr_mh_t>> _gdr_handlers = {};
 
   std::thread _worker;
@@ -64,7 +75,8 @@ class CPUGatherEngineV3 {
     int64_t sink_recent_budget,
     int64_t num_heads,
     int64_t head_dim,
-    bool debug);
+    bool debug,
+    std::string transfer_backend = "gdrcopy");
   ~CPUGatherEngineV3();
 };
 

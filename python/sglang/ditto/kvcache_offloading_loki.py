@@ -183,7 +183,7 @@ class LokiOffloadingCache(OffloadingCache):
     ):
         del value_states
         next_layer_idx = (layer_idx + 1) % self.num_layers
-        encode_current_query = self.layers_gpu_head_ids[layer_idx].numel() > 0
+        encode_current_query = self.needs_current_retrieval_query(layer_idx)
         encode_prefetch_query = not self.layers_full_gpu_mask[next_layer_idx]
         if encode_current_query and encode_prefetch_query:
             prefetch_query_code, current_query_code = self._decode_append_loki_qqk(

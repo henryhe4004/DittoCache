@@ -36,7 +36,8 @@ struct PyCPUGatherEngineV3 {
       int64_t sink_recent_budget,
       int64_t num_heads,
       int64_t head_dim,
-      bool debug) {
+      bool debug,
+      std::string transfer_backend) {
     auto cpu_kv_opt = tensor_list_from_vector(cpu_kv_data);
     auto gpu_kv_opt = tensor_list_from_vector(gpu_kv_buffer);
     auto dst_head_opt = tensor_list_from_vector(dst_head_index);
@@ -56,7 +57,8 @@ struct PyCPUGatherEngineV3 {
         sink_recent_budget,
         num_heads,
         head_dim,
-        debug);
+        debug,
+        transfer_backend);
   }
 };
 
@@ -77,7 +79,8 @@ PYBIND11_MODULE(kvlib_cpu_gather, m) {
            int64_t,
            int64_t,
            int64_t,
-           bool>(),
+           bool,
+           std::string>(),
            pybind11::arg("num_omp_threads"),
            pybind11::arg("cpu_kv_data"),
            pybind11::arg("gpu_kv_buffer"),
@@ -90,7 +93,8 @@ PYBIND11_MODULE(kvlib_cpu_gather, m) {
            pybind11::arg("sink_recent_budget"),
            pybind11::arg("num_heads"),
            pybind11::arg("head_dim"),
-           pybind11::arg("debug") = false);
+           pybind11::arg("debug") = false,
+           pybind11::arg("transfer_backend") = "gdrcopy");
 
   // Offload-related helpers mirroring kvlib CUDA kernels.
   m.def(

@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OUTPUT_DIR="${OUTPUT_DIR:-${SCRIPT_DIR}/results/ablation_b0_b6}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+DATA_PATH="${DATA_PATH:-/workspace/jhe/8K}"
+CONFIG_ROOT="${CONFIG_ROOT:-${SCRIPT_DIR}/../config/hata_offloading}"
+MODEL_CONFIG_NAME="${MODEL_CONFIG_NAME:-Qwen2.5-14B-Instruct-1M}"
+METHOD="${METHOD:-offloading-hash}"
+SEQ_K="${SEQ_K:-8}"
+MAX_SEQ_LEN="${MAX_SEQ_LEN:-8192}"
+WARMUP="${WARMUP:-1}"
+EPOCH="${EPOCH:-1}"
+WATCHDOG_TIMEOUT="${WATCHDOG_TIMEOUT:-300}"
+RANDOM_SEED="${RANDOM_SEED:-42}"
+PROFILES=(B0 B1 B2 B3 B4 B5 B6)
+BATCH_SIZES=(16 64)
+
+if [[ -n "${ABLATION_PROFILES:-}" ]]; then
+    read -r -a PROFILES <<< "${ABLATION_PROFILES^^}"
+fi
+if [[ -n "${ABLATION_BATCH_SIZES:-}" ]]; then
+    read -r -a BATCH_SIZES <<< "${ABLATION_BATCH_SIZES}"
+fi
+
+if [[ ! -d "${DATA_PATH}" ]]; then
+    echo "[ERROR] missing data directory: ${DATA_PATH}" >&2
+    exit 1
+fi
+
+mkdir -p "${OUTPUT_DIR}"
+
+for batch_size in "${BATCH_SIZES[@]}"; do
+    if (( batch_size <= 0 )); then
+        echo "[ERROR] invalid batch size: ${batch_size}" >&2
+        exit 1
+    fi
+    total_k=$((batch_size * SEQ_K))
+    config_file="${CONFIG_ROOT}/${MODEL_CONFIG_NAME}-${total_k}K.yaml"
+    if [[ ! -f "${config_file}" ]]; then
+        echo "[ERROR] missing ${batch_size}x8K config: ${config_file}" >&2
+        exit 1
+    fi
+
+    run_label="${batch_size}x${SEQ_K}K"
+    run_dir="${OUTPUT_DIR}/${run_label}"
+    mkdir -p "${run_dir}"
+
+    for profile in "${PROFILES[@]}"; do
+        result_json="${run_dir}/${profile}.json"
+        log_file="${run_dir}/${profile}.log"
+        cmd=(
+            env
+            USE_INTRA_GQA_AGGREGATION=0
+            "${PYTHON_BIN}"
+            "${SCRIPT_DIR}/n2n_offloading.py"
+            "$@"
+            --method "${METHOD}"
+            --config_file "${config_file}"
+            --data "${DATA_PATH}"
+            --batch_size "${batch_size}"
+            --max_seq_len "${MAX_SEQ_LEN}"
+            --warmup "${WARMUP}"
+            --epoch "${EPOCH}"
+            --max-running-requests "${batch_size}"
+            --max-total-tokens "$((total_k * 1024))"
+            --watchdog-timeout "${WATCHDOG_TIMEOUT}"
+            --random-seed "${RANDOM_SEED}"
+            --disable-cuda-graph
+            --ablation-profile "${profile}"
+            --result-json "${result_json}"
+        )
+
+        echo "[ABLATION] run=${run_label} profile=${profile} result=${result_json}"
+        if [[ "${DRY_RUN:-0}" == "1" ]]; then
+            printf '[DRY_RUN]'
+            printf ' %q' "${cmd[@]}"
+            printf '\n'
+        else
+            "${cmd[@]}" 2>&1 | tee "${log_file}"
+        fi
+    done
+done
+
+if [[ "${EXPORT_CSV:-1}" == "1" && "${DRY_RUN:-0}" != "1" ]]; then
+    "${PYTHON_BIN}" "${SCRIPT_DIR}/export_speedup_csv.py" \
+        --input-dir "${OUTPUT_DIR}" \
+        --recursive \
+        --output-csv "${OUTPUT_DIR}/summary.csv"
+    echo "[DONE] csv summary: ${OUTPUT_DIR}/summary.csv"
+fi

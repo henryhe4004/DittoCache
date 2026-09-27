@@ -47,7 +47,7 @@
         "max_cpu_memory_size": 100,
         "sink_budget": 4,
         "recent_budget": 64,
-        "reuse_threshold_lower": 0,
+        "reuse_threshold_lower": -1.0,
         "reuse_threshold_upper": 0.80,
         "deacy_p": 3,
         "cosine_padding": 0.05,

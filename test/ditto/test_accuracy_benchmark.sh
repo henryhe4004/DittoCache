@@ -153,6 +153,7 @@ SGLANG_ENABLE_STRICT_MEM_CHECK_DURING_IDLE="${SGLANG_ENABLE_STRICT_MEM_CHECK_DUR
 MAX_TOTAL_TOKENS="${MAX_TOTAL_TOKENS:-65536}"
 MEM_FRACTION_STATIC="${MEM_FRACTION_STATIC:-}"
 ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
+ABLATION_PROFILE="${ABLATION_PROFILE:-}"
 
 CONFIG_FILE="${CONFIG_FILE:-}"
 if [[ -z "${CONFIG_FILE}" ]]; then
@@ -172,6 +173,9 @@ fi
 OUTPUT_ROOT="${OUTPUT_ROOT:-${SCRIPT_DIR}/preds}"
 MODEL_TAG="${MODEL_TAG:-$(basename "${MODEL_PATH}")}"
 RUN_TAG="${RUN_TAG:-${MODEL_TAG}-${DATASET_NAME}-top${TOPK}}"
+if [[ -n "${ABLATION_PROFILE}" && "${RUN_TAG}" != *"-${ABLATION_PROFILE}" ]]; then
+    RUN_TAG="${RUN_TAG}-${ABLATION_PROFILE}"
+fi
 OUTPUT_DIR="${OUTPUT_ROOT}/${METHOD}/${RUN_TAG}"
 
 DRY_RUN="${DRY_RUN:-0}"
@@ -255,6 +259,9 @@ RUN_CMD=(
     --decode-log-interval "${DECODE_LOG_INTERVAL}"
 )
 
+if [[ -n "${ABLATION_PROFILE}" ]]; then
+    RUN_CMD+=(--ablation-profile "${ABLATION_PROFILE}")
+fi
 if [[ "${DATASET_E_MODE}" == "1" ]]; then
     RUN_CMD+=(--e)
 fi
@@ -283,6 +290,9 @@ log_info "dataset=${DATASET_NAME} tasks=${TASKS}"
 log_info "output_dir=${OUTPUT_DIR}"
 log_info "model=$(basename "${MODEL_PATH}") method=${METHOD} topk=${TOPK} selective_start_len=${SELECTIVE_START_LEN}"
 log_info "config_file=${CONFIG_FILE}"
+if [[ -n "${ABLATION_PROFILE}" ]]; then
+    log_info "ablation_profile=${ABLATION_PROFILE}"
+fi
 log_info "dataset_path=${DATASET_PATH} gpus=${CUDA_VISIBLE_DEVICES} mp=${MP_NUM} pp=${PP_NUM}"
 log_info "max_seq_len=${MAX_SEQ_LEN} engine_context_length=${ENGINE_CONTEXT_LENGTH}"
 if [[ "${MP_NUM}" == "1" ]]; then

@@ -414,6 +414,7 @@ if(SGL_KERNEL_ENABLE_KVLIB)
   )
   set_target_properties(kvlib_offload_core PROPERTIES
     POSITION_INDEPENDENT_CODE ON
+    CUDA_ARCHITECTURES "${SGL_KERNEL_COMMON_ARCH}"
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_STANDARD 17
   )
@@ -431,7 +432,7 @@ if(SGL_KERNEL_ENABLE_KVLIB)
     ${PROJECT_SOURCE_DIR}/include
   )
   target_link_libraries(kvlib_offload_core PUBLIC OpenMP::OpenMP_CXX)
-  target_link_libraries(kvlib_offload_core PRIVATE ${TORCH_LIBRARIES} c10 cuda gdrapi)
+  target_link_libraries(kvlib_offload_core PRIVATE ${TORCH_LIBRARIES} c10 cuda CUDA::cudart gdrapi)
 endif()
 
 # =========================== Common SM90 Build ============================= #
@@ -552,6 +553,7 @@ target_include_directories(kvlib_cpu_gather PRIVATE
 )
 message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
 set_target_properties(kvlib_cpu_gather PROPERTIES
+    CUDA_ARCHITECTURES "${SGL_KERNEL_COMMON_ARCH}"
     OUTPUT_NAME "kvlib_cpu_gather"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python/sgl_kernel"
 )

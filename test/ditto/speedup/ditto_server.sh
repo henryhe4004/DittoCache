@@ -3,8 +3,8 @@ set -euo pipefail
 
 CUDA_DEVICE="${CUDA_DEVICE:-0}"
 PORT="${PORT:-30000}"
-
-MODEL_PATH="${MODEL_PATH:-/data3/Llama-3-8B-Instruct-Gradient-1048k}" #/models/Llama-3-8B-Instruct
+# /models/Qwen2.5-14B-Instruct-1M
+MODEL_PATH="${MODEL_PATH:-/models/Qwen2.5-14B-Instruct-1M}" #/models/Llama-3-8B-Instruct
 # /models/Qwen2.5-14B-Instruct-1M
 # Offline-parity defaults for accuracy debugging. Override these env vars when
 # testing online multi-batch behavior.

@@ -6,7 +6,6 @@ import sys
 
 import numpy as np
 import torch
-from fastchat.model import get_conversation_template
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 import transformers.activations as hf_activations
 from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
@@ -96,6 +95,13 @@ def apply_template(prompt, model_arch, tokenizer):
         prompt = f"[INST] {prompt} [/INST]"
     # longchat
     elif model_arch == "longchat":
+        try:
+            from fastchat.model import get_conversation_template
+        except ImportError as exc:
+            raise ImportError(
+                "fastchat is required only for longchat templates; "
+                "install fschat or use a Llama/Qwen model."
+            ) from exc
         conv = get_conversation_template("vicuna")
         conv.append_message(conv.roles[0], prompt)
         conv.append_message(conv.roles[1], None)

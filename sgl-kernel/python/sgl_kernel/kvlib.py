@@ -745,6 +745,7 @@ class CPUGatherEngineV3:
         num_heads: int,
         head_dim: int,
         debug: bool = False,
+        transfer_backend: str = "gdrcopy",
     ):
         if _kvlib_cpu_gather is None:
             raise RuntimeError(
@@ -765,6 +766,7 @@ class CPUGatherEngineV3:
             num_heads,
             head_dim,
             debug,
+            transfer_backend,
         )
 
     def __enter__(self):

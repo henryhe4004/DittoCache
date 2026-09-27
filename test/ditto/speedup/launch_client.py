@@ -25,7 +25,7 @@ BASE_URL = f"{SERVER}/generate" if USE_NATIVE_GENERATE else f"{SERVER}/v1/chat/c
 CONCURRENCY = 1
 TOTAL_REQUESTS = 10
 REQUEST_TIMEOUT_SEC = 900
-LOG_FILE = Path("/speedup/online_client_results.jsonl")
+LOG_FILE = THIS_DIR / "online_client_results.jsonl"
 MODEL_PATH = "/models/Qwen2.5-14B-Instruct-1M"
 RULER_ROOT = Path("/datasets/ruler")
 

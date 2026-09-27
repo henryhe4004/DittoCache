@@ -1,13 +1,24 @@
 #include <immintrin.h>
+#include <cuda_runtime_api.h>
 #include <nvtx3/nvToolsExt.h>
 #include <omp.h>
 #include <pthread.h>
 #include <chrono>
 #include <iostream>
+#include <stdexcept>
 #include "cpu_gather_engine.h"
 
 #define PREFETCH_DISTANCE 5
 
+
+namespace {
+void check_cuda(cudaError_t status, const char* operation) {
+  if (status != cudaSuccess) {
+    std::cerr << operation << " failed: " << cudaGetErrorString(status) << std::endl;
+    std::terminate();
+  }
+}
+}  // namespace
 namespace kvlib {
 
 void CPUGatherEngineV3::_work_loop() {
@@ -22,6 +33,9 @@ void CPUGatherEngineV3::_work_loop() {
 
   pthread_setschedprio(thId, max_prio_for_policy);
   pthread_attr_destroy(&thAttr);
+  if (!_use_gdrcopy) {
+    check_cuda(cudaSetDevice(_cuda_device), "cudaSetDevice");
+  }
 
   const size_t vector_size = this->_head_dim * sizeof(uint16_t);
   const size_t onetoken_key_size = this->_num_heads * vector_size;
@@ -44,10 +58,6 @@ void CPUGatherEngineV3::_work_loop() {
       const size_t gpu_buffer_key_size = curr_batch_size * curr_max_cache_buffer_length *
                                          _gpu_buffer_head_num[layer_idx] * vector_size;
 
-      char *output_key_tensor_ptr =
-          (char *)this->_user_space_gpu_kv_buffer_mapped[layer_idx];
-      char *output_value_tensor_ptr =
-          output_key_tensor_ptr + gpu_buffer_key_size;
 
       int num_gather_heads = 0;
       for (int i = 0; i < curr_batch_size * _num_heads; i += 1) {
@@ -64,6 +74,34 @@ void CPUGatherEngineV3::_work_loop() {
           this->_ready_flags[layer_idx][_gather_hids[i]] = true;
         }
         continue;
+      }
+
+      char *gpu_output_key_tensor_ptr =
+          (char *)this->_gpu_kv_buffer[layer_idx];
+      char *gpu_output_value_tensor_ptr =
+          gpu_output_key_tensor_ptr + gpu_buffer_key_size;
+      char *output_key_tensor_ptr = nullptr;
+      char *output_value_tensor_ptr = nullptr;
+      if (_use_gdrcopy) {
+        output_key_tensor_ptr =
+            (char *)this->_user_space_gpu_kv_buffer_mapped[layer_idx];
+        output_value_tensor_ptr = output_key_tensor_ptr + gpu_buffer_key_size;
+      } else {
+        const size_t staging_plane_size =
+            num_gather_heads * gather_length * vector_size;
+        const size_t required_staging_size = 2 * staging_plane_size;
+        if (required_staging_size > _memcpy_staging_capacity) {
+          if (_memcpy_staging != nullptr) {
+            check_cuda(cudaFreeHost(_memcpy_staging), "cudaFreeHost");
+          }
+          check_cuda(cudaHostAlloc((void **)&_memcpy_staging,
+                                   required_staging_size,
+                                   cudaHostAllocPortable),
+                     "cudaHostAlloc");
+          _memcpy_staging_capacity = required_staging_size;
+        }
+        output_key_tensor_ptr = _memcpy_staging;
+        output_value_tensor_ptr = _memcpy_staging + staging_plane_size;
       }
 
       const int num_threads = this->_num_omp_threads;
@@ -109,9 +147,17 @@ void CPUGatherEngineV3::_work_loop() {
             head_gather_length = gather_length;
           }
 
-          size_t cur_dst_offset = bid * gpu_batch_stride +
-                                  dst_hid * vector_size +
-                                  gpu_sink_recent_offset;
+          size_t cur_dst_offset;
+          size_t dst_token_stride;
+          if (_use_gdrcopy) {
+            cur_dst_offset = bid * gpu_batch_stride +
+                             dst_hid * vector_size +
+                             gpu_sink_recent_offset;
+            dst_token_stride = gpu_onetoken_size;
+          } else {
+            cur_dst_offset = tot_hid_idx * gather_length * vector_size;
+            dst_token_stride = vector_size;
+          }
 
           int64_t *thread_indices_ptr =
               indices_base + total_hid * curr_max_indices_buffer_length;
@@ -132,7 +178,7 @@ void CPUGatherEngineV3::_work_loop() {
           for (int k = 0; k < end_k; ++k) {
             int64_t index = thread_indices_ptr[sid + k];
             size_t src_offset = index * vector_size;
-            size_t dst_offset = (sid + k) * gpu_onetoken_size;
+            size_t dst_offset = (sid + k) * dst_token_stride;
 
             // PREFETCH：提前加载后续访问的 key/value 数据
             if (k + PREFETCH_DISTANCE < end_k) {
@@ -155,6 +201,50 @@ void CPUGatherEngineV3::_work_loop() {
         _mm_sfence();
 
 #pragma omp barrier
+#pragma omp single
+        {
+          if (!_use_gdrcopy) {
+            check_cuda(cudaSetDevice(_cuda_device), "cudaSetDevice");
+            for (int i = 0; i < num_gather_heads; ++i) {
+              const int total_hid = _gather_hids[i];
+              const int bid = total_hid / num_heads;
+              const int hid = total_hid % num_heads;
+              const int dst_hid = this->_dst_head_index[layer_idx][hid];
+              const int head_gather_length = std::max(
+                  0, std::min((int)per_head_lengths[total_hid], gather_length));
+              if (head_gather_length == 0) continue;
+
+              const size_t gpu_dst_offset = bid * gpu_batch_stride +
+                                            dst_hid * vector_size +
+                                            gpu_sink_recent_offset;
+              const size_t staging_offset = i * gather_length * vector_size;
+              check_cuda(
+                  cudaMemcpy2DAsync(
+                      gpu_output_key_tensor_ptr + gpu_dst_offset,
+                      gpu_onetoken_size,
+                      output_key_tensor_ptr + staging_offset,
+                      vector_size,
+                      vector_size,
+                      head_gather_length,
+                      cudaMemcpyHostToDevice,
+                      _memcpy_stream),
+                  "cudaMemcpy2DAsync(key)");
+              check_cuda(
+                  cudaMemcpy2DAsync(
+                      gpu_output_value_tensor_ptr + gpu_dst_offset,
+                      gpu_onetoken_size,
+                      output_value_tensor_ptr + staging_offset,
+                      vector_size,
+                      vector_size,
+                      head_gather_length,
+                      cudaMemcpyHostToDevice,
+                      _memcpy_stream),
+                  "cudaMemcpy2DAsync(value)");
+            }
+            check_cuda(cudaStreamSynchronize(_memcpy_stream),
+                       "cudaStreamSynchronize");
+          }
+        }
         for (int i = tid; i < num_gather_heads; i += num_threads) {
           int total_hid = _gather_hids[i];
           this->_ready_flags[layer_idx][total_hid] = true;
@@ -184,7 +274,8 @@ CPUGatherEngineV3::CPUGatherEngineV3(
     int64_t sink_recent_budget,
     int64_t num_heads,
     int64_t head_dim,
-    bool debug)
+    bool debug,
+    std::string transfer_backend)
     : _max_batch_size(max_batch_size),
       _sink_recent_budget(sink_recent_budget),
       _num_heads(num_heads),
@@ -193,6 +284,7 @@ CPUGatherEngineV3::CPUGatherEngineV3(
       // _launch_flag(launch_flag.data_ptr<int32_t>()),
       _launch_flag(reinterpret_cast<volatile int32_t*>(launch_flag.data_ptr<int32_t>())),
       _cpu_indices_buffer(cpu_indices_buffer.data_ptr<int64_t>()),
+      _transfer_backend(transfer_backend),
       _debug(debug) {
 
   _total_num_heads = _max_batch_size * _num_heads;
@@ -223,29 +315,49 @@ CPUGatherEngineV3::CPUGatherEngineV3(
     _gpu_buffer_head_num.emplace_back(num);
   }
 
-  // init gdr and setup gpu_kv_buffer
-  _g = gdr_open();
+  TORCH_CHECK(
+      _transfer_backend == "memcpy" || _transfer_backend == "gdrcopy",
+      "transfer_backend must be 'memcpy' or 'gdrcopy', got ",
+      _transfer_backend);
+  _use_gdrcopy = _transfer_backend == "gdrcopy";
+  if (_use_gdrcopy) {
+    _g = gdr_open();
+    TORCH_CHECK(_g != nullptr, "gdr_open failed");
+  }
+
   for (auto &tensor : gpu_kv_buffer) {
     if (tensor.has_value()) {
       size_t this_layer_gpu_buffer_size =
           tensor.value().numel() * sizeof(uint16_t);
       char *d_ptr = (char *)tensor.value().data_ptr();
+      int tensor_device = tensor.value().get_device();
+      if (_cuda_device < 0) {
+        _cuda_device = tensor_device;
+      } else {
+        TORCH_CHECK(_cuda_device == tensor_device,
+                    "CPUGatherEngineV3 requires buffers on one CUDA device");
+      }
       _gpu_kv_buffer.emplace_back(d_ptr);
-      gdr_mh_t handler;
-      gdr_pin_buffer(_g, (unsigned long)_gpu_kv_buffer.back(),
-                     this_layer_gpu_buffer_size, 0, 0, &handler);
-      void *mapped_gpu_ptr;
-      gdr_map(_g, handler, &mapped_gpu_ptr, this_layer_gpu_buffer_size);
-      gdr_info_t info;
-      gdr_get_info(_g, handler, &info);
-
-      void *user_space_ptr =
-          (char *)mapped_gpu_ptr + ((uintptr_t)d_ptr & (info.page_size - 1));
-
-      _gpu_kv_buffer_mapped.emplace_back(mapped_gpu_ptr);
-      _gdr_handlers.emplace_back(handler);
-      _user_space_gpu_kv_buffer_mapped.emplace_back(user_space_ptr);
       _gpu_buffer_size.emplace_back(this_layer_gpu_buffer_size);
+
+      if (_use_gdrcopy) {
+        gdr_mh_t handler;
+        gdr_pin_buffer(_g, (unsigned long)_gpu_kv_buffer.back(),
+                       this_layer_gpu_buffer_size, 0, 0, &handler);
+        void *mapped_gpu_ptr;
+        gdr_map(_g, handler, &mapped_gpu_ptr, this_layer_gpu_buffer_size);
+        gdr_info_t info;
+        gdr_get_info(_g, handler, &info);
+        void *user_space_ptr =
+            (char *)mapped_gpu_ptr + ((uintptr_t)d_ptr & (info.page_size - 1));
+        _gpu_kv_buffer_mapped.emplace_back(mapped_gpu_ptr);
+        _gdr_handlers.emplace_back(handler);
+        _user_space_gpu_kv_buffer_mapped.emplace_back(user_space_ptr);
+      } else {
+        _gpu_kv_buffer_mapped.emplace_back(nullptr);
+        _gdr_handlers.emplace_back(std::nullopt);
+        _user_space_gpu_kv_buffer_mapped.emplace_back(nullptr);
+      }
     } else {
       _gpu_kv_buffer.emplace_back(nullptr);
       _gpu_kv_buffer_mapped.emplace_back(nullptr);
@@ -253,6 +365,13 @@ CPUGatherEngineV3::CPUGatherEngineV3(
       _user_space_gpu_kv_buffer_mapped.emplace_back(nullptr);
       _gpu_buffer_size.emplace_back(0);
     }
+  }
+
+  if (!_use_gdrcopy) {
+    TORCH_CHECK(_cuda_device >= 0, "memcpy backend requires a CUDA buffer");
+    check_cuda(cudaSetDevice(_cuda_device), "cudaSetDevice");
+    check_cuda(cudaStreamCreateWithFlags(&_memcpy_stream, cudaStreamNonBlocking),
+               "cudaStreamCreateWithFlags");
   }
 
   _gather_hids = std::vector<int>(_total_num_heads);
@@ -263,7 +382,9 @@ CPUGatherEngineV3::~CPUGatherEngineV3() {
   *_launch_flag = -2;
 
   int64_t num_reused_requests = _num_total_requests - _num_processed_requests;
-  double hit_ratio = (double)num_reused_requests / (double)_num_total_requests;
+  double hit_ratio = _num_total_requests == 0
+                         ? 0.0
+                         : (double)num_reused_requests / (double)_num_total_requests;
   std::cout << "Access num: " << _num_total_requests
             << " Hit num: " << num_reused_requests
             << " Hit ratio: " << hit_ratio << std::endl;
@@ -272,14 +393,24 @@ CPUGatherEngineV3::~CPUGatherEngineV3() {
     _worker.join();
   }
 
-  for (size_t i = 0; i < _gdr_handlers.size(); i += 1) {
-    if (_gdr_handlers[i].has_value()) {
-      gdr_unmap(_g, _gdr_handlers[i].value(), _gpu_kv_buffer_mapped[i],
-                _gpu_buffer_size[i]);
-      gdr_unpin_buffer(_g, _gdr_handlers[i].value());
+  if (_use_gdrcopy) {
+    for (size_t i = 0; i < _gdr_handlers.size(); i += 1) {
+      if (_gdr_handlers[i].has_value()) {
+        gdr_unmap(_g, _gdr_handlers[i].value(), _gpu_kv_buffer_mapped[i],
+                  _gpu_buffer_size[i]);
+        gdr_unpin_buffer(_g, _gdr_handlers[i].value());
+      }
+    }
+    gdr_close(_g);
+  } else {
+    check_cuda(cudaSetDevice(_cuda_device), "cudaSetDevice");
+    if (_memcpy_stream != nullptr) {
+      check_cuda(cudaStreamDestroy(_memcpy_stream), "cudaStreamDestroy");
+    }
+    if (_memcpy_staging != nullptr) {
+      check_cuda(cudaFreeHost(_memcpy_staging), "cudaFreeHost");
     }
   }
-  gdr_close(_g);
 }
 
 }  // namespace kvlib

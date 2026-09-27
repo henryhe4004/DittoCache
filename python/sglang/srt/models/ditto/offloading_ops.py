@@ -480,9 +480,11 @@ def attention_sparse_offloading_decode_forward(
     query_states = query_states.view(bsz, -1, self.num_heads, self.head_dim)
     torch.cuda.nvtx.range_pop()
 
-    torch.cuda.nvtx.range_push("simq")
-    prefetch_query_states = _compute_prefetch_query(self, residual, past_key_value)
-    torch.cuda.nvtx.range_pop()
+    prefetch_query_states = None
+    if past_key_value.enable_layer_prefetch:
+        torch.cuda.nvtx.range_push("simq")
+        prefetch_query_states = _compute_prefetch_query(self, residual, past_key_value)
+        torch.cuda.nvtx.range_pop()
 
     torch.cuda.nvtx.range_push("decode append")
     past_key_value.append_decode(
