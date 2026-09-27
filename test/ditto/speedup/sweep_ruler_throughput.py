@@ -5,7 +5,6 @@ import argparse
 import csv
 import json
 import math
-import shutil
 import subprocess
 import sys
 import time
@@ -18,7 +17,6 @@ from typing import Any
 
 THIS_DIR = Path(__file__).resolve().parent
 DEFAULT_CLIENT = THIS_DIR / "launch_client.py"
-DEFAULT_JSONL = THIS_DIR / "online_client_results.jsonl"
 DEFAULT_SERVER_BASE_URL = "http://127.0.0.1:30000"
 
 
@@ -259,6 +257,8 @@ def build_client_cmd(args: argparse.Namespace, concurrency: int, total: int) -> 
         sys.executable,
         "-u",
         str(args.launch_client),
+        "--server",
+        args.server_base_url.rstrip("/"),
         "--dataset",
         "ruler",
         "--ruler-len",
@@ -336,6 +336,8 @@ def summarize_run(
         completion_tokens += c_tokens
 
     total_tokens = prompt_tokens + completion_tokens
+    # Duration mode uses total=0 as an unlimited request sentinel.
+    total = max(total, len(rows))
     return {
         "concurrency": concurrency,
         "total_requests": total,
@@ -477,6 +479,7 @@ def main() -> None:
     out_dir = args.output_dir
     if out_dir is None:
         out_dir = THIS_DIR / "throughput_results" / f"ruler_{args.ruler_len}_{timestamp}"
+    out_dir = out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"output_dir={out_dir}")
@@ -492,6 +495,7 @@ def main() -> None:
 
     if args.warmup_requests > 0:
         warmup_cmd = build_client_cmd(args, 1, args.warmup_requests)
+        warmup_cmd += ["--log-file", str(out_dir / "warmup.jsonl")]
         warmup_log = out_dir / "warmup.log"
         print(f"\n[warmup] {' '.join(warmup_cmd)}")
         if not args.dry_run:
@@ -521,6 +525,7 @@ def main() -> None:
         cmd = build_client_cmd(args, concurrency, total)
         raw_jsonl = out_dir / f"raw_c{concurrency}.jsonl"
         client_log = out_dir / f"client_c{concurrency}.log"
+        cmd += ["--log-file", str(raw_jsonl)]
         print(f"\n[run] concurrency={concurrency} total_requests={total}")
         print(" ".join(cmd))
         if args.dry_run:
@@ -534,10 +539,6 @@ def main() -> None:
             terminal_tag=f"c{concurrency}",
         )
         subprocess_wall_s = time.perf_counter() - start
-        if DEFAULT_JSONL.exists():
-            shutil.copy2(DEFAULT_JSONL, raw_jsonl)
-        else:
-            raw_jsonl.write_text("", encoding="utf-8")
         row = summarize_run(
             concurrency,
             total,
@@ -548,7 +549,7 @@ def main() -> None:
         )
         rows.append(row)
         print(
-            f"[done] c={concurrency} ok={row['ok_requests']}/{total} "
+            f"[done] c={concurrency} ok={row['ok_requests']}/{row['total_requests']} "
             f"req/s={row['request_per_s']} total_tok/s={row['total_tok_per_s']} "
             f"output_tok/s={row['output_tok_per_s']}"
         )
@@ -572,6 +573,10 @@ def main() -> None:
         png_path = out_dir / "ruler_throughput.png"
         plot_rows(png_path, rows)
         print(f"plot: {png_path}")
+
+    if any(row["returncode"] != 0 or row["failed_requests"] > 0
+           or row["ok_requests"] == 0 for row in rows):
+        raise SystemExit("Throughput sweep failed; inspect CSV and client logs.")
 
 
 if __name__ == "__main__":

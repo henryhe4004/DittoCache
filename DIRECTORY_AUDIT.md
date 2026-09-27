@@ -8,15 +8,18 @@
 
 | 原位置 | 当前处理 | 原因 |
 | --- | --- | --- |
-| `test/ditto/speedup/export_head_threshold.py` | 移入 `test/ditto/archive/legacy/` | 写死 `/speedup/...` 输入，仅打印 L0H3 阈值；没有命令行参数和仓库内调用者 |
-| `test/ditto/speedup/serve_llama3_ditto.sh` | 移入 `archive/legacy/` | 名称像服务端，实际是写死机器路径的客户端调用片段 |
-| `test/ditto/overlap_script.sh` | 移入 `archive/legacy/` | 固定 GPU7 和模型的旧包装，已有可配置的 `test_overlap.sh` |
+| `test/ditto/speedup/export_head_threshold.py` | 归档后经用户批准删除（A02） | 写死 `/speedup/...` 输入，仅打印 L0H3 阈值；没有命令行参数和仓库内调用者 |
+| `test/ditto/speedup/serve_llama3_ditto.sh` | 归档后经用户批准删除（A03） | 名称像服务端，实际是写死机器路径的客户端调用片段 |
+| `test/ditto/overlap_script.sh` | 归档后经用户批准删除（A04） | 固定 GPU7 和模型的旧包装，已有可配置的 `test_overlap.sh` |
 | `test/ditto/speedup/latency_results/` | 移入 `archive/history/` | 2026-08-30 的旧输出；两个延迟入口的新输出默认改到 `test/ditto/results/latency/` |
 | `test/ditto/speedup/results-ruler-qwen14b-20260902/` | 移入 `archive/history/` | 历史 PP 诊断/benchmark 结果，无源码消费路径 |
 
-上述归档共 **304 文件、12.31 MiB**；2026-09-21 再次逐文件核对 SHA256 和字节数，全部通过。没有删除原始数据。
+最初归档 **304 文件、12.31 MiB**，2026-09-21 逐文件校验通过。后经用户批准删除其中 3 个旧脚本，当前保留 301 个历史结果文件；原脚本可从 Git 提交 `251df0902` 恢复。A01 的孤立配置 `test/ditto/speedup/ditto_server_override.json` 也已按批准删除。
 索引与恢复位置见 [`test/ditto/archive/manifest.json`](test/ditto/archive/manifest.json)。
 历史结果中记录的旧绝对路径保留原样。
+
+后续清理：用户已批准并删除 B01–B09 共 9 个实验入口；与 A 类累计删除 13 个文件。
+具体路径、删除依据与恢复提交见 [非 kernel 清理记录](NON_KERNEL_CLEANUP_REVIEW.md)。
 
 新增统一入口说明 [`test/ditto/README.md`](test/ditto/README.md)，脚本和运行结果分开。
 Graph 回归、此前临时保存的批量回归和 gather 编译都已保留为仓库脚本。

@@ -9,7 +9,10 @@
         "bytes": 497,
         "sha256": "9689366f9817a967e6330cd97ed8f3bfc83329f080384d5ece86ac2e12e2c6b3"
       }
-    ]
+    ],
+    "status": "removed_after_user_approval",
+    "removed_at": "2026-09-21T09:06:14.073161+00:00",
+    "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
   },
   {
     "source": "test/ditto/speedup/serve_llama3_ditto.sh",
@@ -21,7 +24,10 @@
         "bytes": 527,
         "sha256": "4688e80d7337f6556bdd349a06effecb5609deddf5bcd563fc1223ade917922c"
       }
-    ]
+    ],
+    "status": "removed_after_user_approval",
+    "removed_at": "2026-09-21T09:06:14.073161+00:00",
+    "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
   },
   {
     "source": "test/ditto/overlap_script.sh",
@@ -33,7 +39,10 @@
         "bytes": 203,
         "sha256": "1db78bec19926d6435d86c579add70d2d048322e376832b4a6a6a8d80125acea"
       }
-    ]
+    ],
+    "status": "removed_after_user_approval",
+    "removed_at": "2026-09-21T09:06:14.073161+00:00",
+    "recovery_commit": "251df09024ded932d74414bd96ca179235ad54eb"
   },
   {
     "source": "test/ditto/speedup/latency_results",
@@ -1145,7 +1154,8 @@
         "bytes": 5011,
         "sha256": "29075835a97d6cb2b8e1d05c3a70362a152d5f83ec5885125d6dbaf267f26837"
       }
-    ]
+    ],
+    "status": "retained"
   },
   {
     "source": "test/ditto/speedup/results-ruler-qwen14b-20260902",
@@ -1552,6 +1562,7 @@
         "bytes": 39899,
         "sha256": "b430e28155f09dfbe8125c42fb4eef1424fc81d2d73d5bbaf011653fbcb22e5a"
       }
-    ]
+    ],
+    "status": "retained"
   }
 ]

@@ -1,14 +1,19 @@
-# 历史归档（2026-09-20）
+# 历史归档
 
-本目录保留原始文件，没有删除或重写历史实验数据。`manifest.json` 记录原路径、
-现路径、归档理由、字节数和每个文件的 SHA256。共迁移 304 个文件，12,908,418 bytes。
+最初归档 304 个文件、12,908,418 bytes。经用户确认，清理清单 A02–A04
+对应的 3 个旧脚本已删除；当前保留 **301 个历史结果文件、12,907,191 bytes**。
 
-- `legacy/export_head_threshold.py`：一次性打印某个 head 阈值的片段，硬编码失效的 `/speedup/...` 输入，不是导出 CLI。
-- `legacy/serve_llama3_ditto.sh`：实际是客户端 sweep；写死 `/data3` 模型和机器路径，不是启动服务器。
-- `legacy/overlap_script.sh`：写死 GPU7 和模型路径的简短包装；日常使用 `../test_overlap.sh`。
-- `history/latency_results/`：2026-08-30 延迟实验，新的输出使用 `../results/latency/`。
+`manifest.json` 保留原路径、归档路径、理由、字节数和 SHA256：
+
+- `status=retained`：文件仍在本地归档中。
+- `status=removed_after_user_approval`：旧脚本已删除，保留记录供追溯；
+  可从 `recovery_commit` 指定的 Git 提交取回，不能再从当前归档目录恢复。
+
+已删除的旧脚本为 `legacy/export_head_threshold.py`、
+`legacy/serve_llama3_ditto.sh`、`legacy/overlap_script.sh`。
+当前保留的目录为：
+
+- `history/latency_results/`：2026-08-30 的延迟实验。
 - `history/results-ruler-qwen14b-20260902/`：2026-09-02 的 PP 调试和 benchmark 结果。
 
-`legacy/` 中的脚本按原样保留，只作历史参考；相对路径和绝对路径没有为归档位置改写。
-如需恢复，按 manifest 中的 source/destination 将文件移回原路径；先检查原路径没有新文件，
-不要覆盖。`history/` 是本机保留的产物目录，已加入 `.gitignore`。
+历史结果内容没有改写，目录已加入 `.gitignore`；新测试输出位于 `../results/`。

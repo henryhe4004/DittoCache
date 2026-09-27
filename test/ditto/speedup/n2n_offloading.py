@@ -1010,33 +1010,50 @@ def generate_with_internal_forward_timing(
     t0 = time.perf_counter()
     first_token_ts: float | None = None
     last_ts = t0
-    max_completion_tokens = 0
-    token_timestamps: list[float] = []
+    request_counts: dict[Any, int] = {}
+    request_timestamps: dict[Any, list[float]] = {}
     for chunk in engine.generate(prompt=prompt, sampling_params=sampling_params, stream=True):
         last_chunk = chunk
         now = time.perf_counter()
         last_ts = now
-        completion_tokens_chunk = extract_completion_tokens(chunk)
-        if completion_tokens_chunk > max_completion_tokens:
-            max_completion_tokens = completion_tokens_chunk
-            token_timestamps.append(now)
-        if first_token_ts is None and completion_tokens_chunk > 0:
-            first_token_ts = now
+        for index, item in enumerate(_iter_output_items(chunk)):
+            meta = item.get("meta_info") or {}
+            key = meta.get("id", item.get("index"))
+            if key is None:
+                if batch_size > 1 and not isinstance(chunk, list):
+                    raise ValueError("Batched stream item has no request id/index; cannot count tokens.")
+                key = index
+            count = extract_completion_tokens(item)
+            if count > request_counts.get(key, 0):
+                request_counts[key] = count
+                request_timestamps.setdefault(key, []).append(now)
+                if first_token_ts is None:
+                    first_token_ts = now
         outputs_for_meta.extend(_iter_output_items(chunk))
     if last_chunk is None:
         t0 = time.perf_counter()
         last_chunk = engine.generate(prompt=prompt, sampling_params=sampling_params, stream=False)
         last_ts = time.perf_counter()
         outputs_for_meta = _iter_output_items(last_chunk)
-        max_completion_tokens = extract_completion_tokens(last_chunk)
         first_token_ts = last_ts
-
-    completion_tokens = extract_completion_tokens(last_chunk)
-    if completion_tokens <= 0:
-        completion_tokens = max(
-            (extract_completion_tokens(item) for item in outputs_for_meta),
-            default=0,
-        )
+        completion_tokens = extract_completion_tokens(last_chunk)
+    else:
+        completion_tokens = sum(request_counts.values())
+    # Batched streaming interleaves per-request cumulative counters. Never use
+    # only the last chunk, or stop the wall timer when the first request finishes.
+    token_timestamps = sorted(t for times in request_timestamps.values() for t in times)
+    stream_decode_step_latencies_ms = []
+    for times in request_timestamps.values():
+        intervals = [(times[i] - times[i - 1]) * 1000.0 for i in range(1, len(times))]
+        stream_decode_step_latencies_ms.extend(intervals[10:] if len(intervals) > 10 else intervals)
+    stream_decode_latency_ms_per_step = (
+        statistics.mean(stream_decode_step_latencies_ms)
+        if stream_decode_step_latencies_ms else 0.0
+    )
+    stream_decode_throughput = (
+        batch_size * 1000.0 / stream_decode_latency_ms_per_step
+        if stream_decode_latency_ms_per_step > 0 else 0.0
+    )
     if completion_tokens <= 0:
         sample_meta = None
         for item in outputs_for_meta:
@@ -1071,44 +1088,13 @@ def generate_with_internal_forward_timing(
             first_token_ts = last_ts
         internal_prefill_latency = max(first_token_ts - t0, 0.0)
         decode_elapsed = max(last_ts - first_token_ts, 0.0)
-        decode_tokens = max(max_completion_tokens - batch_size, 0)
         decode_forward_latency_sum = decode_elapsed
-
-        # Align with internal prototype timer semantics:
-        # use per-step decode forward latencies and drop first 20 decode steps.
-        decode_step_latencies_ms: list[float] = []
-        if len(token_timestamps) >= 2:
-            for i in range(1, len(token_timestamps)):
-                decode_step_latencies_ms.append(
-                    (token_timestamps[i] - token_timestamps[i - 1]) * 1000.0
-                )
-        # Very defensive fallback when per-token timestamps are unavailable.
-        if not decode_step_latencies_ms and decode_tokens > 0 and decode_elapsed > 0.0:
-            decode_step_latencies_ms = [decode_elapsed / decode_tokens * 1000.0] * decode_tokens
-
-        dropped = 20
-        if len(decode_step_latencies_ms) > dropped:
-            used_lat_ms = decode_step_latencies_ms[dropped:]
-        else:
-            used_lat_ms = decode_step_latencies_ms
-
-        if used_lat_ms:
-            total_used_ms = sum(used_lat_ms)
-            internal_decode_latency_ms_per_step = total_used_ms / len(used_lat_ms)
-            internal_decode_throughput = (
-                batch_size * len(used_lat_ms) / total_used_ms * 1000.0
-                if total_used_ms > 0
-                else 0.0
-            )
-        else:
-            internal_decode_latency_ms_per_step = 0.0
-            internal_decode_throughput = 0.0
+        internal_decode_latency_ms_per_step = stream_decode_latency_ms_per_step
+        internal_decode_throughput = stream_decode_throughput
         timing_debug = dict(timing_debug)
         timing_debug.update({
-            "source": "stream_fallback_drop_first_20",
-            "stream_decode_step_count": len(decode_step_latencies_ms),
-            "stream_used_step_count": len(used_lat_ms),
-            "stream_decode_elapsed_s": decode_elapsed,
+            "source": "stream_fallback",
+            "stream_decode_step_count": len(stream_decode_step_latencies_ms),
         })
         log(
             "[WARN] Internal forward timing is unavailable; "
@@ -1118,23 +1104,6 @@ def generate_with_internal_forward_timing(
     last_token_ts = token_timestamps[-1] if token_timestamps else last_ts
     wall_elapsed = max(last_token_ts - t0, 0.0)
     ttft_latency = max((first_token_ts or last_ts) - t0, 0.0)
-    stream_decode_step_latencies_ms = [
-        (token_timestamps[i] - token_timestamps[i - 1]) * 1000.0
-        for i in range(1, len(token_timestamps))
-    ]
-    if len(stream_decode_step_latencies_ms) > 10:
-        stream_decode_step_latencies_ms = stream_decode_step_latencies_ms[10:]
-    if stream_decode_step_latencies_ms:
-        stream_decode_latency_ms_per_step = statistics.mean(
-            stream_decode_step_latencies_ms
-        )
-        stream_decode_throughput = (
-            batch_size * 1000.0 / stream_decode_latency_ms_per_step
-        )
-    else:
-        stream_decode_latency_ms_per_step = 0.0
-        stream_decode_throughput = 0.0
-
     internal_elapsed = max(
         internal_prefill_latency + decode_forward_latency_sum, 0.0
     )
@@ -1658,6 +1627,8 @@ def main() -> int:
         "overall_tokens_per_s": overall_tps,
         "epoch_elapsed_s": epoch_latencies,
         "epoch_tokens_per_s": epoch_tps,
+        "epoch_completion_tokens": epoch_tokens,
+        "num_decode_steps": args.num_decode_steps,
         "avg_prefill_latency_s": avg_prefill_latency,
         "avg_decode_latency_ms_per_step": avg_decode_latency_ms,
         "avg_decode_tokens_per_s": avg_decode_tps,

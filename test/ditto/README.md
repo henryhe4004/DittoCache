@@ -1,8 +1,11 @@
 # Ditto 脚本入口
 
 从仓库根目录运行。新测试产物统一放在 `test/ditto/results/`，历史结果在
-`archive/history/`，旧的一次性脚本在 `archive/legacy/`。这些归档没有删除数据；
-迁移位置和校验值见 `archive/manifest.json`。
+`archive/history/`。原 `archive/legacy/` 中的 3 个旧脚本已按用户批准删除；
+迁移位置、校验值、移除状态和 Git 恢复版本见 `archive/manifest.json`。
+
+性能测量的运行命令、参数与结果解读见 [性能测试指南](speedup/README.md)，
+包括离线 TP/PP Graph、在线吞吐、TTFT/TPOT 和累计消融。
 
 ## TP + PP 与 Ditto Graph
 
