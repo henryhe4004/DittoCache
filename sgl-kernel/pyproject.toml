@@ -27,6 +27,7 @@ exclude = [
 ]
 
 [tool.scikit-build]
+build-dir = "build"
 cmake.build-type = "Release"
 minimum-version = "build-system.requires"
 
