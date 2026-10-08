@@ -372,6 +372,54 @@ bash test_accuracy_livecodebench.sh
 
 The accuracy wrappers call `test_accuracy_benchmark.sh`. Ditto offloading configs live under `test/ditto/config/hata_offloading`; dense full-attention baselines live under `test/ditto/config/full_attn`.
 
+### Tensor and Pipeline Parallelism (TP/PP)
+
+Ditto offloading supports tensor parallelism (`--tp-size`) and pipeline parallelism (`--pp-size`) on top of the single-GPU entrypoints above. The KV heads of each layer are partitioned across TP ranks (with an optional explicit placement map), and the offloading/CPU-gather engine follows the same partitioning; PP splits layers across ranks.
+
+Offline benchmark with TP/PP — `test/ditto/speedup/n2n_offloading.py` accepts `--tp-size` and `--pp-size` directly:
+
+```shell
+cd test/ditto/speedup
+python3 n2n_offloading.py \
+  --model /models/Llama-3-8B-Instruct-Gradient-1048k \
+  --config_file ../config/hata_offloading/Llama-3-8B-Instruct-Gradient-1048k-4K.yaml \
+  --data data/RULER-Llama-3-8B-Instruct-Gradient-1048k-8K.jsonl \
+  --method offloading-hash \
+  --tp-size 2 --pp-size 1 \
+  --num_decode_steps 50 --warmup 1 --epoch 3 --batch_size 1 \
+  --result-json results/tp2_pp1_llama_8k.json
+```
+
+Useful related flags: `--transfer-backend {gdr,cuda_memcpy}` selects the CPU→GPU gather transfer path (GDRCopy vs pinned-staging memcpy), `--ablation-stage {b0_memcpy,...,b6_resident}` fixes the ablation knobs, and `--ditto-enable-cuda-graph` / `--ditto-disable-cuda-graph` controls the Ditto internal decode graph. For TP decode, the internal CUDA graph path additionally requires `DITTO_TP_ENABLE_CUDA_GRAPH=1` in the environment (it is opt-in until NCCL graph replay is validated); without it TP runs eagerly.
+
+Correctness/validation helpers for TP/PP layouts:
+
+```shell
+# Greedy full-attention parity across 1x1, 2x1, 1x2, 2x2 (needs 4 visible GPUs)
+python3 test/ditto/run_tp_pp_smoke.py --model-path /models/Llama-3-8B-Instruct-Gradient-1048k \
+  --output-dir /tmp/ditto-tp-pp
+
+# Ditto offloading decode-graph capture/replay per layout (--cases 1x1,2x1,1x2,2x2)
+python3 test/ditto/run_tp_pp_graph.py --model-path /models/Llama-3-8B-Instruct-Gradient-1048k \
+  --output-dir /tmp/ditto-tp-pp-graph
+
+# Single-shot bring-up without the wrappers:
+python3 python/sglang/srt/models/ditto/minimal_selftest.py \
+  --model-path /models/Llama-3-8B-Instruct-Gradient-1048k --variant offloading \
+  --tp-size 2 --pp-size 1 --max-new-tokens 8 --max-tokens 4096 --gpu-memory-budget 4 \
+  --output-file /tmp/selftest-tp2.json
+```
+
+Resident-head placement for TP is controlled by `DITTO_RESIDENT_HEADS_FILE`, which points at an explicit per-layer resident map consumed by `python/sglang/ditto/tp_head_mapping.py`. Pre-made maps live under `test/ditto/speedup/head-mapping-ab/resident-placement/` (for example `l25-none.json` = no resident heads, `l25-head5.json` = resident head 5); pick the map that matches the model's layer count and the desired resident set, or generate one with the `build_tp_head_mapping_*.py` tools in `test/ditto/speedup`:
+
+```shell
+DITTO_RESIDENT_HEADS_FILE=$PWD/test/ditto/speedup/head-mapping-ab/resident-placement/l25-none.json \
+DITTO_TP_ENABLE_CUDA_GRAPH=1 \
+python3 test/ditto/speedup/n2n_offloading.py ... --tp-size 2 --pp-size 1
+```
+
+For sweep-style TP/PP runs, `test/ditto/speedup/run_n2n_qwen_offloading_seqlen.sh` (and the other `run_n2n_*` wrappers) take `TP_SIZE` / `PP_SIZE` environment variables and forward `DITTO_TP_ENABLE_CUDA_GRAPH` and `DITTO_RESIDENT_HEADS_FILE` to the benchmark. For online serving, keep using `test/ditto/speedup/ditto_server.sh` plus `launch_client.py` / `sweep_ruler_throughput.py`.
+
 ## Ditto TP/PP tests and directory guide
 
 - [Test scripts and Ditto CUDA Graph commands](test/ditto/README.md)
