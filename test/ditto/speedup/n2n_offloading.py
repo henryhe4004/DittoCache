@@ -1076,6 +1076,11 @@ def generate_with_internal_forward_timing(
         batch_size=batch_size,
         completion_tokens=completion_tokens,
     )
+    # The TP/PP revision reports internal decode metrics under these names;
+    # keep them in sync with the values extracted above (the stream fallback
+    # below overwrites them when internal timing is unavailable).
+    internal_decode_latency_ms_per_step = decode_latency_ms_per_step
+    internal_decode_throughput = decode_throughput
 
     # Internal forward fields can be unavailable in some runtime paths.
     # Fall back to stream timeline so benchmark still remains usable.

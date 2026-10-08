@@ -66,9 +66,20 @@ def ensure_ditto_custom_config(custom_config: Optional[Any], hf_config: Optional
         ),
         offload_config=_ns(
             attn_pattern_path=str(_get(ofc, "attn_pattern_path", "")),
-            transfer_backend=_choice(
-                ofc, "transfer_backend", "gdr", {"cuda_memcpy", "gdr"}
-            ),
+            # Accept both naming conventions: the TP/PP configs use
+            # "gdr"/"cuda_memcpy" while the Hopper-revision configs use
+            # "gdrcopy"/"memcpy"; downstream code normalizes on the latter.
+            transfer_backend={
+                "gdr": "gdrcopy",
+                "gdrcopy": "gdrcopy",
+                "cuda_memcpy": "memcpy",
+                "memcpy": "memcpy",
+            }[_choice(
+                ofc,
+                "transfer_backend",
+                "gdrcopy",
+                {"gdr", "gdrcopy", "cuda_memcpy", "memcpy"},
+            )],
             prefetch_mode=_choice(
                 ofc, "prefetch_mode", "cross_layer", {"none", "cross_layer"}
             ),
@@ -108,7 +119,6 @@ def ensure_ditto_custom_config(custom_config: Optional[Any], hf_config: Optional
             enable_layer_prefetch=bool(
                 _get(ofc, "enable_layer_prefetch", True)
             ),
-            transfer_backend=str(_get(ofc, "transfer_backend", "gdrcopy")),
             # <=0 means disabled: do not force gather refresh by reuse count.
             max_reuse_count=int(_get(ofc, "max_reuse_count", 0)),
             num_skip_layers=int(_get(ofc, "num_skip_layers", 0)),
