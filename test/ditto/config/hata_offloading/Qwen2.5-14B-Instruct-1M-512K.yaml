@@ -16,7 +16,7 @@ offload:
   decay_p: 3
   cosine_padding: 0.05
   num_omp_threads: 16
-  num_overlapped_heads: 1
+  num_overlapped_heads: 2
   num_skip_layers: 1
   attn_pattern_path:  "../auxiliary/attn_pattern/Qwen2.5-14B-Instruct-1M"
 enable_cuda_graph: true
