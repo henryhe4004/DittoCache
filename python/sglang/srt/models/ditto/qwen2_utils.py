@@ -132,11 +132,51 @@ class CustomQwen2RMSNorm(Qwen2RMSNorm):
 
 
 class CustomQwen2RotaryEmbedding(nn.Module):
-    """RoPE adapter matching internal prototype's cache metadata API."""
+    """RoPE adapter matching internal prototype's cache metadata API.
+
+    Use flashinfer's in-place kernels for the common rope_scaling types and
+    fall back to the native rope module only for scaling types flashinfer
+    does not support. The in-place path avoids several small position-build
+    kernels per call, which matters because decode issues two RoPE calls per
+    layer (current query and cross-layer prefetch query).
+    """
 
     def __init__(self, config):
         super().__init__()
-        _init_native_rope(self, config)
+        import flashinfer
+
+        if getattr(config, "rope_scaling", None) is not None:
+            rope_scaling = config.rope_scaling
+            self.rope_type = rope_scaling.get("rope_type", rope_scaling.get("type"))
+        else:
+            self.rope_type = "default"
+
+        self.fn = None
+        self.fn_kwargs = {}
+        if self.rope_type == "linear":
+            self.fn_kwargs["interleave"] = False
+            self.fn_kwargs["rope_scale"] = config.rope_scaling["factor"]
+            self.fn_kwargs["rope_theta"] = config.rope_theta
+            self.fn = flashinfer.apply_rope_inplace
+        elif self.rope_type == "llama3":
+            self.fn_kwargs["interleave"] = False
+            self.fn_kwargs["high_freq_factor"] = config.rope_scaling["high_freq_factor"]
+            self.fn_kwargs["low_freq_factor"] = config.rope_scaling["low_freq_factor"]
+            self.fn_kwargs["rope_theta"] = config.rope_theta
+            self.fn_kwargs["rope_scale"] = config.rope_scaling["factor"]
+            self.fn_kwargs["old_context_len"] = config.rope_scaling["original_max_position_embeddings"]
+            self.fn = flashinfer.apply_llama31_rope_inplace
+        elif self.rope_type == "default":
+            self.fn_kwargs["interleave"] = False
+            self.fn_kwargs["rope_scale"] = 1
+            self.fn_kwargs["rope_theta"] = config.rope_theta
+            self.fn = flashinfer.apply_rope_inplace
+        else:
+            _init_native_rope(self, config)
 
     def forward(self, query_states, key_states, past_key_values):
+        if self.fn is not None:
+            indptr, offsets = past_key_values.get_rope_metadata(query_states.device)
+            self.fn(query_states, key_states, indptr, offsets, **self.fn_kwargs)
+            return query_states, key_states
         return _native_rope_forward(self, query_states, key_states, past_key_values)
